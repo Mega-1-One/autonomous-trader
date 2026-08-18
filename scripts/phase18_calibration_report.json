@@ -1,0 +1,853 @@
+{
+  "total_research_observations": 25248,
+  "overall_walk_forward_calibration": {
+    "total_observations": 25248,
+    "train_count": 15148,
+    "validation_count": 5050,
+    "out_of_sample_count": 5050,
+    "train_result": {
+      "brier_score": 0.2853,
+      "log_loss": 0.7641,
+      "platt_slope": 0.0641,
+      "platt_intercept": 0.2533,
+      "bucket_stats": [
+        {
+          "score_range": "0.50\u20130.55",
+          "sample_count": 0,
+          "raw_positive_rate": 0.0,
+          "calibrated_probability": 0.57,
+          "avg_mfe_pips": 0.0,
+          "avg_mae_pips": 0.0,
+          "avg_net_r": 0.0,
+          "median_net_r": 0.0,
+          "status": "INSUFFICIENT_DATA"
+        },
+        {
+          "score_range": "0.55\u20130.60",
+          "sample_count": 0,
+          "raw_positive_rate": 0.0,
+          "calibrated_probability": 0.57,
+          "avg_mfe_pips": 0.0,
+          "avg_mae_pips": 0.0,
+          "avg_net_r": 0.0,
+          "median_net_r": 0.0,
+          "status": "INSUFFICIENT_DATA"
+        },
+        {
+          "score_range": "0.60\u20130.65",
+          "sample_count": 0,
+          "raw_positive_rate": 0.0,
+          "calibrated_probability": 0.57,
+          "avg_mfe_pips": 0.0,
+          "avg_mae_pips": 0.0,
+          "avg_net_r": 0.0,
+          "median_net_r": 0.0,
+          "status": "INSUFFICIENT_DATA"
+        },
+        {
+          "score_range": "0.65\u20130.70",
+          "sample_count": 0,
+          "raw_positive_rate": 0.0,
+          "calibrated_probability": 0.57,
+          "avg_mfe_pips": 0.0,
+          "avg_mae_pips": 0.0,
+          "avg_net_r": 0.0,
+          "median_net_r": 0.0,
+          "status": "INSUFFICIENT_DATA"
+        },
+        {
+          "score_range": "0.70\u20130.75",
+          "sample_count": 0,
+          "raw_positive_rate": 0.0,
+          "calibrated_probability": 0.57,
+          "avg_mfe_pips": 0.0,
+          "avg_mae_pips": 0.0,
+          "avg_net_r": 0.0,
+          "median_net_r": 0.0,
+          "status": "INSUFFICIENT_DATA"
+        },
+        {
+          "score_range": "0.75\u20130.80",
+          "sample_count": 0,
+          "raw_positive_rate": 0.0,
+          "calibrated_probability": 0.58,
+          "avg_mfe_pips": 0.0,
+          "avg_mae_pips": 0.0,
+          "avg_net_r": 0.0,
+          "median_net_r": 0.0,
+          "status": "INSUFFICIENT_DATA"
+        },
+        {
+          "score_range": "0.80\u20130.85",
+          "sample_count": 0,
+          "raw_positive_rate": 0.0,
+          "calibrated_probability": 0.58,
+          "avg_mfe_pips": 0.0,
+          "avg_mae_pips": 0.0,
+          "avg_net_r": 0.0,
+          "median_net_r": 0.0,
+          "status": "INSUFFICIENT_DATA"
+        },
+        {
+          "score_range": "0.85\u20130.90",
+          "sample_count": 0,
+          "raw_positive_rate": 0.0,
+          "calibrated_probability": 0.58,
+          "avg_mfe_pips": 0.0,
+          "avg_mae_pips": 0.0,
+          "avg_net_r": 0.0,
+          "median_net_r": 0.0,
+          "status": "INSUFFICIENT_DATA"
+        },
+        {
+          "score_range": "0.90\u20130.95",
+          "sample_count": 0,
+          "raw_positive_rate": 0.0,
+          "calibrated_probability": 0.58,
+          "avg_mfe_pips": 0.0,
+          "avg_mae_pips": 0.0,
+          "avg_net_r": 0.0,
+          "median_net_r": 0.0,
+          "status": "INSUFFICIENT_DATA"
+        },
+        {
+          "score_range": "0.95\u20131.00",
+          "sample_count": 0,
+          "raw_positive_rate": 0.0,
+          "calibrated_probability": 0.58,
+          "avg_mfe_pips": 0.0,
+          "avg_mae_pips": 0.0,
+          "avg_net_r": 0.0,
+          "median_net_r": 0.0,
+          "status": "INSUFFICIENT_DATA"
+        }
+      ],
+      "calibration_status": "CALIBRATED",
+      "reliability_summary": "Platt Scaling Calibrated on N=15148 observations (Brier: 0.2853)"
+    },
+    "validation_result": {
+      "brier_score": 0.2851,
+      "log_loss": 0.7637,
+      "platt_slope": -0.0913,
+      "platt_intercept": 0.2705,
+      "bucket_stats": [
+        {
+          "score_range": "0.50\u20130.55",
+          "sample_count": 0,
+          "raw_positive_rate": 0.0,
+          "calibrated_probability": 0.56,
+          "avg_mfe_pips": 0.0,
+          "avg_mae_pips": 0.0,
+          "avg_net_r": 0.0,
+          "median_net_r": 0.0,
+          "status": "INSUFFICIENT_DATA"
+        },
+        {
+          "score_range": "0.55\u20130.60",
+          "sample_count": 0,
+          "raw_positive_rate": 0.0,
+          "calibrated_probability": 0.55,
+          "avg_mfe_pips": 0.0,
+          "avg_mae_pips": 0.0,
+          "avg_net_r": 0.0,
+          "median_net_r": 0.0,
+          "status": "INSUFFICIENT_DATA"
+        },
+        {
+          "score_range": "0.60\u20130.65",
+          "sample_count": 0,
+          "raw_positive_rate": 0.0,
+          "calibrated_probability": 0.55,
+          "avg_mfe_pips": 0.0,
+          "avg_mae_pips": 0.0,
+          "avg_net_r": 0.0,
+          "median_net_r": 0.0,
+          "status": "INSUFFICIENT_DATA"
+        },
+        {
+          "score_range": "0.65\u20130.70",
+          "sample_count": 0,
+          "raw_positive_rate": 0.0,
+          "calibrated_probability": 0.55,
+          "avg_mfe_pips": 0.0,
+          "avg_mae_pips": 0.0,
+          "avg_net_r": 0.0,
+          "median_net_r": 0.0,
+          "status": "INSUFFICIENT_DATA"
+        },
+        {
+          "score_range": "0.70\u20130.75",
+          "sample_count": 0,
+          "raw_positive_rate": 0.0,
+          "calibrated_probability": 0.55,
+          "avg_mfe_pips": 0.0,
+          "avg_mae_pips": 0.0,
+          "avg_net_r": 0.0,
+          "median_net_r": 0.0,
+          "status": "INSUFFICIENT_DATA"
+        },
+        {
+          "score_range": "0.75\u20130.80",
+          "sample_count": 0,
+          "raw_positive_rate": 0.0,
+          "calibrated_probability": 0.55,
+          "avg_mfe_pips": 0.0,
+          "avg_mae_pips": 0.0,
+          "avg_net_r": 0.0,
+          "median_net_r": 0.0,
+          "status": "INSUFFICIENT_DATA"
+        },
+        {
+          "score_range": "0.80\u20130.85",
+          "sample_count": 0,
+          "raw_positive_rate": 0.0,
+          "calibrated_probability": 0.55,
+          "avg_mfe_pips": 0.0,
+          "avg_mae_pips": 0.0,
+          "avg_net_r": 0.0,
+          "median_net_r": 0.0,
+          "status": "INSUFFICIENT_DATA"
+        },
+        {
+          "score_range": "0.85\u20130.90",
+          "sample_count": 0,
+          "raw_positive_rate": 0.0,
+          "calibrated_probability": 0.55,
+          "avg_mfe_pips": 0.0,
+          "avg_mae_pips": 0.0,
+          "avg_net_r": 0.0,
+          "median_net_r": 0.0,
+          "status": "INSUFFICIENT_DATA"
+        },
+        {
+          "score_range": "0.90\u20130.95",
+          "sample_count": 0,
+          "raw_positive_rate": 0.0,
+          "calibrated_probability": 0.55,
+          "avg_mfe_pips": 0.0,
+          "avg_mae_pips": 0.0,
+          "avg_net_r": 0.0,
+          "median_net_r": 0.0,
+          "status": "INSUFFICIENT_DATA"
+        },
+        {
+          "score_range": "0.95\u20131.00",
+          "sample_count": 0,
+          "raw_positive_rate": 0.0,
+          "calibrated_probability": 0.55,
+          "avg_mfe_pips": 0.0,
+          "avg_mae_pips": 0.0,
+          "avg_net_r": 0.0,
+          "median_net_r": 0.0,
+          "status": "INSUFFICIENT_DATA"
+        }
+      ],
+      "calibration_status": "CALIBRATED",
+      "reliability_summary": "Platt Scaling Calibrated on N=5050 observations (Brier: 0.2851)"
+    },
+    "out_of_sample_result": {
+      "brier_score": 0.284,
+      "log_loss": 0.7614,
+      "platt_slope": 0.0986,
+      "platt_intercept": 0.2102,
+      "bucket_stats": [
+        {
+          "score_range": "0.50\u20130.55",
+          "sample_count": 0,
+          "raw_positive_rate": 0.0,
+          "calibrated_probability": 0.57,
+          "avg_mfe_pips": 0.0,
+          "avg_mae_pips": 0.0,
+          "avg_net_r": 0.0,
+          "median_net_r": 0.0,
+          "status": "INSUFFICIENT_DATA"
+        },
+        {
+          "score_range": "0.55\u20130.60",
+          "sample_count": 0,
+          "raw_positive_rate": 0.0,
+          "calibrated_probability": 0.57,
+          "avg_mfe_pips": 0.0,
+          "avg_mae_pips": 0.0,
+          "avg_net_r": 0.0,
+          "median_net_r": 0.0,
+          "status": "INSUFFICIENT_DATA"
+        },
+        {
+          "score_range": "0.60\u20130.65",
+          "sample_count": 0,
+          "raw_positive_rate": 0.0,
+          "calibrated_probability": 0.57,
+          "avg_mfe_pips": 0.0,
+          "avg_mae_pips": 0.0,
+          "avg_net_r": 0.0,
+          "median_net_r": 0.0,
+          "status": "INSUFFICIENT_DATA"
+        },
+        {
+          "score_range": "0.65\u20130.70",
+          "sample_count": 0,
+          "raw_positive_rate": 0.0,
+          "calibrated_probability": 0.57,
+          "avg_mfe_pips": 0.0,
+          "avg_mae_pips": 0.0,
+          "avg_net_r": 0.0,
+          "median_net_r": 0.0,
+          "status": "INSUFFICIENT_DATA"
+        },
+        {
+          "score_range": "0.70\u20130.75",
+          "sample_count": 0,
+          "raw_positive_rate": 0.0,
+          "calibrated_probability": 0.57,
+          "avg_mfe_pips": 0.0,
+          "avg_mae_pips": 0.0,
+          "avg_net_r": 0.0,
+          "median_net_r": 0.0,
+          "status": "INSUFFICIENT_DATA"
+        },
+        {
+          "score_range": "0.75\u20130.80",
+          "sample_count": 0,
+          "raw_positive_rate": 0.0,
+          "calibrated_probability": 0.57,
+          "avg_mfe_pips": 0.0,
+          "avg_mae_pips": 0.0,
+          "avg_net_r": 0.0,
+          "median_net_r": 0.0,
+          "status": "INSUFFICIENT_DATA"
+        },
+        {
+          "score_range": "0.80\u20130.85",
+          "sample_count": 0,
+          "raw_positive_rate": 0.0,
+          "calibrated_probability": 0.57,
+          "avg_mfe_pips": 0.0,
+          "avg_mae_pips": 0.0,
+          "avg_net_r": 0.0,
+          "median_net_r": 0.0,
+          "status": "INSUFFICIENT_DATA"
+        },
+        {
+          "score_range": "0.85\u20130.90",
+          "sample_count": 0,
+          "raw_positive_rate": 0.0,
+          "calibrated_probability": 0.57,
+          "avg_mfe_pips": 0.0,
+          "avg_mae_pips": 0.0,
+          "avg_net_r": 0.0,
+          "median_net_r": 0.0,
+          "status": "INSUFFICIENT_DATA"
+        },
+        {
+          "score_range": "0.90\u20130.95",
+          "sample_count": 0,
+          "raw_positive_rate": 0.0,
+          "calibrated_probability": 0.57,
+          "avg_mfe_pips": 0.0,
+          "avg_mae_pips": 0.0,
+          "avg_net_r": 0.0,
+          "median_net_r": 0.0,
+          "status": "INSUFFICIENT_DATA"
+        },
+        {
+          "score_range": "0.95\u20131.00",
+          "sample_count": 0,
+          "raw_positive_rate": 0.0,
+          "calibrated_probability": 0.58,
+          "avg_mfe_pips": 0.0,
+          "avg_mae_pips": 0.0,
+          "avg_net_r": 0.0,
+          "median_net_r": 0.0,
+          "status": "INSUFFICIENT_DATA"
+        }
+      ],
+      "calibration_status": "CALIBRATED",
+      "reliability_summary": "Platt Scaling Calibrated on N=5050 observations (Brier: 0.2840)"
+    },
+    "summary": "Walk-Forward Calibration Complete: Train N=15148, Val N=5050, OOS N=5050. OOS Brier Score: 0.2840"
+  },
+  "symbol_reports": {
+    "XAUUSD": {
+      "total_candidate_signals": 25248,
+      "walk_forward_calibration": {
+        "total_observations": 25248,
+        "train_count": 15148,
+        "validation_count": 5050,
+        "out_of_sample_count": 5050,
+        "train_result": {
+          "brier_score": 0.2853,
+          "log_loss": 0.7641,
+          "platt_slope": 0.0641,
+          "platt_intercept": 0.2533,
+          "bucket_stats": [
+            {
+              "score_range": "0.50\u20130.55",
+              "sample_count": 0,
+              "raw_positive_rate": 0.0,
+              "calibrated_probability": 0.57,
+              "avg_mfe_pips": 0.0,
+              "avg_mae_pips": 0.0,
+              "avg_net_r": 0.0,
+              "median_net_r": 0.0,
+              "status": "INSUFFICIENT_DATA"
+            },
+            {
+              "score_range": "0.55\u20130.60",
+              "sample_count": 0,
+              "raw_positive_rate": 0.0,
+              "calibrated_probability": 0.57,
+              "avg_mfe_pips": 0.0,
+              "avg_mae_pips": 0.0,
+              "avg_net_r": 0.0,
+              "median_net_r": 0.0,
+              "status": "INSUFFICIENT_DATA"
+            },
+            {
+              "score_range": "0.60\u20130.65",
+              "sample_count": 0,
+              "raw_positive_rate": 0.0,
+              "calibrated_probability": 0.57,
+              "avg_mfe_pips": 0.0,
+              "avg_mae_pips": 0.0,
+              "avg_net_r": 0.0,
+              "median_net_r": 0.0,
+              "status": "INSUFFICIENT_DATA"
+            },
+            {
+              "score_range": "0.65\u20130.70",
+              "sample_count": 0,
+              "raw_positive_rate": 0.0,
+              "calibrated_probability": 0.57,
+              "avg_mfe_pips": 0.0,
+              "avg_mae_pips": 0.0,
+              "avg_net_r": 0.0,
+              "median_net_r": 0.0,
+              "status": "INSUFFICIENT_DATA"
+            },
+            {
+              "score_range": "0.70\u20130.75",
+              "sample_count": 0,
+              "raw_positive_rate": 0.0,
+              "calibrated_probability": 0.57,
+              "avg_mfe_pips": 0.0,
+              "avg_mae_pips": 0.0,
+              "avg_net_r": 0.0,
+              "median_net_r": 0.0,
+              "status": "INSUFFICIENT_DATA"
+            },
+            {
+              "score_range": "0.75\u20130.80",
+              "sample_count": 0,
+              "raw_positive_rate": 0.0,
+              "calibrated_probability": 0.58,
+              "avg_mfe_pips": 0.0,
+              "avg_mae_pips": 0.0,
+              "avg_net_r": 0.0,
+              "median_net_r": 0.0,
+              "status": "INSUFFICIENT_DATA"
+            },
+            {
+              "score_range": "0.80\u20130.85",
+              "sample_count": 0,
+              "raw_positive_rate": 0.0,
+              "calibrated_probability": 0.58,
+              "avg_mfe_pips": 0.0,
+              "avg_mae_pips": 0.0,
+              "avg_net_r": 0.0,
+              "median_net_r": 0.0,
+              "status": "INSUFFICIENT_DATA"
+            },
+            {
+              "score_range": "0.85\u20130.90",
+              "sample_count": 0,
+              "raw_positive_rate": 0.0,
+              "calibrated_probability": 0.58,
+              "avg_mfe_pips": 0.0,
+              "avg_mae_pips": 0.0,
+              "avg_net_r": 0.0,
+              "median_net_r": 0.0,
+              "status": "INSUFFICIENT_DATA"
+            },
+            {
+              "score_range": "0.90\u20130.95",
+              "sample_count": 0,
+              "raw_positive_rate": 0.0,
+              "calibrated_probability": 0.58,
+              "avg_mfe_pips": 0.0,
+              "avg_mae_pips": 0.0,
+              "avg_net_r": 0.0,
+              "median_net_r": 0.0,
+              "status": "INSUFFICIENT_DATA"
+            },
+            {
+              "score_range": "0.95\u20131.00",
+              "sample_count": 0,
+              "raw_positive_rate": 0.0,
+              "calibrated_probability": 0.58,
+              "avg_mfe_pips": 0.0,
+              "avg_mae_pips": 0.0,
+              "avg_net_r": 0.0,
+              "median_net_r": 0.0,
+              "status": "INSUFFICIENT_DATA"
+            }
+          ],
+          "calibration_status": "CALIBRATED",
+          "reliability_summary": "Platt Scaling Calibrated on N=15148 observations (Brier: 0.2853)"
+        },
+        "validation_result": {
+          "brier_score": 0.2851,
+          "log_loss": 0.7637,
+          "platt_slope": -0.0913,
+          "platt_intercept": 0.2705,
+          "bucket_stats": [
+            {
+              "score_range": "0.50\u20130.55",
+              "sample_count": 0,
+              "raw_positive_rate": 0.0,
+              "calibrated_probability": 0.56,
+              "avg_mfe_pips": 0.0,
+              "avg_mae_pips": 0.0,
+              "avg_net_r": 0.0,
+              "median_net_r": 0.0,
+              "status": "INSUFFICIENT_DATA"
+            },
+            {
+              "score_range": "0.55\u20130.60",
+              "sample_count": 0,
+              "raw_positive_rate": 0.0,
+              "calibrated_probability": 0.55,
+              "avg_mfe_pips": 0.0,
+              "avg_mae_pips": 0.0,
+              "avg_net_r": 0.0,
+              "median_net_r": 0.0,
+              "status": "INSUFFICIENT_DATA"
+            },
+            {
+              "score_range": "0.60\u20130.65",
+              "sample_count": 0,
+              "raw_positive_rate": 0.0,
+              "calibrated_probability": 0.55,
+              "avg_mfe_pips": 0.0,
+              "avg_mae_pips": 0.0,
+              "avg_net_r": 0.0,
+              "median_net_r": 0.0,
+              "status": "INSUFFICIENT_DATA"
+            },
+            {
+              "score_range": "0.65\u20130.70",
+              "sample_count": 0,
+              "raw_positive_rate": 0.0,
+              "calibrated_probability": 0.55,
+              "avg_mfe_pips": 0.0,
+              "avg_mae_pips": 0.0,
+              "avg_net_r": 0.0,
+              "median_net_r": 0.0,
+              "status": "INSUFFICIENT_DATA"
+            },
+            {
+              "score_range": "0.70\u20130.75",
+              "sample_count": 0,
+              "raw_positive_rate": 0.0,
+              "calibrated_probability": 0.55,
+              "avg_mfe_pips": 0.0,
+              "avg_mae_pips": 0.0,
+              "avg_net_r": 0.0,
+              "median_net_r": 0.0,
+              "status": "INSUFFICIENT_DATA"
+            },
+            {
+              "score_range": "0.75\u20130.80",
+              "sample_count": 0,
+              "raw_positive_rate": 0.0,
+              "calibrated_probability": 0.55,
+              "avg_mfe_pips": 0.0,
+              "avg_mae_pips": 0.0,
+              "avg_net_r": 0.0,
+              "median_net_r": 0.0,
+              "status": "INSUFFICIENT_DATA"
+            },
+            {
+              "score_range": "0.80\u20130.85",
+              "sample_count": 0,
+              "raw_positive_rate": 0.0,
+              "calibrated_probability": 0.55,
+              "avg_mfe_pips": 0.0,
+              "avg_mae_pips": 0.0,
+              "avg_net_r": 0.0,
+              "median_net_r": 0.0,
+              "status": "INSUFFICIENT_DATA"
+            },
+            {
+              "score_range": "0.85\u20130.90",
+              "sample_count": 0,
+              "raw_positive_rate": 0.0,
+              "calibrated_probability": 0.55,
+              "avg_mfe_pips": 0.0,
+              "avg_mae_pips": 0.0,
+              "avg_net_r": 0.0,
+              "median_net_r": 0.0,
+              "status": "INSUFFICIENT_DATA"
+            },
+            {
+              "score_range": "0.90\u20130.95",
+              "sample_count": 0,
+              "raw_positive_rate": 0.0,
+              "calibrated_probability": 0.55,
+              "avg_mfe_pips": 0.0,
+              "avg_mae_pips": 0.0,
+              "avg_net_r": 0.0,
+              "median_net_r": 0.0,
+              "status": "INSUFFICIENT_DATA"
+            },
+            {
+              "score_range": "0.95\u20131.00",
+              "sample_count": 0,
+              "raw_positive_rate": 0.0,
+              "calibrated_probability": 0.55,
+              "avg_mfe_pips": 0.0,
+              "avg_mae_pips": 0.0,
+              "avg_net_r": 0.0,
+              "median_net_r": 0.0,
+              "status": "INSUFFICIENT_DATA"
+            }
+          ],
+          "calibration_status": "CALIBRATED",
+          "reliability_summary": "Platt Scaling Calibrated on N=5050 observations (Brier: 0.2851)"
+        },
+        "out_of_sample_result": {
+          "brier_score": 0.284,
+          "log_loss": 0.7614,
+          "platt_slope": 0.0986,
+          "platt_intercept": 0.2102,
+          "bucket_stats": [
+            {
+              "score_range": "0.50\u20130.55",
+              "sample_count": 0,
+              "raw_positive_rate": 0.0,
+              "calibrated_probability": 0.57,
+              "avg_mfe_pips": 0.0,
+              "avg_mae_pips": 0.0,
+              "avg_net_r": 0.0,
+              "median_net_r": 0.0,
+              "status": "INSUFFICIENT_DATA"
+            },
+            {
+              "score_range": "0.55\u20130.60",
+              "sample_count": 0,
+              "raw_positive_rate": 0.0,
+              "calibrated_probability": 0.57,
+              "avg_mfe_pips": 0.0,
+              "avg_mae_pips": 0.0,
+              "avg_net_r": 0.0,
+              "median_net_r": 0.0,
+              "status": "INSUFFICIENT_DATA"
+            },
+            {
+              "score_range": "0.60\u20130.65",
+              "sample_count": 0,
+              "raw_positive_rate": 0.0,
+              "calibrated_probability": 0.57,
+              "avg_mfe_pips": 0.0,
+              "avg_mae_pips": 0.0,
+              "avg_net_r": 0.0,
+              "median_net_r": 0.0,
+              "status": "INSUFFICIENT_DATA"
+            },
+            {
+              "score_range": "0.65\u20130.70",
+              "sample_count": 0,
+              "raw_positive_rate": 0.0,
+              "calibrated_probability": 0.57,
+              "avg_mfe_pips": 0.0,
+              "avg_mae_pips": 0.0,
+              "avg_net_r": 0.0,
+              "median_net_r": 0.0,
+              "status": "INSUFFICIENT_DATA"
+            },
+            {
+              "score_range": "0.70\u20130.75",
+              "sample_count": 0,
+              "raw_positive_rate": 0.0,
+              "calibrated_probability": 0.57,
+              "avg_mfe_pips": 0.0,
+              "avg_mae_pips": 0.0,
+              "avg_net_r": 0.0,
+              "median_net_r": 0.0,
+              "status": "INSUFFICIENT_DATA"
+            },
+            {
+              "score_range": "0.75\u20130.80",
+              "sample_count": 0,
+              "raw_positive_rate": 0.0,
+              "calibrated_probability": 0.57,
+              "avg_mfe_pips": 0.0,
+              "avg_mae_pips": 0.0,
+              "avg_net_r": 0.0,
+              "median_net_r": 0.0,
+              "status": "INSUFFICIENT_DATA"
+            },
+            {
+              "score_range": "0.80\u20130.85",
+              "sample_count": 0,
+              "raw_positive_rate": 0.0,
+              "calibrated_probability": 0.57,
+              "avg_mfe_pips": 0.0,
+              "avg_mae_pips": 0.0,
+              "avg_net_r": 0.0,
+              "median_net_r": 0.0,
+              "status": "INSUFFICIENT_DATA"
+            },
+            {
+              "score_range": "0.85\u20130.90",
+              "sample_count": 0,
+              "raw_positive_rate": 0.0,
+              "calibrated_probability": 0.57,
+              "avg_mfe_pips": 0.0,
+              "avg_mae_pips": 0.0,
+              "avg_net_r": 0.0,
+              "median_net_r": 0.0,
+              "status": "INSUFFICIENT_DATA"
+            },
+            {
+              "score_range": "0.90\u20130.95",
+              "sample_count": 0,
+              "raw_positive_rate": 0.0,
+              "calibrated_probability": 0.57,
+              "avg_mfe_pips": 0.0,
+              "avg_mae_pips": 0.0,
+              "avg_net_r": 0.0,
+              "median_net_r": 0.0,
+              "status": "INSUFFICIENT_DATA"
+            },
+            {
+              "score_range": "0.95\u20131.00",
+              "sample_count": 0,
+              "raw_positive_rate": 0.0,
+              "calibrated_probability": 0.58,
+              "avg_mfe_pips": 0.0,
+              "avg_mae_pips": 0.0,
+              "avg_net_r": 0.0,
+              "median_net_r": 0.0,
+              "status": "INSUFFICIENT_DATA"
+            }
+          ],
+          "calibration_status": "CALIBRATED",
+          "reliability_summary": "Platt Scaling Calibrated on N=5050 observations (Brier: 0.2840)"
+        },
+        "summary": "Walk-Forward Calibration Complete: Train N=15148, Val N=5050, OOS N=5050. OOS Brier Score: 0.2840"
+      }
+    },
+    "EURUSD": {
+      "total_candidate_signals": 0,
+      "walk_forward_calibration": {
+        "total_observations": 0,
+        "train_count": 0,
+        "validation_count": 0,
+        "out_of_sample_count": 0,
+        "train_result": {
+          "brier_score": 1.0,
+          "log_loss": 1.0,
+          "platt_slope": 0.0,
+          "platt_intercept": 0.0,
+          "bucket_stats": [],
+          "calibration_status": "INSUFFICIENT_DATA",
+          "reliability_summary": "Insufficient training observations (N=0 < 30)"
+        },
+        "validation_result": {
+          "brier_score": 1.0,
+          "log_loss": 1.0,
+          "platt_slope": 0.0,
+          "platt_intercept": 0.0,
+          "bucket_stats": [],
+          "calibration_status": "INSUFFICIENT_DATA",
+          "reliability_summary": "Insufficient training observations (N=0 < 30)"
+        },
+        "out_of_sample_result": {
+          "brier_score": 1.0,
+          "log_loss": 1.0,
+          "platt_slope": 0.0,
+          "platt_intercept": 0.0,
+          "bucket_stats": [],
+          "calibration_status": "INSUFFICIENT_DATA",
+          "reliability_summary": "Insufficient training observations (N=0 < 30)"
+        },
+        "summary": "INSUFFICIENT DATA: Total observations (0) below minimum threshold (50)"
+      }
+    },
+    "GBPUSD": {
+      "total_candidate_signals": 0,
+      "walk_forward_calibration": {
+        "total_observations": 0,
+        "train_count": 0,
+        "validation_count": 0,
+        "out_of_sample_count": 0,
+        "train_result": {
+          "brier_score": 1.0,
+          "log_loss": 1.0,
+          "platt_slope": 0.0,
+          "platt_intercept": 0.0,
+          "bucket_stats": [],
+          "calibration_status": "INSUFFICIENT_DATA",
+          "reliability_summary": "Insufficient training observations (N=0 < 30)"
+        },
+        "validation_result": {
+          "brier_score": 1.0,
+          "log_loss": 1.0,
+          "platt_slope": 0.0,
+          "platt_intercept": 0.0,
+          "bucket_stats": [],
+          "calibration_status": "INSUFFICIENT_DATA",
+          "reliability_summary": "Insufficient training observations (N=0 < 30)"
+        },
+        "out_of_sample_result": {
+          "brier_score": 1.0,
+          "log_loss": 1.0,
+          "platt_slope": 0.0,
+          "platt_intercept": 0.0,
+          "bucket_stats": [],
+          "calibration_status": "INSUFFICIENT_DATA",
+          "reliability_summary": "Insufficient training observations (N=0 < 30)"
+        },
+        "summary": "INSUFFICIENT DATA: Total observations (0) below minimum threshold (50)"
+      }
+    },
+    "NAS100": {
+      "total_candidate_signals": 0,
+      "walk_forward_calibration": {
+        "total_observations": 0,
+        "train_count": 0,
+        "validation_count": 0,
+        "out_of_sample_count": 0,
+        "train_result": {
+          "brier_score": 1.0,
+          "log_loss": 1.0,
+          "platt_slope": 0.0,
+          "platt_intercept": 0.0,
+          "bucket_stats": [],
+          "calibration_status": "INSUFFICIENT_DATA",
+          "reliability_summary": "Insufficient training observations (N=0 < 30)"
+        },
+        "validation_result": {
+          "brier_score": 1.0,
+          "log_loss": 1.0,
+          "platt_slope": 0.0,
+          "platt_intercept": 0.0,
+          "bucket_stats": [],
+          "calibration_status": "INSUFFICIENT_DATA",
+          "reliability_summary": "Insufficient training observations (N=0 < 30)"
+        },
+        "out_of_sample_result": {
+          "brier_score": 1.0,
+          "log_loss": 1.0,
+          "platt_slope": 0.0,
+          "platt_intercept": 0.0,
+          "bucket_stats": [],
+          "calibration_status": "INSUFFICIENT_DATA",
+          "reliability_summary": "Insufficient training observations (N=0 < 30)"
+        },
+        "summary": "INSUFFICIENT DATA: Total observations (0) below minimum threshold (50)"
+      }
+    }
+  }
+}

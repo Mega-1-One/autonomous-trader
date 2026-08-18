@@ -1,0 +1,102 @@
+{
+  "XAUUSD": {
+    "broker_symbol": "XAUUSDm",
+    "h1_candle_count": 6000,
+    "d1_candle_count": 1000,
+    "oldest_timestamp_date": "2025-08-12",
+    "newest_timestamp_date": "2026-08-18",
+    "coverage_calendar_days": 370,
+    "coverage_months": 12.2,
+    "monthly_h1_candle_breakdown": {
+      "2025-08": 305,
+      "2025-09": 504,
+      "2025-10": 527,
+      "2025-11": 457,
+      "2025-12": 502,
+      "2026-01": 481,
+      "2026-02": 458,
+      "2026-03": 508,
+      "2026-04": 483,
+      "2026-05": 481,
+      "2026-06": 502,
+      "2026-07": 523,
+      "2026-08": 269
+    },
+    "sufficient_for_12_months": true
+  },
+  "EURUSD": {
+    "broker_symbol": "EURUSDm",
+    "h1_candle_count": 6000,
+    "d1_candle_count": 1000,
+    "oldest_timestamp_date": "2025-08-29",
+    "newest_timestamp_date": "2026-08-18",
+    "coverage_calendar_days": 353,
+    "coverage_months": 11.6,
+    "monthly_h1_candle_breakdown": {
+      "2025-08": 10,
+      "2025-09": 528,
+      "2025-10": 549,
+      "2025-11": 482,
+      "2025-12": 526,
+      "2026-01": 504,
+      "2026-02": 480,
+      "2026-03": 531,
+      "2026-04": 528,
+      "2026-05": 504,
+      "2026-06": 528,
+      "2026-07": 549,
+      "2026-08": 281
+    },
+    "sufficient_for_12_months": false
+  },
+  "GBPUSD": {
+    "broker_symbol": "GBPUSDm",
+    "h1_candle_count": 6000,
+    "d1_candle_count": 1000,
+    "oldest_timestamp_date": "2025-08-29",
+    "newest_timestamp_date": "2026-08-18",
+    "coverage_calendar_days": 353,
+    "coverage_months": 11.6,
+    "monthly_h1_candle_breakdown": {
+      "2025-08": 10,
+      "2025-09": 528,
+      "2025-10": 549,
+      "2025-11": 482,
+      "2025-12": 526,
+      "2026-01": 504,
+      "2026-02": 480,
+      "2026-03": 531,
+      "2026-04": 528,
+      "2026-05": 504,
+      "2026-06": 528,
+      "2026-07": 549,
+      "2026-08": 281
+    },
+    "sufficient_for_12_months": false
+  },
+  "NAS100": {
+    "broker_symbol": "USTECm",
+    "h1_candle_count": 6000,
+    "d1_candle_count": 1000,
+    "oldest_timestamp_date": "2025-08-12",
+    "newest_timestamp_date": "2026-08-18",
+    "coverage_calendar_days": 371,
+    "coverage_months": 12.2,
+    "monthly_h1_candle_breakdown": {
+      "2025-08": 310,
+      "2025-09": 502,
+      "2025-10": 527,
+      "2025-11": 444,
+      "2025-12": 502,
+      "2026-01": 479,
+      "2026-02": 456,
+      "2026-03": 508,
+      "2026-04": 499,
+      "2026-05": 479,
+      "2026-06": 502,
+      "2026-07": 523,
+      "2026-08": 269
+    },
+    "sufficient_for_12_months": true
+  }
+}

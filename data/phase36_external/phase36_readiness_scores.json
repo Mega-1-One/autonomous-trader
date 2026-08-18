@@ -1,0 +1,30 @@
+{
+  "cme_gold_futures": {
+    "source_name": "CME COMEX Gold Futures",
+    "data_authenticity": 95.0,
+    "historical_depth": 85.0,
+    "timestamp_quality": 95.0,
+    "information_novelty": 90.0,
+    "synchronization_quality": 85.0,
+    "field_completeness": 80.0,
+    "reproducibility": 85.0,
+    "cost_accessibility": 70.0,
+    "research_suitability": 90.0,
+    "total_score": 88.2,
+    "confidence_level": "HIGH"
+  },
+  "macro_calendar": {
+    "source_name": "Macro Economic News Calendar",
+    "data_authenticity": 90.0,
+    "historical_depth": 90.0,
+    "timestamp_quality": 90.0,
+    "information_novelty": 85.0,
+    "synchronization_quality": 85.0,
+    "field_completeness": 85.0,
+    "reproducibility": 90.0,
+    "cost_accessibility": 95.0,
+    "research_suitability": 85.0,
+    "total_score": 88.2,
+    "confidence_level": "HIGH"
+  }
+}

@@ -1,0 +1,95 @@
+{
+  "dataset_manifest_path": "C:\\Users\\Gammee\\.gemini\\antigravity\\scratch\\autonomous-trader\\backend\\data\\dataset_manifest.json",
+  "global_dataset_hash": "94156c0519d221f98491b14786486041a6f676dc463968b374694598c73bc992",
+  "cost_sensitivity_scenarios": {
+    "XAUUSD": {
+      "optimistic_cost": {
+        "commission_per_lot": 0.0,
+        "spread_pips": 0.64,
+        "slippage_pips": 0.0
+      },
+      "realistic_median_cost": {
+        "commission_per_lot": 7.0,
+        "spread_pips": 1.6,
+        "slippage_pips": 0.1
+      },
+      "conservative_cost": {
+        "commission_per_lot": 10.0,
+        "spread_pips": 2.8,
+        "slippage_pips": 0.2
+      },
+      "stress_cost": {
+        "commission_per_lot": 15.0,
+        "spread_pips": 7.73,
+        "slippage_pips": 0.5
+      }
+    },
+    "EURUSD": {
+      "optimistic_cost": {
+        "commission_per_lot": 0.0,
+        "spread_pips": 0.8,
+        "slippage_pips": 0.0
+      },
+      "realistic_median_cost": {
+        "commission_per_lot": 7.0,
+        "spread_pips": 0.8,
+        "slippage_pips": 0.1
+      },
+      "conservative_cost": {
+        "commission_per_lot": 10.0,
+        "spread_pips": 0.9,
+        "slippage_pips": 0.2
+      },
+      "stress_cost": {
+        "commission_per_lot": 15.0,
+        "spread_pips": 16.0,
+        "slippage_pips": 0.5
+      }
+    },
+    "GBPUSD": {
+      "optimistic_cost": {
+        "commission_per_lot": 0.0,
+        "spread_pips": 0.2,
+        "slippage_pips": 0.0
+      },
+      "realistic_median_cost": {
+        "commission_per_lot": 7.0,
+        "spread_pips": 1.0,
+        "slippage_pips": 0.1
+      },
+      "conservative_cost": {
+        "commission_per_lot": 10.0,
+        "spread_pips": 1.1,
+        "slippage_pips": 0.2
+      },
+      "stress_cost": {
+        "commission_per_lot": 15.0,
+        "spread_pips": 23.6,
+        "slippage_pips": 0.5
+      }
+    },
+    "NAS100": {
+      "optimistic_cost": {
+        "commission_per_lot": 0.0,
+        "spread_pips": 0.56,
+        "slippage_pips": 0.0
+      },
+      "realistic_median_cost": {
+        "commission_per_lot": 7.0,
+        "spread_pips": 1.92,
+        "slippage_pips": 0.1
+      },
+      "conservative_cost": {
+        "commission_per_lot": 10.0,
+        "spread_pips": 2.4,
+        "slippage_pips": 0.2
+      },
+      "stress_cost": {
+        "commission_per_lot": 15.0,
+        "spread_pips": 5.61,
+        "slippage_pips": 0.5
+      }
+    }
+  },
+  "final_verdict": "READY FOR PHASE 28 (Full historical dataset spanning 353-371 days validated, deterministic SHA256 dataset hash generated, zero-lookahead & chronological OOS split passed)"
+}

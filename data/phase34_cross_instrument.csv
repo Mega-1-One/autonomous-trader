@@ -1,0 +1,5 @@
+instrument,sample_size,net_expectancy_r,profit_factor,replication_status
+XAUUSD,168,-0.28,0.76,ORIGINAL
+EURUSD,585,-1.14,0.94,FAILED
+GBPUSD,458,-0.99,1.05,FAILED
+NAS100,372,-0.21,1.08,FAILED

@@ -1,0 +1,6 @@
+{
+  "cme_futures_volume": "NEW_INFORMATION",
+  "macro_event_timestamps": "NEW_INFORMATION",
+  "l2_order_book": "UNAVAILABLE",
+  "price_indicators": "REDUNDANT_INFORMATION"
+}

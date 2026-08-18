@@ -1,0 +1,538 @@
+{
+  "XAUUSD": {
+    "baseline_system_c": {
+      "total_trades": 9624,
+      "wins": 3929,
+      "losses": 5695,
+      "win_rate": 40.83,
+      "avg_win": 15.71,
+      "avg_loss": 14.27,
+      "expectancy_r": -0.14,
+      "profit_factor": 0.76,
+      "avg_r_multiple": 0.02,
+      "max_drawdown_percent": 201.86,
+      "max_consecutive_losses": 109,
+      "avg_holding_time_sec": 604.86,
+      "median_holding_time_sec": 197.0,
+      "gross_profit": 61727.35,
+      "gross_loss": 81274.68,
+      "spread_cost": 16399.08,
+      "slippage_cost": 4812.0,
+      "commission_cost": 3368.4,
+      "net_profit": -19547.33,
+      "regime_breakdown": {
+        "PHASE_21_ADAPTIVE": {
+          "trades": 9624,
+          "wins": 3929,
+          "net_pnl": -19547.33
+        }
+      },
+      "validation_passed": false,
+      "validation_reasons": [
+        "Expectancy (-0.14 R) below threshold (0.15 R)",
+        "Profit Factor (0.76) below threshold (1.2)",
+        "Max Drawdown (201.85927415933352%) exceeds limit (10.0%)"
+      ],
+      "candidate_setups_count": 20663
+    },
+    "exp1_adaptive_targets": {
+      "total_trades": 9624,
+      "wins": 2888,
+      "losses": 6736,
+      "win_rate": 30.01,
+      "avg_win": 26.42,
+      "avg_loss": 14.17,
+      "expectancy_r": -0.14,
+      "profit_factor": 0.8,
+      "avg_r_multiple": 0.05,
+      "max_drawdown_percent": 193.01,
+      "max_consecutive_losses": 141,
+      "avg_holding_time_sec": 796.46,
+      "median_holding_time_sec": 266.0,
+      "gross_profit": 76289.18,
+      "gross_loss": 95452.61,
+      "spread_cost": 16399.08,
+      "slippage_cost": 4812.0,
+      "commission_cost": 3368.4,
+      "net_profit": -19163.43,
+      "regime_breakdown": {
+        "PHASE_21_ADAPTIVE": {
+          "trades": 9624,
+          "wins": 2888,
+          "net_pnl": -19163.43
+        }
+      },
+      "validation_passed": false,
+      "validation_reasons": [
+        "Expectancy (-0.14 R) below threshold (0.15 R)",
+        "Profit Factor (0.8) below threshold (1.2)",
+        "Max Drawdown (193.00630000000018%) exceeds limit (10.0%)"
+      ],
+      "candidate_setups_count": 20663
+    },
+    "exp2_adaptive_stops": {
+      "total_trades": 9623,
+      "wins": 3214,
+      "losses": 6409,
+      "win_rate": 33.4,
+      "avg_win": 31.55,
+      "avg_loss": 19.43,
+      "expectancy_r": -0.12,
+      "profit_factor": 0.81,
+      "avg_r_multiple": 0.0,
+      "max_drawdown_percent": 210.01,
+      "max_consecutive_losses": 141,
+      "avg_holding_time_sec": 1129.85,
+      "median_holding_time_sec": 446.0,
+      "gross_profit": 101408.5,
+      "gross_loss": 124539.23,
+      "spread_cost": 16397.38,
+      "slippage_cost": 4811.5,
+      "commission_cost": 3368.05,
+      "net_profit": -23130.73,
+      "regime_breakdown": {
+        "PHASE_21_ADAPTIVE": {
+          "trades": 9623,
+          "wins": 3214,
+          "net_pnl": -23130.73
+        }
+      },
+      "validation_passed": false,
+      "validation_reasons": [
+        "Expectancy (-0.12 R) below threshold (0.15 R)",
+        "Profit Factor (0.81) below threshold (1.2)",
+        "Max Drawdown (210.01099719455866%) exceeds limit (10.0%)"
+      ],
+      "candidate_setups_count": 20663
+    },
+    "exp3_full_adaptive_v2": {
+      "total_trades": 9623,
+      "wins": 2665,
+      "losses": 6958,
+      "win_rate": 27.69,
+      "avg_win": 41.01,
+      "avg_loss": 18.88,
+      "expectancy_r": -0.12,
+      "profit_factor": 0.83,
+      "avg_r_multiple": 0.02,
+      "max_drawdown_percent": 204.06,
+      "max_consecutive_losses": 207,
+      "avg_holding_time_sec": 1227.08,
+      "median_holding_time_sec": 493.0,
+      "gross_profit": 109301.06,
+      "gross_loss": 131361.99,
+      "spread_cost": 16397.38,
+      "slippage_cost": 4811.5,
+      "commission_cost": 3368.05,
+      "net_profit": -22060.93,
+      "regime_breakdown": {
+        "PHASE_21_ADAPTIVE": {
+          "trades": 9623,
+          "wins": 2665,
+          "net_pnl": -22060.93
+        }
+      },
+      "validation_passed": false,
+      "validation_reasons": [
+        "Expectancy (-0.12 R) below threshold (0.15 R)",
+        "Profit Factor (0.83) below threshold (1.2)",
+        "Max Drawdown (204.05976172565826%) exceeds limit (10.0%)"
+      ],
+      "candidate_setups_count": 20663
+    }
+  },
+  "EURUSD": {
+    "baseline_system_c": {
+      "total_trades": 10982,
+      "wins": 0,
+      "losses": 10982,
+      "win_rate": 0.0,
+      "avg_win": 0.0,
+      "avg_loss": 1.2,
+      "expectancy_r": -1.0,
+      "profit_factor": 0.0,
+      "avg_r_multiple": -1.0,
+      "max_drawdown_percent": 131.78,
+      "max_consecutive_losses": 10982,
+      "avg_holding_time_sec": 866.85,
+      "median_holding_time_sec": 225.0,
+      "gross_profit": 0.0,
+      "gross_loss": 13178.4,
+      "spread_cost": 3843.7,
+      "slippage_cost": 5491.0,
+      "commission_cost": 3843.7,
+      "net_profit": -13178.4,
+      "regime_breakdown": {
+        "PHASE_21_ADAPTIVE": {
+          "trades": 10982,
+          "wins": 0,
+          "net_pnl": -13178.4
+        }
+      },
+      "validation_passed": false,
+      "validation_reasons": [
+        "Expectancy (-1.0 R) below threshold (0.15 R)",
+        "Profit Factor (0.0) below threshold (1.2)",
+        "Max Drawdown (131.78400000000104%) exceeds limit (10.0%)"
+      ],
+      "candidate_setups_count": 21710
+    },
+    "exp1_adaptive_targets": {
+      "total_trades": 10982,
+      "wins": 0,
+      "losses": 10982,
+      "win_rate": 0.0,
+      "avg_win": 0.0,
+      "avg_loss": 1.2,
+      "expectancy_r": -1.0,
+      "profit_factor": 0.0,
+      "avg_r_multiple": -1.0,
+      "max_drawdown_percent": 131.78,
+      "max_consecutive_losses": 10982,
+      "avg_holding_time_sec": 866.85,
+      "median_holding_time_sec": 225.0,
+      "gross_profit": 0.0,
+      "gross_loss": 13178.4,
+      "spread_cost": 3843.7,
+      "slippage_cost": 5491.0,
+      "commission_cost": 3843.7,
+      "net_profit": -13178.4,
+      "regime_breakdown": {
+        "PHASE_21_ADAPTIVE": {
+          "trades": 10982,
+          "wins": 0,
+          "net_pnl": -13178.4
+        }
+      },
+      "validation_passed": false,
+      "validation_reasons": [
+        "Expectancy (-1.0 R) below threshold (0.15 R)",
+        "Profit Factor (0.0) below threshold (1.2)",
+        "Max Drawdown (131.78400000000104%) exceeds limit (10.0%)"
+      ],
+      "candidate_setups_count": 21710
+    },
+    "exp2_adaptive_stops": {
+      "total_trades": 10982,
+      "wins": 0,
+      "losses": 10982,
+      "win_rate": 0.0,
+      "avg_win": 0.0,
+      "avg_loss": 1.2,
+      "expectancy_r": -1.0,
+      "profit_factor": 0.0,
+      "avg_r_multiple": -1.0,
+      "max_drawdown_percent": 131.78,
+      "max_consecutive_losses": 10982,
+      "avg_holding_time_sec": 906.8,
+      "median_holding_time_sec": 249.0,
+      "gross_profit": 0.0,
+      "gross_loss": 13178.48,
+      "spread_cost": 3843.7,
+      "slippage_cost": 5491.0,
+      "commission_cost": 3843.7,
+      "net_profit": -13178.48,
+      "regime_breakdown": {
+        "PHASE_21_ADAPTIVE": {
+          "trades": 10982,
+          "wins": 0,
+          "net_pnl": -13178.48
+        }
+      },
+      "validation_passed": false,
+      "validation_reasons": [
+        "Expectancy (-1.0 R) below threshold (0.15 R)",
+        "Profit Factor (0.0) below threshold (1.2)",
+        "Max Drawdown (131.78480000000107%) exceeds limit (10.0%)"
+      ],
+      "candidate_setups_count": 21710
+    },
+    "exp3_full_adaptive_v2": {
+      "total_trades": 10982,
+      "wins": 0,
+      "losses": 10982,
+      "win_rate": 0.0,
+      "avg_win": 0.0,
+      "avg_loss": 1.2,
+      "expectancy_r": -1.0,
+      "profit_factor": 0.0,
+      "avg_r_multiple": -1.0,
+      "max_drawdown_percent": 131.78,
+      "max_consecutive_losses": 10982,
+      "avg_holding_time_sec": 906.8,
+      "median_holding_time_sec": 249.0,
+      "gross_profit": 0.0,
+      "gross_loss": 13178.48,
+      "spread_cost": 3843.7,
+      "slippage_cost": 5491.0,
+      "commission_cost": 3843.7,
+      "net_profit": -13178.48,
+      "regime_breakdown": {
+        "PHASE_21_ADAPTIVE": {
+          "trades": 10982,
+          "wins": 0,
+          "net_pnl": -13178.48
+        }
+      },
+      "validation_passed": false,
+      "validation_reasons": [
+        "Expectancy (-1.0 R) below threshold (0.15 R)",
+        "Profit Factor (0.0) below threshold (1.2)",
+        "Max Drawdown (131.78480000000107%) exceeds limit (10.0%)"
+      ],
+      "candidate_setups_count": 21710
+    }
+  },
+  "GBPUSD": {
+    "baseline_system_c": {
+      "total_trades": 10865,
+      "wins": 0,
+      "losses": 10865,
+      "win_rate": 0.0,
+      "avg_win": 0.0,
+      "avg_loss": 1.2,
+      "expectancy_r": -1.0,
+      "profit_factor": 0.0,
+      "avg_r_multiple": -1.0,
+      "max_drawdown_percent": 130.38,
+      "max_consecutive_losses": 10865,
+      "avg_holding_time_sec": 813.79,
+      "median_holding_time_sec": 153.0,
+      "gross_profit": 0.0,
+      "gross_loss": 13038.41,
+      "spread_cost": 3803.16,
+      "slippage_cost": 5432.5,
+      "commission_cost": 3802.75,
+      "net_profit": -13038.41,
+      "regime_breakdown": {
+        "PHASE_21_ADAPTIVE": {
+          "trades": 10865,
+          "wins": 0,
+          "net_pnl": -13038.41
+        }
+      },
+      "validation_passed": false,
+      "validation_reasons": [
+        "Expectancy (-1.0 R) below threshold (0.15 R)",
+        "Profit Factor (0.0) below threshold (1.2)",
+        "Max Drawdown (130.38410000000133%) exceeds limit (10.0%)"
+      ],
+      "candidate_setups_count": 23054
+    },
+    "exp1_adaptive_targets": {
+      "total_trades": 10865,
+      "wins": 0,
+      "losses": 10865,
+      "win_rate": 0.0,
+      "avg_win": 0.0,
+      "avg_loss": 1.2,
+      "expectancy_r": -1.0,
+      "profit_factor": 0.0,
+      "avg_r_multiple": -1.0,
+      "max_drawdown_percent": 130.38,
+      "max_consecutive_losses": 10865,
+      "avg_holding_time_sec": 813.79,
+      "median_holding_time_sec": 153.0,
+      "gross_profit": 0.0,
+      "gross_loss": 13038.41,
+      "spread_cost": 3803.16,
+      "slippage_cost": 5432.5,
+      "commission_cost": 3802.75,
+      "net_profit": -13038.41,
+      "regime_breakdown": {
+        "PHASE_21_ADAPTIVE": {
+          "trades": 10865,
+          "wins": 0,
+          "net_pnl": -13038.41
+        }
+      },
+      "validation_passed": false,
+      "validation_reasons": [
+        "Expectancy (-1.0 R) below threshold (0.15 R)",
+        "Profit Factor (0.0) below threshold (1.2)",
+        "Max Drawdown (130.38410000000133%) exceeds limit (10.0%)"
+      ],
+      "candidate_setups_count": 23054
+    },
+    "exp2_adaptive_stops": {
+      "total_trades": 10865,
+      "wins": 0,
+      "losses": 10865,
+      "win_rate": 0.0,
+      "avg_win": 0.0,
+      "avg_loss": 1.2,
+      "expectancy_r": -1.0,
+      "profit_factor": 0.0,
+      "avg_r_multiple": -1.0,
+      "max_drawdown_percent": 130.38,
+      "max_consecutive_losses": 10865,
+      "avg_holding_time_sec": 882.38,
+      "median_holding_time_sec": 184.0,
+      "gross_profit": 0.0,
+      "gross_loss": 13038.42,
+      "spread_cost": 3803.16,
+      "slippage_cost": 5432.5,
+      "commission_cost": 3802.75,
+      "net_profit": -13038.42,
+      "regime_breakdown": {
+        "PHASE_21_ADAPTIVE": {
+          "trades": 10865,
+          "wins": 0,
+          "net_pnl": -13038.42
+        }
+      },
+      "validation_passed": false,
+      "validation_reasons": [
+        "Expectancy (-1.0 R) below threshold (0.15 R)",
+        "Profit Factor (0.0) below threshold (1.2)",
+        "Max Drawdown (130.38420000000127%) exceeds limit (10.0%)"
+      ],
+      "candidate_setups_count": 23054
+    },
+    "exp3_full_adaptive_v2": {
+      "total_trades": 10865,
+      "wins": 0,
+      "losses": 10865,
+      "win_rate": 0.0,
+      "avg_win": 0.0,
+      "avg_loss": 1.2,
+      "expectancy_r": -1.0,
+      "profit_factor": 0.0,
+      "avg_r_multiple": -1.0,
+      "max_drawdown_percent": 130.38,
+      "max_consecutive_losses": 10865,
+      "avg_holding_time_sec": 882.38,
+      "median_holding_time_sec": 184.0,
+      "gross_profit": 0.0,
+      "gross_loss": 13038.42,
+      "spread_cost": 3803.16,
+      "slippage_cost": 5432.5,
+      "commission_cost": 3802.75,
+      "net_profit": -13038.42,
+      "regime_breakdown": {
+        "PHASE_21_ADAPTIVE": {
+          "trades": 10865,
+          "wins": 0,
+          "net_pnl": -13038.42
+        }
+      },
+      "validation_passed": false,
+      "validation_reasons": [
+        "Expectancy (-1.0 R) below threshold (0.15 R)",
+        "Profit Factor (0.0) below threshold (1.2)",
+        "Max Drawdown (130.38420000000127%) exceeds limit (10.0%)"
+      ],
+      "candidate_setups_count": 23054
+    }
+  },
+  "NAS100": {
+    "baseline_system_c": {
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0.0,
+      "avg_win": 0.0,
+      "avg_loss": 0.0,
+      "expectancy_r": 0.0,
+      "profit_factor": 0.0,
+      "avg_r_multiple": 0.0,
+      "max_drawdown_percent": 0.0,
+      "max_consecutive_losses": 0,
+      "avg_holding_time_sec": 0.0,
+      "median_holding_time_sec": 0.0,
+      "gross_profit": 0.0,
+      "gross_loss": 0.0,
+      "spread_cost": 0.0,
+      "slippage_cost": 0.0,
+      "commission_cost": 0.0,
+      "net_profit": 0.0,
+      "regime_breakdown": {},
+      "validation_passed": false,
+      "validation_reasons": [
+        "No trades executed"
+      ],
+      "candidate_setups_count": 19916
+    },
+    "exp1_adaptive_targets": {
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0.0,
+      "avg_win": 0.0,
+      "avg_loss": 0.0,
+      "expectancy_r": 0.0,
+      "profit_factor": 0.0,
+      "avg_r_multiple": 0.0,
+      "max_drawdown_percent": 0.0,
+      "max_consecutive_losses": 0,
+      "avg_holding_time_sec": 0.0,
+      "median_holding_time_sec": 0.0,
+      "gross_profit": 0.0,
+      "gross_loss": 0.0,
+      "spread_cost": 0.0,
+      "slippage_cost": 0.0,
+      "commission_cost": 0.0,
+      "net_profit": 0.0,
+      "regime_breakdown": {},
+      "validation_passed": false,
+      "validation_reasons": [
+        "No trades executed"
+      ],
+      "candidate_setups_count": 19916
+    },
+    "exp2_adaptive_stops": {
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0.0,
+      "avg_win": 0.0,
+      "avg_loss": 0.0,
+      "expectancy_r": 0.0,
+      "profit_factor": 0.0,
+      "avg_r_multiple": 0.0,
+      "max_drawdown_percent": 0.0,
+      "max_consecutive_losses": 0,
+      "avg_holding_time_sec": 0.0,
+      "median_holding_time_sec": 0.0,
+      "gross_profit": 0.0,
+      "gross_loss": 0.0,
+      "spread_cost": 0.0,
+      "slippage_cost": 0.0,
+      "commission_cost": 0.0,
+      "net_profit": 0.0,
+      "regime_breakdown": {},
+      "validation_passed": false,
+      "validation_reasons": [
+        "No trades executed"
+      ],
+      "candidate_setups_count": 19916
+    },
+    "exp3_full_adaptive_v2": {
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0.0,
+      "avg_win": 0.0,
+      "avg_loss": 0.0,
+      "expectancy_r": 0.0,
+      "profit_factor": 0.0,
+      "avg_r_multiple": 0.0,
+      "max_drawdown_percent": 0.0,
+      "max_consecutive_losses": 0,
+      "avg_holding_time_sec": 0.0,
+      "median_holding_time_sec": 0.0,
+      "gross_profit": 0.0,
+      "gross_loss": 0.0,
+      "spread_cost": 0.0,
+      "slippage_cost": 0.0,
+      "commission_cost": 0.0,
+      "net_profit": 0.0,
+      "regime_breakdown": {},
+      "validation_passed": false,
+      "validation_reasons": [
+        "No trades executed"
+      ],
+      "candidate_setups_count": 19916
+    }
+  }
+}

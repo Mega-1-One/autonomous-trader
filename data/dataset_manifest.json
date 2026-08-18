@@ -1,0 +1,171 @@
+{
+  "version": "2.0.0",
+  "global_status": "PARTIALLY_READY",
+  "symbols": {
+    "XAUUSD": {
+      "total_ticks": 100028,
+      "valid_ticks": 100028,
+      "rejected_ticks": 0,
+      "rejection_reasons": {},
+      "duplicates": 0,
+      "duration_days": 103.1,
+      "candles": {
+        "1m": 100028,
+        "5m": 20039,
+        "15m": 6680,
+        "1h": 1672,
+        "4h": 452
+      },
+      "spread_statistics": {
+        "min_pips": 0.2,
+        "median_pips": 0.2,
+        "mean_pips": 0.2,
+        "p90_pips": 0.2,
+        "p95_pips": 0.2,
+        "p99_pips": 0.2,
+        "max_pips": 0.2
+      },
+      "data_quality_score": 1.0,
+      "chronological_split": {
+        "train_start_ts": 1778158260.0,
+        "train_end_ts": 1783516500.0,
+        "train_count": 60016,
+        "val_start_ts": 1783516560.0,
+        "val_end_ts": 1785291240.0,
+        "val_count": 20006,
+        "oos_start_ts": 1785291300.0,
+        "oos_end_ts": 1787062260.0,
+        "oos_count": 20006,
+        "is_chronological": true,
+        "data_leakage_detected": false
+      },
+      "leakage_status": "PASSED",
+      "dataset_hash": "8b28ac7179edf95ab9ff5152847d9b1a458d402115b5faa631ce378935778e09",
+      "validation_status": "FAIL"
+    },
+    "EURUSD": {
+      "total_ticks": 100000,
+      "valid_ticks": 100000,
+      "rejected_ticks": 0,
+      "rejection_reasons": {},
+      "duplicates": 0,
+      "duration_days": 97.6,
+      "candles": {
+        "1m": 100000,
+        "5m": 20027,
+        "15m": 6683,
+        "1h": 1672,
+        "4h": 433
+      },
+      "spread_statistics": {
+        "min_pips": 0.2,
+        "median_pips": 0.2,
+        "mean_pips": 0.2,
+        "p90_pips": 0.2,
+        "p95_pips": 0.2,
+        "p99_pips": 0.2,
+        "max_pips": 0.2
+      },
+      "data_quality_score": 1.0,
+      "chronological_split": {
+        "train_start_ts": 1778628840.0,
+        "train_end_ts": 1783620060.0,
+        "train_count": 60000,
+        "val_start_ts": 1783620120.0,
+        "val_end_ts": 1785341040.0,
+        "val_count": 20000,
+        "oos_start_ts": 1785341100.0,
+        "oos_end_ts": 1787062260.0,
+        "oos_count": 20000,
+        "is_chronological": true,
+        "data_leakage_detected": false
+      },
+      "leakage_status": "PASSED",
+      "dataset_hash": "2e1b9fb98fa23b9738f03c0fce74858320458dfab8111d32866b192ec98b4306",
+      "validation_status": "FAIL"
+    },
+    "GBPUSD": {
+      "total_ticks": 100000,
+      "valid_ticks": 100000,
+      "rejected_ticks": 0,
+      "rejection_reasons": {},
+      "duplicates": 0,
+      "duration_days": 97.7,
+      "candles": {
+        "1m": 100000,
+        "5m": 20024,
+        "15m": 6690,
+        "1h": 1673,
+        "4h": 433
+      },
+      "spread_statistics": {
+        "min_pips": 0.2,
+        "median_pips": 0.2,
+        "mean_pips": 0.2,
+        "p90_pips": 0.2,
+        "p95_pips": 0.2,
+        "p99_pips": 0.2,
+        "max_pips": 0.2
+      },
+      "data_quality_score": 1.0,
+      "chronological_split": {
+        "train_start_ts": 1778622240.0,
+        "train_end_ts": 1783615800.0,
+        "train_count": 60000,
+        "val_start_ts": 1783615860.0,
+        "val_end_ts": 1785338880.0,
+        "val_count": 20000,
+        "oos_start_ts": 1785338940.0,
+        "oos_end_ts": 1787061360.0,
+        "oos_count": 20000,
+        "is_chronological": true,
+        "data_leakage_detected": false
+      },
+      "leakage_status": "PASSED",
+      "dataset_hash": "5181552d5cd8f7d6bf76fd790fc3f3cd2e2c4fe8bdbd76dbdd6a5c5604902614",
+      "validation_status": "FAIL"
+    },
+    "NAS100": {
+      "total_ticks": 100000,
+      "valid_ticks": 100000,
+      "rejected_ticks": 0,
+      "rejection_reasons": {},
+      "duplicates": 0,
+      "duration_days": 103.0,
+      "candles": {
+        "1m": 100000,
+        "5m": 20001,
+        "15m": 6672,
+        "1h": 1668,
+        "4h": 452
+      },
+      "spread_statistics": {
+        "min_pips": 0.2,
+        "median_pips": 0.2,
+        "mean_pips": 0.2,
+        "p90_pips": 0.2,
+        "p95_pips": 0.2,
+        "p99_pips": 0.2,
+        "max_pips": 0.2
+      },
+      "data_quality_score": 1.0,
+      "chronological_split": {
+        "train_start_ts": 1778159400.0,
+        "train_end_ts": 1783518540.0,
+        "train_count": 60000,
+        "val_start_ts": 1783518600.0,
+        "val_end_ts": 1785291840.0,
+        "val_count": 20000,
+        "oos_start_ts": 1785291900.0,
+        "oos_end_ts": 1787061540.0,
+        "oos_count": 20000,
+        "is_chronological": true,
+        "data_leakage_detected": false
+      },
+      "leakage_status": "PASSED",
+      "dataset_hash": "91c4a970dbc1d5d6692db8d103280f264df1077a7f3278f9191bce7c633fdf8c",
+      "validation_status": "FAIL"
+    }
+  },
+  "global_dataset_hash": "25833aa4b8fd8428bf170e456c27398933bef0a03d0f56f8cbf47fccff1a6728"
+}

@@ -1,0 +1,6 @@
+{
+  "total_hypotheses_tested": 120,
+  "fdr_significant_count": 0,
+  "surviving_oos_edges_count": 0,
+  "final_verdict": "NO PREDICTIVE EDGE FOUND AFTER FDR CORRECTION (0/120 MACRO/FUTURES HYPOTHESES PASSED FDR CORRECTION WITH OOS NET EXPECTANCY > 0)"
+}

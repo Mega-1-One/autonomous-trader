@@ -1,0 +1,386 @@
+{
+  "total_matrix_combinations_tested": 36,
+  "top_20_candidates": [
+    {
+      "config": {
+        "instrument": "XAUUSD",
+        "session": "ALL_SESSIONS",
+        "regime": "MULTI_REGIME",
+        "setup": "LIQUIDITY_SWEEP_REVERSAL",
+        "entry_timing": "1M_CONFIRM",
+        "sl_atr": 2.0,
+        "tp_atr": 4.0
+      },
+      "sample_size": 4133,
+      "win_rate": 29.08,
+      "profit_factor": 0.71,
+      "gross_expectancy_r": -0.13,
+      "net_expectancy_r": -0.21,
+      "net_profit_dollars": -18172.7,
+      "max_drawdown_percent": 216.08,
+      "oos_net_expectancy_r": -0.09,
+      "oos_profit_factor": 0.86,
+      "is_statistically_robust": false
+    },
+    {
+      "config": {
+        "instrument": "XAUUSD",
+        "session": "ALL_SESSIONS",
+        "regime": "MULTI_REGIME",
+        "setup": "LIQUIDITY_SWEEP_REVERSAL",
+        "entry_timing": "1M_CONFIRM",
+        "sl_atr": 1.5,
+        "tp_atr": 3.0
+      },
+      "sample_size": 4133,
+      "win_rate": 31.99,
+      "profit_factor": 0.76,
+      "gross_expectancy_r": -0.04,
+      "net_expectancy_r": -0.17,
+      "net_profit_dollars": -11871.05,
+      "max_drawdown_percent": 144.62,
+      "oos_net_expectancy_r": -0.09,
+      "oos_profit_factor": 0.85,
+      "is_statistically_robust": false
+    },
+    {
+      "config": {
+        "instrument": "XAUUSD",
+        "session": "ALL_SESSIONS",
+        "regime": "MULTI_REGIME",
+        "setup": "LIQUIDITY_SWEEP_REVERSAL",
+        "entry_timing": "1M_CONFIRM",
+        "sl_atr": 1.0,
+        "tp_atr": 1.5
+      },
+      "sample_size": 4133,
+      "win_rate": 37.41,
+      "profit_factor": 0.6,
+      "gross_expectancy_r": -0.06,
+      "net_expectancy_r": -0.25,
+      "net_profit_dollars": -12715.75,
+      "max_drawdown_percent": 127.95,
+      "oos_net_expectancy_r": -0.26,
+      "oos_profit_factor": 0.58,
+      "is_statistically_robust": false
+    },
+    {
+      "config": {
+        "instrument": "XAUUSD",
+        "session": "ALL_SESSIONS",
+        "regime": "MULTI_REGIME",
+        "setup": "TREND_CONTINUATION",
+        "entry_timing": "1M_CONFIRM",
+        "sl_atr": 1.0,
+        "tp_atr": 1.5
+      },
+      "sample_size": 2603,
+      "win_rate": 35.15,
+      "profit_factor": 0.62,
+      "gross_expectancy_r": -0.12,
+      "net_expectancy_r": -0.24,
+      "net_profit_dollars": -8193.74,
+      "max_drawdown_percent": 85.26,
+      "oos_net_expectancy_r": -0.36,
+      "oos_profit_factor": 0.47,
+      "is_statistically_robust": false
+    },
+    {
+      "config": {
+        "instrument": "XAUUSD",
+        "session": "ALL_SESSIONS",
+        "regime": "MULTI_REGIME",
+        "setup": "TREND_CONTINUATION",
+        "entry_timing": "1M_CONFIRM",
+        "sl_atr": 1.5,
+        "tp_atr": 3.0
+      },
+      "sample_size": 2603,
+      "win_rate": 28.51,
+      "profit_factor": 0.74,
+      "gross_expectancy_r": -0.14,
+      "net_expectancy_r": -0.19,
+      "net_profit_dollars": -8117.49,
+      "max_drawdown_percent": 82.69,
+      "oos_net_expectancy_r": -0.59,
+      "oos_profit_factor": 0.3,
+      "is_statistically_robust": false
+    },
+    {
+      "config": {
+        "instrument": "XAUUSD",
+        "session": "ALL_SESSIONS",
+        "regime": "MULTI_REGIME",
+        "setup": "TREND_CONTINUATION",
+        "entry_timing": "1M_CONFIRM",
+        "sl_atr": 2.0,
+        "tp_atr": 4.0
+      },
+      "sample_size": 2603,
+      "win_rate": 28.47,
+      "profit_factor": 0.8,
+      "gross_expectancy_r": -0.15,
+      "net_expectancy_r": -0.14,
+      "net_profit_dollars": -7479.74,
+      "max_drawdown_percent": 79.93,
+      "oos_net_expectancy_r": -0.63,
+      "oos_profit_factor": 0.27,
+      "is_statistically_robust": false
+    },
+    {
+      "config": {
+        "instrument": "EURUSD",
+        "session": "ALL_SESSIONS",
+        "regime": "MULTI_REGIME",
+        "setup": "LIQUIDITY_SWEEP_REVERSAL",
+        "entry_timing": "1M_CONFIRM",
+        "sl_atr": 1.0,
+        "tp_atr": 1.5
+      },
+      "sample_size": 3932,
+      "win_rate": 0.0,
+      "profit_factor": 0.0,
+      "gross_expectancy_r": -1.0,
+      "net_expectancy_r": -1.0,
+      "net_profit_dollars": -4718.4,
+      "max_drawdown_percent": 47.18,
+      "oos_net_expectancy_r": -1.0,
+      "oos_profit_factor": 0.0,
+      "is_statistically_robust": false
+    },
+    {
+      "config": {
+        "instrument": "EURUSD",
+        "session": "ALL_SESSIONS",
+        "regime": "MULTI_REGIME",
+        "setup": "LIQUIDITY_SWEEP_REVERSAL",
+        "entry_timing": "1M_CONFIRM",
+        "sl_atr": 1.5,
+        "tp_atr": 3.0
+      },
+      "sample_size": 3932,
+      "win_rate": 0.0,
+      "profit_factor": 0.0,
+      "gross_expectancy_r": -1.0,
+      "net_expectancy_r": -1.0,
+      "net_profit_dollars": -4718.4,
+      "max_drawdown_percent": 47.18,
+      "oos_net_expectancy_r": -1.0,
+      "oos_profit_factor": 0.0,
+      "is_statistically_robust": false
+    },
+    {
+      "config": {
+        "instrument": "EURUSD",
+        "session": "ALL_SESSIONS",
+        "regime": "MULTI_REGIME",
+        "setup": "LIQUIDITY_SWEEP_REVERSAL",
+        "entry_timing": "1M_CONFIRM",
+        "sl_atr": 2.0,
+        "tp_atr": 4.0
+      },
+      "sample_size": 3932,
+      "win_rate": 0.0,
+      "profit_factor": 0.0,
+      "gross_expectancy_r": -1.0,
+      "net_expectancy_r": -1.0,
+      "net_profit_dollars": -4718.4,
+      "max_drawdown_percent": 47.18,
+      "oos_net_expectancy_r": -1.0,
+      "oos_profit_factor": 0.0,
+      "is_statistically_robust": false
+    },
+    {
+      "config": {
+        "instrument": "EURUSD",
+        "session": "ALL_SESSIONS",
+        "regime": "MULTI_REGIME",
+        "setup": "TREND_CONTINUATION",
+        "entry_timing": "1M_CONFIRM",
+        "sl_atr": 1.0,
+        "tp_atr": 1.5
+      },
+      "sample_size": 2976,
+      "win_rate": 0.0,
+      "profit_factor": 0.0,
+      "gross_expectancy_r": -1.0,
+      "net_expectancy_r": -1.0,
+      "net_profit_dollars": -3571.2,
+      "max_drawdown_percent": 35.71,
+      "oos_net_expectancy_r": -1.0,
+      "oos_profit_factor": 0.0,
+      "is_statistically_robust": false
+    },
+    {
+      "config": {
+        "instrument": "EURUSD",
+        "session": "ALL_SESSIONS",
+        "regime": "MULTI_REGIME",
+        "setup": "TREND_CONTINUATION",
+        "entry_timing": "1M_CONFIRM",
+        "sl_atr": 1.5,
+        "tp_atr": 3.0
+      },
+      "sample_size": 2976,
+      "win_rate": 0.0,
+      "profit_factor": 0.0,
+      "gross_expectancy_r": -1.0,
+      "net_expectancy_r": -1.0,
+      "net_profit_dollars": -3571.2,
+      "max_drawdown_percent": 35.71,
+      "oos_net_expectancy_r": -1.0,
+      "oos_profit_factor": 0.0,
+      "is_statistically_robust": false
+    },
+    {
+      "config": {
+        "instrument": "EURUSD",
+        "session": "ALL_SESSIONS",
+        "regime": "MULTI_REGIME",
+        "setup": "TREND_CONTINUATION",
+        "entry_timing": "1M_CONFIRM",
+        "sl_atr": 2.0,
+        "tp_atr": 4.0
+      },
+      "sample_size": 2976,
+      "win_rate": 0.0,
+      "profit_factor": 0.0,
+      "gross_expectancy_r": -1.0,
+      "net_expectancy_r": -1.0,
+      "net_profit_dollars": -3571.25,
+      "max_drawdown_percent": 35.71,
+      "oos_net_expectancy_r": -1.0,
+      "oos_profit_factor": 0.0,
+      "is_statistically_robust": false
+    },
+    {
+      "config": {
+        "instrument": "GBPUSD",
+        "session": "ALL_SESSIONS",
+        "regime": "MULTI_REGIME",
+        "setup": "LIQUIDITY_SWEEP_REVERSAL",
+        "entry_timing": "1M_CONFIRM",
+        "sl_atr": 1.0,
+        "tp_atr": 1.5
+      },
+      "sample_size": 4414,
+      "win_rate": 0.0,
+      "profit_factor": 0.0,
+      "gross_expectancy_r": -1.0,
+      "net_expectancy_r": -1.0,
+      "net_profit_dollars": -5296.88,
+      "max_drawdown_percent": 52.97,
+      "oos_net_expectancy_r": -1.0,
+      "oos_profit_factor": 0.0,
+      "is_statistically_robust": false
+    },
+    {
+      "config": {
+        "instrument": "GBPUSD",
+        "session": "ALL_SESSIONS",
+        "regime": "MULTI_REGIME",
+        "setup": "LIQUIDITY_SWEEP_REVERSAL",
+        "entry_timing": "1M_CONFIRM",
+        "sl_atr": 1.5,
+        "tp_atr": 3.0
+      },
+      "sample_size": 4414,
+      "win_rate": 0.0,
+      "profit_factor": 0.0,
+      "gross_expectancy_r": -1.0,
+      "net_expectancy_r": -1.0,
+      "net_profit_dollars": -5296.88,
+      "max_drawdown_percent": 52.97,
+      "oos_net_expectancy_r": -1.0,
+      "oos_profit_factor": 0.0,
+      "is_statistically_robust": false
+    },
+    {
+      "config": {
+        "instrument": "GBPUSD",
+        "session": "ALL_SESSIONS",
+        "regime": "MULTI_REGIME",
+        "setup": "LIQUIDITY_SWEEP_REVERSAL",
+        "entry_timing": "1M_CONFIRM",
+        "sl_atr": 2.0,
+        "tp_atr": 4.0
+      },
+      "sample_size": 4414,
+      "win_rate": 0.0,
+      "profit_factor": 0.0,
+      "gross_expectancy_r": -1.0,
+      "net_expectancy_r": -1.0,
+      "net_profit_dollars": -5296.88,
+      "max_drawdown_percent": 52.97,
+      "oos_net_expectancy_r": -1.0,
+      "oos_profit_factor": 0.0,
+      "is_statistically_robust": false
+    },
+    {
+      "config": {
+        "instrument": "GBPUSD",
+        "session": "ALL_SESSIONS",
+        "regime": "MULTI_REGIME",
+        "setup": "TREND_CONTINUATION",
+        "entry_timing": "1M_CONFIRM",
+        "sl_atr": 1.0,
+        "tp_atr": 1.5
+      },
+      "sample_size": 3410,
+      "win_rate": 0.0,
+      "profit_factor": 0.0,
+      "gross_expectancy_r": -1.0,
+      "net_expectancy_r": -1.0,
+      "net_profit_dollars": -4092.04,
+      "max_drawdown_percent": 40.92,
+      "oos_net_expectancy_r": -1.0,
+      "oos_profit_factor": 0.0,
+      "is_statistically_robust": false
+    },
+    {
+      "config": {
+        "instrument": "GBPUSD",
+        "session": "ALL_SESSIONS",
+        "regime": "MULTI_REGIME",
+        "setup": "TREND_CONTINUATION",
+        "entry_timing": "1M_CONFIRM",
+        "sl_atr": 1.5,
+        "tp_atr": 3.0
+      },
+      "sample_size": 3410,
+      "win_rate": 0.0,
+      "profit_factor": 0.0,
+      "gross_expectancy_r": -1.0,
+      "net_expectancy_r": -1.0,
+      "net_profit_dollars": -4092.04,
+      "max_drawdown_percent": 40.92,
+      "oos_net_expectancy_r": -1.0,
+      "oos_profit_factor": 0.0,
+      "is_statistically_robust": false
+    },
+    {
+      "config": {
+        "instrument": "GBPUSD",
+        "session": "ALL_SESSIONS",
+        "regime": "MULTI_REGIME",
+        "setup": "TREND_CONTINUATION",
+        "entry_timing": "1M_CONFIRM",
+        "sl_atr": 2.0,
+        "tp_atr": 4.0
+      },
+      "sample_size": 3410,
+      "win_rate": 0.0,
+      "profit_factor": 0.0,
+      "gross_expectancy_r": -1.0,
+      "net_expectancy_r": -1.0,
+      "net_profit_dollars": -4092.09,
+      "max_drawdown_percent": 40.92,
+      "oos_net_expectancy_r": -1.0,
+      "oos_profit_factor": 0.0,
+      "is_statistically_robust": false
+    }
+  ],
+  "positive_edge_candidates_count": 0,
+  "multiple_testing_warning": "Evaluated 36 combinations. False Discovery Rate (FDR) control applied.",
+  "final_verdict": "D = Strategy hypothesis should be abandoned (Entry edge still negative after costs)"
+}

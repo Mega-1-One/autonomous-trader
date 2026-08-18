@@ -1,0 +1,30 @@
+{
+  "available_information": [
+    "bid",
+    "ask",
+    "spread",
+    "tick_price",
+    "tick_volume",
+    "multi_asset_timestamp_sync"
+  ],
+  "unavailable_information_evaluation": {
+    "real_volume": {
+      "obtainable": "Yes (Futures market data feed e.g. CME/COMEX)",
+      "mechanism": "True volume measures institutional trade execution intensity",
+      "feasibility": "Requires external data vendor API integration",
+      "research_value": "HIGH"
+    },
+    "order_book_level2": {
+      "obtainable": "Yes (FIX protocol / L2 depth streaming)",
+      "mechanism": "Order book imbalances detect passive liquidity walls",
+      "feasibility": "High data bandwidth & storage requirement",
+      "research_value": "HIGH"
+    },
+    "macro_economic_events": {
+      "obtainable": "Yes (ForexFactory / FXStreet calendar feed)",
+      "mechanism": "High-impact CPI/NFP releases inject macro volatility shocks",
+      "feasibility": "Easy integration via static calendar JSON",
+      "research_value": "MEDIUM"
+    }
+  }
+}

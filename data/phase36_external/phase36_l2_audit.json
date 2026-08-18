@@ -1,0 +1,9 @@
+{
+  "source": "Level-2 Market Depth",
+  "status": "UNAVAILABLE",
+  "reason": "Historical L2 order book depth not provided by CFD broker feed; requires dedicated L2 streaming vendor",
+  "quality_gates": {
+    "schema_validation": "NOT_TESTABLE",
+    "timestamp_validation": "NOT_TESTABLE"
+  }
+}

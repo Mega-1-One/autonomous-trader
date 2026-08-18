@@ -1,0 +1,23 @@
+{
+  "source": "CME / COMEX Gold Futures (GC)",
+  "contract_rollover_methodology": "Volume-based front-month roll with backwardation adjustment",
+  "available_fields": [
+    "timestamp",
+    "trade_price",
+    "trade_volume",
+    "contract_month",
+    "open_interest"
+  ],
+  "unavailable_fields": [
+    "aggressor_buy_sell_flag"
+  ],
+  "information_novelty": "NEW_INFORMATION (Real exchange contract volume & open interest)",
+  "quality_gates": {
+    "schema_validation": "PASS",
+    "timestamp_validation": "PASS",
+    "timezone_validation": "PASS (UTC)",
+    "duplicate_detection": "PASS",
+    "chronological_ordering": "PASS",
+    "missing_data_analysis": "PASS (0.02% gaps during daily maintenance break)"
+  }
+}

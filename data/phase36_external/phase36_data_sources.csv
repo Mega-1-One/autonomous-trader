@@ -1,0 +1,4 @@
+provider,product,historical_depth,timestamp_resolution,volume_availability,novelty_status,suitability
+CME Group,COMEX Gold Futures (GC),365 days,1-minute / Tick,Exchange Contract Volume,NEW_INFORMATION,HIGH
+US Bureau of Labor Statistics,Macro Economic Calendar (CPI/NFP),365 days,Exact Release Timestamp,N/A,NEW_INFORMATION,HIGH
+Level-2 Vendor,L2 Depth Feed,Unavailable,Tick Depth,Unavailable,UNAVAILABLE,LOW

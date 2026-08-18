@@ -1,0 +1,75 @@
+{
+  "frozen_state": "VOLATILITY_COMPRESSION",
+  "instrument": "XAUUSD",
+  "multiple_testing_audit": {
+    "total_phase33_tests": 115,
+    "alpha": 0.05,
+    "family_wise_error_rate": 0.9973,
+    "expected_false_discoveries": 5.75,
+    "conclusion": "With 115 hypothesis tests, an expected 5.75 positive results will occur purely by random chance at 95% confidence."
+  },
+  "threshold_perturbations": {
+    "-10% (0.63)": {
+      "sample_size": 24,
+      "net_expectancy_r": -0.33,
+      "profit_factor": 0.63
+    },
+    "-5% (0.665)": {
+      "sample_size": 68,
+      "net_expectancy_r": -0.39,
+      "profit_factor": 0.55
+    },
+    "Original (0.70)": {
+      "sample_size": 168,
+      "net_expectancy_r": -0.28,
+      "profit_factor": 0.76
+    },
+    "+5% (0.735)": {
+      "sample_size": 312,
+      "net_expectancy_r": -0.2,
+      "profit_factor": 0.98
+    },
+    "+10% (0.77)": {
+      "sample_size": 640,
+      "net_expectancy_r": -0.18,
+      "profit_factor": 1.03
+    }
+  },
+  "placebo_test": {
+    "placebo_n": 142,
+    "placebo_net_expectancy_r": -0.24,
+    "placebo_profit_factor": 0.92,
+    "null_hypothesis_passed": true
+  },
+  "cross_instrument_replication": [
+    {
+      "instrument": "XAUUSD",
+      "sample_size": 168,
+      "net_expectancy_r": -0.28,
+      "profit_factor": 0.76,
+      "replication_status": "ORIGINAL"
+    },
+    {
+      "instrument": "EURUSD",
+      "sample_size": 585,
+      "net_expectancy_r": -1.14,
+      "profit_factor": 0.94,
+      "replication_status": "FAILED"
+    },
+    {
+      "instrument": "GBPUSD",
+      "sample_size": 458,
+      "net_expectancy_r": -0.99,
+      "profit_factor": 1.05,
+      "replication_status": "FAILED"
+    },
+    {
+      "instrument": "NAS100",
+      "sample_size": 372,
+      "net_expectancy_r": -0.21,
+      "profit_factor": 1.08,
+      "replication_status": "FAILED"
+    }
+  ],
+  "final_classification": "C = Likely false discovery (Single positive result out of 115 Phase 33 hypotheses is statistically explained by multiple-testing false discovery; cross-instrument replication failed on EURUSD, GBPUSD, and NAS100)"
+}

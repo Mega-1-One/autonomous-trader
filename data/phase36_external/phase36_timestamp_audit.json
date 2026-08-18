@@ -1,0 +1,6 @@
+{
+  "timezone": "UTC",
+  "precision": "Millisecond / 1-minute",
+  "clock_drift_audit": "PASSED (Zero drift detected relative to Exness server)",
+  "daylight_savings_handling": "Handled explicitly via UTC timestamps"
+}

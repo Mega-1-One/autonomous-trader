@@ -1,0 +1,15 @@
+{
+  "version": "1.0.0",
+  "state_name": "VOLATILITY_COMPRESSION",
+  "instrument": "XAUUSD",
+  "horizon_timeframe": "4H",
+  "horizon_steps": 240,
+  "definition_rules": {
+    "indicator": "atr_ratio",
+    "formula": "atr_14 / atr_30",
+    "condition": "atr_ratio < 0.70",
+    "lookback_fast": 14,
+    "lookback_slow": 30
+  },
+  "dataset_hash_lock": "25833aa4b8fd8428bf170e456c27398933bef0a03d0f56f8cbf47fccff1a6728"
+}

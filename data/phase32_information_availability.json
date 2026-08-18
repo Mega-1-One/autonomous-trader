@@ -1,0 +1,18 @@
+{
+  "version": "1.0.0",
+  "audit_timestamp": "2026-08-18T17:49:00Z",
+  "fields": {
+    "bid": {"status": "AVAILABLE", "description": "Authentic bid price feed from Exness MT5 server"},
+    "ask": {"status": "AVAILABLE", "description": "Authentic ask price feed from Exness MT5 server"},
+    "spread": {"status": "AVAILABLE", "description": "Computed spread (ask - bid) in pips"},
+    "tick_timestamps": {"status": "AVAILABLE", "description": "UTC timestamps with millisecond precision"},
+    "tick_price": {"status": "AVAILABLE", "description": "Authentic tick execution prices"},
+    "tick_volume": {"status": "AVAILABLE", "description": "Aggregated tick count per bar"},
+    "real_volume": {"status": "UNAVAILABLE", "description": "Not provided by MetaTrader 5 CFD feed"},
+    "trade_direction": {"status": "UNAVAILABLE", "description": "No aggressor buy/sell flag in OTC feed"},
+    "order_book_depth": {"status": "UNAVAILABLE", "description": "Level-2 order book depth not streamed"},
+    "level_2": {"status": "UNAVAILABLE", "description": "Market depth unavailable on demo trial server"},
+    "economic_event_timestamps": {"status": "UNAVAILABLE", "description": "Macro economic calendar feed not integrated"},
+    "cross_asset_synchronized_data": {"status": "AVAILABLE", "description": "Synchronized multi-asset timestamp series across XAUUSD, EURUSD, GBPUSD, NAS100"}
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "primary_asset": "Exness XAUUSD",
+  "external_asset": "CME COMEX Gold Futures (GC)",
+  "timestamp_alignment": "1-minute synchronized bar timestamps",
+  "session_gap_handling": "No forward-filling across market breaks",
+  "quality": "HIGH (99.8% timestamp overlap during active trading hours)"
+}

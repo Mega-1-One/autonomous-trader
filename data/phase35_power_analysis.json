@@ -1,0 +1,17 @@
+{
+  "effect_0.03R": {
+    "effect_size_r": 0.03,
+    "required_sample_size_80pct_power": 8712,
+    "feasibility": "Feasible on 1M/5M continuous feeds"
+  },
+  "effect_0.05R": {
+    "effect_size_r": 0.05,
+    "required_sample_size_80pct_power": 3136,
+    "feasibility": "Feasible on 1M/5M continuous feeds"
+  },
+  "effect_0.1R": {
+    "effect_size_r": 0.1,
+    "required_sample_size_80pct_power": 784,
+    "feasibility": "Feasible on 1M/5M continuous feeds"
+  }
+}

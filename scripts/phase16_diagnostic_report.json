@@ -1,0 +1,502 @@
+{
+  "XAUUSD": {
+    "score_0.5": {
+      "total_trades": 3,
+      "wins": 0,
+      "losses": 3,
+      "win_rate": 0.0,
+      "avg_win": 0.0,
+      "avg_loss": 4.28,
+      "expectancy_r": -1.0,
+      "profit_factor": 0.0,
+      "avg_r_multiple": 0.0,
+      "max_drawdown_percent": 0.13,
+      "max_consecutive_losses": 3,
+      "avg_holding_time_sec": 0.0,
+      "median_holding_time_sec": 0.0,
+      "gross_profit": 0.0,
+      "gross_loss": 12.85,
+      "spread_cost": 12.48,
+      "slippage_cost": 0.56,
+      "commission_cost": 3.36,
+      "net_profit": -12.85,
+      "regime_breakdown": {
+        "TRENDING_UP": {
+          "trades": 2,
+          "wins": 0,
+          "net_pnl": -8.58
+        },
+        "TRENDING_DOWN": {
+          "trades": 1,
+          "wins": 0,
+          "net_pnl": -4.27
+        }
+      },
+      "validation_passed": false,
+      "validation_reasons": [
+        "Expectancy (-1.0 R) below threshold (0.15 R)",
+        "Profit Factor (0.0) below threshold (1.2)"
+      ]
+    },
+    "score_0.55": {
+      "total_trades": 3,
+      "wins": 0,
+      "losses": 3,
+      "win_rate": 0.0,
+      "avg_win": 0.0,
+      "avg_loss": 4.28,
+      "expectancy_r": -1.0,
+      "profit_factor": 0.0,
+      "avg_r_multiple": 0.0,
+      "max_drawdown_percent": 0.13,
+      "max_consecutive_losses": 3,
+      "avg_holding_time_sec": 0.0,
+      "median_holding_time_sec": 0.0,
+      "gross_profit": 0.0,
+      "gross_loss": 12.85,
+      "spread_cost": 12.48,
+      "slippage_cost": 0.56,
+      "commission_cost": 3.36,
+      "net_profit": -12.85,
+      "regime_breakdown": {
+        "TRENDING_UP": {
+          "trades": 2,
+          "wins": 0,
+          "net_pnl": -8.58
+        },
+        "TRENDING_DOWN": {
+          "trades": 1,
+          "wins": 0,
+          "net_pnl": -4.27
+        }
+      },
+      "validation_passed": false,
+      "validation_reasons": [
+        "Expectancy (-1.0 R) below threshold (0.15 R)",
+        "Profit Factor (0.0) below threshold (1.2)"
+      ]
+    },
+    "score_0.6": {
+      "total_trades": 3,
+      "wins": 0,
+      "losses": 3,
+      "win_rate": 0.0,
+      "avg_win": 0.0,
+      "avg_loss": 4.28,
+      "expectancy_r": -1.0,
+      "profit_factor": 0.0,
+      "avg_r_multiple": 0.0,
+      "max_drawdown_percent": 0.13,
+      "max_consecutive_losses": 3,
+      "avg_holding_time_sec": 0.0,
+      "median_holding_time_sec": 0.0,
+      "gross_profit": 0.0,
+      "gross_loss": 12.85,
+      "spread_cost": 12.48,
+      "slippage_cost": 0.56,
+      "commission_cost": 3.36,
+      "net_profit": -12.85,
+      "regime_breakdown": {
+        "TRENDING_UP": {
+          "trades": 2,
+          "wins": 0,
+          "net_pnl": -8.58
+        },
+        "TRENDING_DOWN": {
+          "trades": 1,
+          "wins": 0,
+          "net_pnl": -4.27
+        }
+      },
+      "validation_passed": false,
+      "validation_reasons": [
+        "Expectancy (-1.0 R) below threshold (0.15 R)",
+        "Profit Factor (0.0) below threshold (1.2)"
+      ]
+    },
+    "score_0.65": {
+      "total_trades": 4,
+      "wins": 0,
+      "losses": 4,
+      "win_rate": 0.0,
+      "avg_win": 0.0,
+      "avg_loss": 3.73,
+      "expectancy_r": -1.0,
+      "profit_factor": 0.0,
+      "avg_r_multiple": 0.0,
+      "max_drawdown_percent": 0.15,
+      "max_consecutive_losses": 4,
+      "avg_holding_time_sec": 0.25,
+      "median_holding_time_sec": 0.0,
+      "gross_profit": 0.0,
+      "gross_loss": 14.93,
+      "spread_cost": 16.64,
+      "slippage_cost": 0.75,
+      "commission_cost": 4.48,
+      "net_profit": -14.93,
+      "regime_breakdown": {
+        "TRENDING_UP": {
+          "trades": 3,
+          "wins": 0,
+          "net_pnl": -10.66
+        },
+        "TRENDING_DOWN": {
+          "trades": 1,
+          "wins": 0,
+          "net_pnl": -4.27
+        }
+      },
+      "validation_passed": false,
+      "validation_reasons": [
+        "Expectancy (-1.0 R) below threshold (0.15 R)",
+        "Profit Factor (0.0) below threshold (1.2)"
+      ]
+    }
+  },
+  "EURUSD": {
+    "score_0.5": {
+      "total_trades": 4,
+      "wins": 0,
+      "losses": 4,
+      "win_rate": 0.0,
+      "avg_win": 0.0,
+      "avg_loss": 11.64,
+      "expectancy_r": -1.0,
+      "profit_factor": 0.0,
+      "avg_r_multiple": 0.0,
+      "max_drawdown_percent": 0.47,
+      "max_consecutive_losses": 4,
+      "avg_holding_time_sec": 31.25,
+      "median_holding_time_sec": 30.5,
+      "gross_profit": 0.0,
+      "gross_loss": 46.56,
+      "spread_cost": 0.04,
+      "slippage_cost": 0.0,
+      "commission_cost": 46.48,
+      "net_profit": -46.56,
+      "regime_breakdown": {
+        "BREAKOUT": {
+          "trades": 4,
+          "wins": 0,
+          "net_pnl": -46.56
+        }
+      },
+      "validation_passed": false,
+      "validation_reasons": [
+        "Expectancy (-1.0 R) below threshold (0.15 R)",
+        "Profit Factor (0.0) below threshold (1.2)"
+      ]
+    },
+    "score_0.55": {
+      "total_trades": 1,
+      "wins": 0,
+      "losses": 1,
+      "win_rate": 0.0,
+      "avg_win": 0.0,
+      "avg_loss": 11.62,
+      "expectancy_r": -1.0,
+      "profit_factor": 0.0,
+      "avg_r_multiple": 0.0,
+      "max_drawdown_percent": 0.12,
+      "max_consecutive_losses": 1,
+      "avg_holding_time_sec": 31.0,
+      "median_holding_time_sec": 31.0,
+      "gross_profit": 0.0,
+      "gross_loss": 11.62,
+      "spread_cost": 0.01,
+      "slippage_cost": 0.0,
+      "commission_cost": 11.62,
+      "net_profit": -11.62,
+      "regime_breakdown": {
+        "BREAKOUT": {
+          "trades": 1,
+          "wins": 0,
+          "net_pnl": -11.62
+        }
+      },
+      "validation_passed": false,
+      "validation_reasons": [
+        "Expectancy (-1.0 R) below threshold (0.15 R)",
+        "Profit Factor (0.0) below threshold (1.2)"
+      ]
+    },
+    "score_0.6": {
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0.0,
+      "avg_win": 0.0,
+      "avg_loss": 0.0,
+      "expectancy_r": 0.0,
+      "profit_factor": 0.0,
+      "avg_r_multiple": 0.0,
+      "max_drawdown_percent": 0.0,
+      "max_consecutive_losses": 0,
+      "avg_holding_time_sec": 0.0,
+      "median_holding_time_sec": 0.0,
+      "gross_profit": 0.0,
+      "gross_loss": 0.0,
+      "spread_cost": 0.0,
+      "slippage_cost": 0.0,
+      "commission_cost": 0.0,
+      "net_profit": 0.0,
+      "regime_breakdown": {},
+      "validation_passed": false,
+      "validation_reasons": [
+        "No trades executed"
+      ]
+    },
+    "score_0.65": {
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0.0,
+      "avg_win": 0.0,
+      "avg_loss": 0.0,
+      "expectancy_r": 0.0,
+      "profit_factor": 0.0,
+      "avg_r_multiple": 0.0,
+      "max_drawdown_percent": 0.0,
+      "max_consecutive_losses": 0,
+      "avg_holding_time_sec": 0.0,
+      "median_holding_time_sec": 0.0,
+      "gross_profit": 0.0,
+      "gross_loss": 0.0,
+      "spread_cost": 0.0,
+      "slippage_cost": 0.0,
+      "commission_cost": 0.0,
+      "net_profit": 0.0,
+      "regime_breakdown": {},
+      "validation_passed": false,
+      "validation_reasons": [
+        "No trades executed"
+      ]
+    }
+  },
+  "GBPUSD": {
+    "score_0.5": {
+      "total_trades": 3,
+      "wins": 0,
+      "losses": 3,
+      "win_rate": 0.0,
+      "avg_win": 0.0,
+      "avg_loss": 11.65,
+      "expectancy_r": -1.0,
+      "profit_factor": 0.0,
+      "avg_r_multiple": 0.0,
+      "max_drawdown_percent": 0.35,
+      "max_consecutive_losses": 3,
+      "avg_holding_time_sec": 21.33,
+      "median_holding_time_sec": 30.0,
+      "gross_profit": 0.0,
+      "gross_loss": 34.96,
+      "spread_cost": 0.06,
+      "slippage_cost": 0.0,
+      "commission_cost": 34.86,
+      "net_profit": -34.96,
+      "regime_breakdown": {
+        "BREAKOUT": {
+          "trades": 3,
+          "wins": 0,
+          "net_pnl": -34.96
+        }
+      },
+      "validation_passed": false,
+      "validation_reasons": [
+        "Expectancy (-1.0 R) below threshold (0.15 R)",
+        "Profit Factor (0.0) below threshold (1.2)"
+      ]
+    },
+    "score_0.55": {
+      "total_trades": 1,
+      "wins": 0,
+      "losses": 1,
+      "win_rate": 0.0,
+      "avg_win": 0.0,
+      "avg_loss": 11.63,
+      "expectancy_r": -1.0,
+      "profit_factor": 0.0,
+      "avg_r_multiple": 0.0,
+      "max_drawdown_percent": 0.12,
+      "max_consecutive_losses": 1,
+      "avg_holding_time_sec": 31.0,
+      "median_holding_time_sec": 31.0,
+      "gross_profit": 0.0,
+      "gross_loss": 11.63,
+      "spread_cost": 0.02,
+      "slippage_cost": 0.0,
+      "commission_cost": 11.62,
+      "net_profit": -11.63,
+      "regime_breakdown": {
+        "BREAKOUT": {
+          "trades": 1,
+          "wins": 0,
+          "net_pnl": -11.63
+        }
+      },
+      "validation_passed": false,
+      "validation_reasons": [
+        "Expectancy (-1.0 R) below threshold (0.15 R)",
+        "Profit Factor (0.0) below threshold (1.2)"
+      ]
+    },
+    "score_0.6": {
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0.0,
+      "avg_win": 0.0,
+      "avg_loss": 0.0,
+      "expectancy_r": 0.0,
+      "profit_factor": 0.0,
+      "avg_r_multiple": 0.0,
+      "max_drawdown_percent": 0.0,
+      "max_consecutive_losses": 0,
+      "avg_holding_time_sec": 0.0,
+      "median_holding_time_sec": 0.0,
+      "gross_profit": 0.0,
+      "gross_loss": 0.0,
+      "spread_cost": 0.0,
+      "slippage_cost": 0.0,
+      "commission_cost": 0.0,
+      "net_profit": 0.0,
+      "regime_breakdown": {},
+      "validation_passed": false,
+      "validation_reasons": [
+        "No trades executed"
+      ]
+    },
+    "score_0.65": {
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0.0,
+      "avg_win": 0.0,
+      "avg_loss": 0.0,
+      "expectancy_r": 0.0,
+      "profit_factor": 0.0,
+      "avg_r_multiple": 0.0,
+      "max_drawdown_percent": 0.0,
+      "max_consecutive_losses": 0,
+      "avg_holding_time_sec": 0.0,
+      "median_holding_time_sec": 0.0,
+      "gross_profit": 0.0,
+      "gross_loss": 0.0,
+      "spread_cost": 0.0,
+      "slippage_cost": 0.0,
+      "commission_cost": 0.0,
+      "net_profit": 0.0,
+      "regime_breakdown": {},
+      "validation_passed": false,
+      "validation_reasons": [
+        "No trades executed"
+      ]
+    }
+  },
+  "NAS100": {
+    "score_0.5": {
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0.0,
+      "avg_win": 0.0,
+      "avg_loss": 0.0,
+      "expectancy_r": 0.0,
+      "profit_factor": 0.0,
+      "avg_r_multiple": 0.0,
+      "max_drawdown_percent": 0.0,
+      "max_consecutive_losses": 0,
+      "avg_holding_time_sec": 0.0,
+      "median_holding_time_sec": 0.0,
+      "gross_profit": 0.0,
+      "gross_loss": 0.0,
+      "spread_cost": 0.0,
+      "slippage_cost": 0.0,
+      "commission_cost": 0.0,
+      "net_profit": 0.0,
+      "regime_breakdown": {},
+      "validation_passed": false,
+      "validation_reasons": [
+        "No trades executed"
+      ]
+    },
+    "score_0.55": {
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0.0,
+      "avg_win": 0.0,
+      "avg_loss": 0.0,
+      "expectancy_r": 0.0,
+      "profit_factor": 0.0,
+      "avg_r_multiple": 0.0,
+      "max_drawdown_percent": 0.0,
+      "max_consecutive_losses": 0,
+      "avg_holding_time_sec": 0.0,
+      "median_holding_time_sec": 0.0,
+      "gross_profit": 0.0,
+      "gross_loss": 0.0,
+      "spread_cost": 0.0,
+      "slippage_cost": 0.0,
+      "commission_cost": 0.0,
+      "net_profit": 0.0,
+      "regime_breakdown": {},
+      "validation_passed": false,
+      "validation_reasons": [
+        "No trades executed"
+      ]
+    },
+    "score_0.6": {
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0.0,
+      "avg_win": 0.0,
+      "avg_loss": 0.0,
+      "expectancy_r": 0.0,
+      "profit_factor": 0.0,
+      "avg_r_multiple": 0.0,
+      "max_drawdown_percent": 0.0,
+      "max_consecutive_losses": 0,
+      "avg_holding_time_sec": 0.0,
+      "median_holding_time_sec": 0.0,
+      "gross_profit": 0.0,
+      "gross_loss": 0.0,
+      "spread_cost": 0.0,
+      "slippage_cost": 0.0,
+      "commission_cost": 0.0,
+      "net_profit": 0.0,
+      "regime_breakdown": {},
+      "validation_passed": false,
+      "validation_reasons": [
+        "No trades executed"
+      ]
+    },
+    "score_0.65": {
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0.0,
+      "avg_win": 0.0,
+      "avg_loss": 0.0,
+      "expectancy_r": 0.0,
+      "profit_factor": 0.0,
+      "avg_r_multiple": 0.0,
+      "max_drawdown_percent": 0.0,
+      "max_consecutive_losses": 0,
+      "avg_holding_time_sec": 0.0,
+      "median_holding_time_sec": 0.0,
+      "gross_profit": 0.0,
+      "gross_loss": 0.0,
+      "spread_cost": 0.0,
+      "slippage_cost": 0.0,
+      "commission_cost": 0.0,
+      "net_profit": 0.0,
+      "regime_breakdown": {},
+      "validation_passed": false,
+      "validation_reasons": [
+        "No trades executed"
+      ]
+    }
+  }
+}

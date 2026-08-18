@@ -1,0 +1,145 @@
+{
+  "pipeline_manifest": {
+    "version": "1.0.0",
+    "global_status": "RESEARCH_READY",
+    "symbols": {
+      "XAUUSD": {
+        "total_ticks": 25267,
+        "valid_ticks": 25267,
+        "rejected_ticks": 0,
+        "duplicates": 0,
+        "duration_days": 8.0,
+        "candles": {
+          "1m": 8188,
+          "5m": 1656,
+          "15m": 552,
+          "1h": 138,
+          "4h": 37
+        },
+        "spread_metrics": {
+          "median_pips": 2.6,
+          "p95_pips": 2.6,
+          "max_pips": 6.0
+        },
+        "data_quality_score": 1.0,
+        "chronological_split": {
+          "train_start_ts": 1786320000.0,
+          "train_end_ts": 1786613008.0,
+          "train_count": 15160,
+          "val_start_ts": 1786613041.0,
+          "val_end_ts": 1786712944.0,
+          "val_count": 5053,
+          "oos_start_ts": 1786712962.0,
+          "oos_end_ts": 1787011172.0,
+          "oos_count": 5054,
+          "is_chronological": true,
+          "data_leakage_detected": false
+        },
+        "validation_status": "PASS"
+      },
+      "EURUSD": {
+        "total_ticks": 26045,
+        "valid_ticks": 26041,
+        "rejected_ticks": 4,
+        "duplicates": 4,
+        "duration_days": 8.0,
+        "candles": {
+          "1m": 8218,
+          "5m": 1723,
+          "15m": 576,
+          "1h": 144,
+          "4h": 37
+        },
+        "spread_metrics": {
+          "median_pips": 0.8,
+          "p95_pips": 0.8,
+          "max_pips": 7.2
+        },
+        "data_quality_score": 0.9998,
+        "chronological_split": {
+          "train_start_ts": 1786320000.0,
+          "train_end_ts": 1786631304.0,
+          "train_count": 15624,
+          "val_start_ts": 1786631313.0,
+          "val_end_ts": 1786730248.0,
+          "val_count": 5208,
+          "oos_start_ts": 1786730280.0,
+          "oos_end_ts": 1787011164.0,
+          "oos_count": 5209,
+          "is_chronological": true,
+          "data_leakage_detected": false
+        },
+        "validation_status": "PASS"
+      },
+      "GBPUSD": {
+        "total_ticks": 27193,
+        "valid_ticks": 27192,
+        "rejected_ticks": 1,
+        "duplicates": 1,
+        "duration_days": 8.0,
+        "candles": {
+          "1m": 8324,
+          "5m": 1722,
+          "15m": 576,
+          "1h": 144,
+          "4h": 37
+        },
+        "spread_metrics": {
+          "median_pips": 1.0,
+          "p95_pips": 1.0,
+          "max_pips": 24.4
+        },
+        "data_quality_score": 1.0,
+        "chronological_split": {
+          "train_start_ts": 1786320000.0,
+          "train_end_ts": 1786630319.0,
+          "train_count": 16315,
+          "val_start_ts": 1786630326.0,
+          "val_end_ts": 1786726210.0,
+          "val_count": 5438,
+          "oos_start_ts": 1786726245.0,
+          "oos_end_ts": 1787011180.0,
+          "oos_count": 5439,
+          "is_chronological": true,
+          "data_leakage_detected": false
+        },
+        "validation_status": "PASS"
+      },
+      "NAS100": {
+        "total_ticks": 25181,
+        "valid_ticks": 25170,
+        "rejected_ticks": 11,
+        "duplicates": 11,
+        "duration_days": 8.0,
+        "candles": {
+          "1m": 7500,
+          "5m": 1655,
+          "15m": 552,
+          "1h": 138,
+          "4h": 37
+        },
+        "spread_metrics": {
+          "median_pips": 1.27,
+          "p95_pips": 1.27,
+          "max_pips": 2.4
+        },
+        "data_quality_score": 0.9996,
+        "chronological_split": {
+          "train_start_ts": 1786320000.0,
+          "train_end_ts": 1786724132.0,
+          "train_count": 15102,
+          "val_start_ts": 1786724166.0,
+          "val_end_ts": 1786974322.0,
+          "val_count": 5034,
+          "oos_start_ts": 1786974323.0,
+          "oos_end_ts": 1787011178.0,
+          "oos_count": 5034,
+          "is_chronological": true,
+          "data_leakage_detected": false
+        },
+        "validation_status": "PASS"
+      }
+    }
+  },
+  "final_verdict": "B \u2014 PARTIALLY READY (Data pipeline, candle reconstruction, zero-lookahead, and chronological splitting validated; historical coverage depth spans 8.0 days, 12-month ingestion interface ready)"
+}

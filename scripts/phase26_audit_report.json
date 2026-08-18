@@ -1,0 +1,89 @@
+{
+  "coverage_audit": {
+    "XAUUSD": {
+      "symbol": "XAUUSD",
+      "total_ticks": 25267,
+      "start_timestamp": 1786320000.0,
+      "end_timestamp": 1787011172.0,
+      "duration_days": 8.0,
+      "c1m_count": 11520,
+      "c5m_count": 2304,
+      "c15m_count": 768,
+      "c1h_count": 192,
+      "c4h_count": 48,
+      "data_sufficient_for_htf": false,
+      "recommended_min_history_months": 12
+    },
+    "EURUSD": {
+      "symbol": "EURUSD",
+      "total_ticks": 26045,
+      "start_timestamp": 1786320000.0,
+      "end_timestamp": 1787011164.0,
+      "duration_days": 8.0,
+      "c1m_count": 11520,
+      "c5m_count": 2304,
+      "c15m_count": 768,
+      "c1h_count": 192,
+      "c4h_count": 48,
+      "data_sufficient_for_htf": false,
+      "recommended_min_history_months": 12
+    },
+    "GBPUSD": {
+      "symbol": "GBPUSD",
+      "total_ticks": 27193,
+      "start_timestamp": 1786320000.0,
+      "end_timestamp": 1787011180.0,
+      "duration_days": 8.0,
+      "c1m_count": 11520,
+      "c5m_count": 2304,
+      "c15m_count": 768,
+      "c1h_count": 192,
+      "c4h_count": 48,
+      "data_sufficient_for_htf": false,
+      "recommended_min_history_months": 12
+    },
+    "NAS100": {
+      "symbol": "NAS100",
+      "total_ticks": 25181,
+      "start_timestamp": 1786320000.0,
+      "end_timestamp": 1787011178.0,
+      "duration_days": 8.0,
+      "c1m_count": 11520,
+      "c5m_count": 2304,
+      "c15m_count": 768,
+      "c1h_count": 192,
+      "c4h_count": 48,
+      "data_sufficient_for_htf": false,
+      "recommended_min_history_months": 12
+    }
+  },
+  "cost_model_sensitivity": {
+    "zero_cost_baseline": {
+      "expectancy_r": -0.05,
+      "profit_factor": 0.92,
+      "diagnosis": "Fundamentally Negative Before Costs"
+    },
+    "median_ecn_cost": {
+      "expectancy_r": -0.17,
+      "profit_factor": 0.76,
+      "diagnosis": "Significantly Degraded by ECN Costs"
+    },
+    "stress_high_cost": {
+      "expectancy_r": -0.36,
+      "profit_factor": 0.53,
+      "diagnosis": "Severely Impaired by Transaction Friction"
+    }
+  },
+  "minimum_dataset_requirement": {
+    "current_history_days": 8.0,
+    "recommended_min_history_months": 12,
+    "required_market_regimes": [
+      "Bull Market",
+      "Bear Market",
+      "Range",
+      "High Volatility",
+      "Low Volatility"
+    ]
+  },
+  "final_diagnostic_verdict": "B = Infrastructure valid but dataset insufficient (Current 8-day dataset is insufficient for 15M/1H/4H swing strategy evaluation; minimum 12 months required)"
+}

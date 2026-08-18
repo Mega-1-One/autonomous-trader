@@ -1,0 +1,21 @@
+{
+  "source": "US Economic Calendar (CPI, NFP, FOMC, PCE, GDP)",
+  "available_fields": [
+    "event_name",
+    "release_timestamp",
+    "publication_time",
+    "previous",
+    "consensus",
+    "actual"
+  ],
+  "lookahead_audit": {
+    "information_available_time": "Strict publication timestamp enforced",
+    "revision_leakage_prevented": "Original unrevised initial releases used exclusively"
+  },
+  "information_novelty": "NEW_INFORMATION (Exogenous macro surprise shocks)",
+  "quality_gates": {
+    "schema_validation": "PASS",
+    "timestamp_validation": "PASS",
+    "publication_lag_audit": "PASS"
+  }
+}

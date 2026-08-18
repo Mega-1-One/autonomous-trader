@@ -1,0 +1,8 @@
+family,instruments,timeframes,features_used,num_hypotheses,oos_result,statistical_controls,classification,is_exhausted
+Directional Micro-Scalping,XAUUSD,1M,"Tick momentum, bid/ask delta",103546,Cost drag negative,None,EXHAUSTED,True
+ICT/SMC Liquidity Sweeps,ALL 4,1M-15M,"Sweep events, swing highs/lows",36000,Gross exp <= 0,Sample gating,EXHAUSTED,True
+Simple Directional Baselines,ALL 4,1M,"MA crossover, RSI, Breakout",160000,Negative OOS net exp,Split validation,EXHAUSTED,True
+Regime-Conditional Setups,ALL 4,1M-4H,Setups x Volatility/Trend regimes,200000,0/200 positive OOS,N >= 100 filter,EXHAUSTED,True
+Technical Predictive Features,ALL 4,1M-4H,15 price-derived indicators,360000,0/360 FDR significant,Benjamini-Hochberg,EXHAUSTED,True
+Microstructure & Cross-Asset,ALL 4,1M-4H,"Spread dynamics, lead/lag returns",264000,0/264 FDR significant,Benjamini-Hochberg,EXHAUSTED,True
+Market State Distributions,ALL 4,1M-4H,Volatility compression / expansion,115000,Likely false discovery,FWER audit,EXHAUSTED,True
