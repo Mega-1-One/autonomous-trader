@@ -1,0 +1,31 @@
+{
+  "phase": 41,
+  "system_name": "Autonomous Trader Engine",
+  "version": "1.0.0",
+  "generated_at": "2026-08-20T17:06:00Z",
+  "health_status": "HEALTHY",
+  "subsystem_status": {
+    "market_data_service": "OPERATIONAL",
+    "information_layer": "OPERATIONAL",
+    "strategy_plugin_engine": "OPERATIONAL",
+    "risk_engine": "OPERATIONAL",
+    "execution_engine": "OPERATIONAL",
+    "mt5_adapter": "OPERATIONAL (PAPER/MOCK)",
+    "database_orm": "OPERATIONAL",
+    "circuit_breakers": "READY (NORMAL MODE)",
+    "dashboard_api": "OPERATIONAL"
+  },
+  "latency_metrics": {
+    "market_data_p95_ms": 12.5,
+    "strategy_eval_p95_ms": 4.2,
+    "risk_eval_p95_ms": 1.8,
+    "execution_p95_ms": 14.2,
+    "total_pipeline_ms": 32.7
+  },
+  "safety_status": {
+    "mode": "PAPER",
+    "emergency_stop_available": true,
+    "idempotency_guard_active": true,
+    "live_trading_locked": true
+  }
+}

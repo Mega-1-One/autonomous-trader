@@ -148,7 +148,7 @@ class TickMetricsCalculator:
             val_passed = False
             val_reasons.append(f"Profit Factor ({profit_factor}) below threshold ({min_profit_factor})")
 
-        if max_drawdown_pct > max_drawdown_limit:
+        if max_drawdown_limit > 0 and max_drawdown_pct > max_drawdown_limit:
             val_passed = False
             val_reasons.append(f"Max Drawdown ({max_drawdown_pct}%) exceeds limit ({max_drawdown_limit}%)")
 

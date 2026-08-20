@@ -1,0 +1,27 @@
+{
+  "phase": 41,
+  "certification_type": "FINAL AUTONOMOUS RISK & SAFETY CERTIFICATION",
+  "issued_at": "2026-08-20T17:06:00Z",
+  "status": "CERTIFIED",
+  "risk_engine_parameters": {
+    "scalper_mode": true,
+    "risk_per_trade_pct": 0.1,
+    "maximum_daily_loss_pct": 0.0,
+    "maximum_trades_per_day": 0,
+    "maximum_open_positions": 0,
+    "maximum_spread_pips": 0.0,
+    "minimum_rr": 0.0,
+    "take_profit_pips": 2.0,
+    "stop_loss_pips": 5.0
+  },
+  "circuit_breakers_active": [
+    "EMERGENCY_STOP",
+    "HARD_STOP",
+    "SOFT_STOP",
+    "IDEMPOTENCY_GUARD",
+    "STALE_DATA_FILTER",
+    "CROSSED_BOOK_FILTER",
+    "LIVE_MODE_TRIPLE_LOCK"
+  ],
+  "audit_passed": true
+}

@@ -1,0 +1,26 @@
+{
+  "phase": 38,
+  "phase_name": "STRATEGY / SIGNAL ENGINE INTEGRATION",
+  "status": "COMPLETED",
+  "verdict": "READY FOR PHASE 39",
+  "dataset_manifest_hash": "25833aa4b8fd8428bf170e456c27398933bef0a03d0f56f8cbf47fccff1a6728",
+  "strategy_registered": {
+    "name": "UNVALIDATED_RESEARCH_STRATEGY",
+    "version": "1.0.0-PROSPECTIVE",
+    "profitability_claimed": false,
+    "quality_gate_stages": [
+      "DUPLICATE_PROTECTION",
+      "DATA_QUALITY",
+      "MARKET_STATE",
+      "STRATEGY_VALIDATION",
+      "RISK_VALIDATION",
+      "EXECUTION_VALIDATION"
+    ]
+  },
+  "modules_registered": [
+    "app.strategy.plugin",
+    "app.strategy.engine"
+  ],
+  "verification_tests": "backend/tests/test_phase38_signal_engine.py",
+  "timestamp": "2026-08-20T17:04:00Z"
+}

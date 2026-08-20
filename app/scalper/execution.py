@@ -12,11 +12,18 @@ from app.scalper.cooldown import CooldownManager
 class ScalpPaperExecutionEngine:
     """High-speed Paper Execution Router capturing signal-to-order latency and simulated fills."""
 
-    def __init__(self, position_manager: Optional[ScalpPositionManager] = None):
+    def __init__(
+        self,
+        position_manager: Optional[ScalpPositionManager] = None,
+        cooldown_seconds: int = 0,
+        max_consecutive_losses: int = 0,
+        max_open_positions: int = 0
+    ):
         if position_manager is None:
             position_manager = ScalpPositionManager(max_holding_seconds=30.0)
         self.position_manager = position_manager
-        self.cooldown_manager = CooldownManager(cooldown_seconds=15, max_consecutive_losses=3)
+        self.cooldown_manager = CooldownManager(cooldown_seconds=cooldown_seconds, max_consecutive_losses=max_consecutive_losses)
+        self.max_open_positions = max_open_positions
 
     def execute_scalp_opportunity(
         self,
@@ -35,10 +42,11 @@ class ScalpPaperExecutionEngine:
         if self.cooldown_manager.is_in_cooldown(now):
             return {"status": "REJECTED", "reason": "Trade cooldown active"}
 
-        # 2. Check Open Position Limit
-        open_positions = [p for p in self.position_manager.positions.values() if p.status == "OPEN"]
-        if len(open_positions) >= 1:
-            return {"status": "REJECTED", "reason": "Max open position limit (1) reached"}
+        # 2. Check Open Position Limit (0 = disabled / unlimited)
+        if self.max_open_positions > 0:
+            open_positions = [p for p in self.position_manager.positions.values() if p.status == "OPEN"]
+            if len(open_positions) >= self.max_open_positions:
+                return {"status": "REJECTED", "reason": f"Max open position limit ({self.max_open_positions}) reached"}
 
         # 3. Simulate Fill & Latency Measurement
         fill_price = signal.entry_reference

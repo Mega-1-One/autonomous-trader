@@ -16,9 +16,9 @@ class AutonomousScalperDaemon:
         self,
         symbol: str = "EURUSDm",
         max_holding_seconds: float = 45.0,
-        risk_percent: float = 1.0,
-        cooldown_seconds: int = 15,
-        max_drawdown_pct: float = 15.0
+        risk_percent: float = 0.1,
+        cooldown_seconds: int = 0,
+        max_drawdown_pct: float = 0.0
     ):
         self.symbol = symbol
         self.max_holding_seconds = max_holding_seconds
@@ -79,7 +79,7 @@ class AutonomousScalperDaemon:
         print(f"Target Risk/Reward:   5.0 pips SL / 10.0 pips TP")
         print(f"Max Holding Horizon:  {self.max_holding_seconds} seconds")
         print(f"Post-Trade Cooldown:  {self.cooldown_seconds} seconds")
-        print(f"Equity Stop Guard:    {self.max_drawdown_pct}%")
+        print(f"Equity Stop Guard:    {self.max_drawdown_pct if self.max_drawdown_pct > 0 else 'Disabled (Continuous Scalp)'}")
         print("==================================================")
         print("Scanning live MT5 market for autonomous scalp signals...")
         print("Press Ctrl+C in terminal to stop at any time.\n")
@@ -98,7 +98,7 @@ class AutonomousScalperDaemon:
                     balance = acc_curr.balance
                     equity = acc_curr.equity
                     dd_pct = ((start_balance - equity) / start_balance) * 100.0
-                    if dd_pct >= self.max_drawdown_pct:
+                    if self.max_drawdown_pct > 0 and dd_pct >= self.max_drawdown_pct:
                         print(f"\n[EQUITY GUARD TRIGGERED ({dd_pct:.1f}% DD)] Stopping autonomous scalp daemon.")
                         break
 

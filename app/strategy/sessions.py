@@ -8,7 +8,8 @@ class SessionFilter:
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         if config is None:
             config = settings.strategy_config.get("sessions", {})
-        
+
+        self.sessions_enabled = config.get("enabled", True)
         self.london_enabled = config.get("london", {}).get("enabled", True)
         self.london_start = time.fromisoformat(config.get("london", {}).get("start_utc", "07:00"))
         self.london_end = time.fromisoformat(config.get("london", {}).get("end_utc", "16:00"))
@@ -19,6 +20,9 @@ class SessionFilter:
 
     def is_in_active_session(self, timestamp: Optional[str] = None) -> tuple[bool, str]:
         """Determines if given UTC timestamp falls inside an enabled trading session."""
+        if not self.sessions_enabled or (not self.london_enabled and not self.ny_enabled):
+            return True, "Always On (Scalp)"
+
         if timestamp:
             dt = datetime.fromisoformat(timestamp)
         else:

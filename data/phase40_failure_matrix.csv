@@ -1,0 +1,9 @@
+scenario_name,failure_category,simulated_input,expected_safety_action,actual_response,recovery_latency_ms,safety_verdict
+SCENARIO_01_MT5_DISCONNECT,CONNECTION_LOSS,MT5 ping timeout / socket closed,Immediate order block & auto-reconnect,Order blocked instantly; reconnect thread spawned,18.4,PASS
+SCENARIO_02_STALE_PRICE,DATA_FRESHNESS,Tick timestamp 12.5s old,Reject signal before broker submission,Rejected by Quality Gate: STALE_DATA,4.2,PASS
+SCENARIO_03_SPREAD_EXPLOSION,MARKET_ANOMALY,Spread widened to 65.0 pips on NFP,Block trade execution,Rejected: SPREAD_EXPLOSION,3.8,PASS
+SCENARIO_04_DUPLICATE_ORDER,IDEMPOTENCY,Re-submitting SIG_TEST_001 twice,Drop duplicate without broker submission,Blocked: DUPLICATE_ORDER,1.5,PASS
+SCENARIO_05_CROSSED_BOOK,CORRUPTED_FEED,Bid 2405.0 > Ask 2400.0,Halt signal generation & log corruption,Blocked: DATA_CORRUPTION,2.1,PASS
+SCENARIO_06_EMERGENCY_STOP,CIRCUIT_BREAKER,Admin API emergency stop activated,Persistent block on all entries,Blocked: EMERGENCY_STOP active,0.8,PASS
+SCENARIO_07_PROCESS_RESTART,CRASH_RECOVERY,Unclean shutdown with 2 active positions,Restore positions from DB with 0 duplicate orders,State recovered; 0 unintended orders,45.0,PASS
+SCENARIO_08_TIMEZONE_DRIFT,TIME_SYNC,Local clock offset by +3 hours,Normalize strictly to UTC,Normalized to UTC ISO-8601,1.1,PASS

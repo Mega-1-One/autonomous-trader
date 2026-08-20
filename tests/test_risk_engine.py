@@ -37,7 +37,8 @@ def test_evaluate_trade_risk_approval():
     assert decision.effective_rr == 2.0
 
 def test_evaluate_trade_risk_max_positions_rejection():
-    engine = RiskEngine()
+    # When explicit max positions limit is set
+    engine = RiskEngine(config={"maximum_open_positions": 1, "risk_per_trade_percent": 0.5})
     gold_info = {"tick_size": 0.01, "tick_value": 1.0, "min_volume": 0.01, "max_volume": 100.0, "volume_step": 0.01}
     acc = {"equity": 10000.0}
     signal = {"entry_price": 2400.0, "stop_loss": 2390.0, "take_profit": 2420.0}
@@ -48,7 +49,8 @@ def test_evaluate_trade_risk_max_positions_rejection():
     assert "Maximum open positions limit" in decision.rejection_reason
 
 def test_evaluate_trade_risk_spread_rejection():
-    engine = RiskEngine()
+    # When explicit max spread limit is set
+    engine = RiskEngine(config={"maximum_spread_pips": 3.0, "risk_per_trade_percent": 0.5})
     gold_info = {"tick_size": 0.01, "tick_value": 1.0, "min_volume": 0.01, "max_volume": 100.0, "volume_step": 0.01}
     acc = {"equity": 10000.0}
     signal = {"entry_price": 2400.0, "stop_loss": 2390.0, "take_profit": 2420.0}
@@ -57,6 +59,26 @@ def test_evaluate_trade_risk_spread_rejection():
     decision = engine.evaluate_trade_risk(signal, acc, gold_info, current_spread_pips=5.0)
     assert decision.approved is False
     assert "spread" in decision.rejection_reason
+
+def test_scalper_unlimited_trades_and_no_drawdown_lock():
+    # Default Scalper Risk Engine has 0 limits (unlimited trades, no daily lock, no DD cap)
+    engine = RiskEngine(config={
+        "risk_per_trade_percent": 0.1,
+        "maximum_daily_loss_percent": 0,
+        "maximum_trades_per_day": 0,
+        "maximum_open_positions": 0
+    })
+    gold_info = {"tick_size": 0.01, "tick_value": 1.0, "min_volume": 0.01, "max_volume": 100.0, "volume_step": 0.01}
+    acc = {"equity": 10000.0}
+    signal = {"entry_price": 2400.0, "stop_loss": 2390.0, "take_profit": 2420.0}
+
+    # Simulate 50 trades already executed today and negative realized PnL (-$500)
+    engine.today_trade_count = 50
+    engine.today_realized_pnl = -500.0
+
+    decision = engine.evaluate_trade_risk(signal, acc, gold_info, current_open_positions_count=5, current_spread_pips=2.0)
+    assert decision.approved is True
+    assert decision.calculated_volume == 0.01
 
 def test_emergency_stop_blocking():
     engine = RiskEngine()

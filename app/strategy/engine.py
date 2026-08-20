@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Optional
 import uuid
 
 from app.core.config import settings
+from app.scalper.instrument import InstrumentSpecification
 from app.strategy.structure import StructureEngine, TrendRegime
 from app.strategy.liquidity import LiquidityEngine, LiquiditySide
 from app.strategy.displacement import DisplacementEngine
@@ -32,13 +33,20 @@ class TradeSignal:
         return asdict(self)
 
 class StrategyEngine:
-    """Deterministic Strategy Engine evaluating the V1 ICT/SMC 10-step entry model."""
+    """Fast scalp engine: ICT/SMC as a trigger, tight pip stops, small pip targets."""
 
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         if config is None:
             config = settings.strategy_config
 
-        self.minimum_rr = config.get("entry", {}).get("minimum_rr", 2.0)
+        entry_cfg = config.get("entry", {})
+        tf_cfg = config.get("timeframes", {})
+        stops_cfg = settings.risk_config.get("stops_and_targets", {})
+
+        self.minimum_rr = entry_cfg.get("minimum_rr", 0)
+        self.take_profit_pips = entry_cfg.get("take_profit_pips", stops_cfg.get("take_profit_pips", 2.0))
+        self.stop_loss_pips = entry_cfg.get("stop_loss_pips", stops_cfg.get("stop_loss_pips", 5.0))
+        self.ltf = tf_cfg.get("ltf", "M1")
         self.swing_lookback = config.get("market_structure", {}).get("swing_lookback", 3)
         self.session_filter = SessionFilter(config.get("sessions", {}))
         
@@ -48,6 +56,28 @@ class StrategyEngine:
         self.fvg_engine = FVGEngine()
         self.sweep_engine = SweepEngine()
         self.ob_engine = OrderBlockEngine()
+
+    def _pip_size(self, symbol: str, point_size: float) -> float:
+        spec = InstrumentSpecification.get_default_spec(symbol)
+        if spec and spec.pip_size > 0:
+            return spec.pip_size
+        return point_size * 10.0 if point_size > 0 else 0.1
+
+    def _scalp_levels(self, symbol: str, direction: str, entry_price: float, point_size: float) -> tuple[float, float, float]:
+        """Tight stop and small profit target in pips from entry."""
+        pip = self._pip_size(symbol, point_size)
+        digits = 2 if point_size >= 0.01 else 5
+        sl_dist = self.stop_loss_pips * pip
+        tp_dist = self.take_profit_pips * pip
+        if direction == "LONG":
+            stop_loss = round(entry_price - sl_dist, digits)
+            take_profit = round(entry_price + tp_dist, digits)
+        else:
+            stop_loss = round(entry_price + sl_dist, digits)
+            take_profit = round(entry_price - tp_dist, digits)
+        risk_dist = abs(entry_price - stop_loss)
+        rr = round(abs(take_profit - entry_price) / risk_dist, 2) if risk_dist > 0 else 0.0
+        return stop_loss, take_profit, rr
 
     def evaluate_setup(
         self,
@@ -63,18 +93,18 @@ class StrategyEngine:
 
         if not ltf_candles:
             return self._build_rejected_signal(
-                signal_id, symbol, "LTF_M5", 0.0, 0.0, 0.0,
+                signal_id, symbol, self.ltf, 0.0, 0.0, 0.0,
                 {"rejection_reason": "No market candles available"}, timestamp
             )
 
         latest_candle = ltf_candles[-1]
 
-        # 1. Session Filter Check
+        # 1. Session Filter Check (always-on when sessions.enabled is false)
         in_session, session_name = self.session_filter.is_in_active_session(latest_candle["timestamp"])
         reasons["session_check"] = {"active": in_session, "session": session_name}
         if not in_session:
             return self._build_rejected_signal(
-                signal_id, symbol, "LTF_M5", 0.0, 0.0, 0.0,
+                signal_id, symbol, self.ltf, 0.0, 0.0, 0.0,
                 {**reasons, "rejection_reason": "Outside active trading session"}, timestamp
             )
 
@@ -88,7 +118,7 @@ class StrategyEngine:
         liq_levels = self.liq_engine.get_all_liquidity_levels(ltf_candles, ltf_res.swing_points, point_size)
         sweeps = self.sweep_engine.detect_sweeps(ltf_candles, liq_levels, point_size)
         displacements = self.disp_engine.detect_displacement(ltf_candles)
-        fvgs = self.fvg_engine.detect_fvgs(ltf_candles, timeframe="M5", point_size=point_size)
+        fvgs = self.fvg_engine.detect_fvgs(ltf_candles, timeframe=self.ltf, point_size=point_size)
         obs = self.ob_engine.detect_order_blocks(ltf_candles, displacements, ltf_res.events)
 
         # Evaluate LONG Setup
@@ -99,38 +129,31 @@ class StrategyEngine:
 
             if active_fvg or active_ob:
                 entry_price = latest_candle["close"]
-                sweep_low = recent_bullish_sweep.sweep_extreme_price
-                safety_buffer = 2.0 * point_size
-                stop_loss = round(sweep_low - safety_buffer, 2 if point_size >= 0.01 else 5)
-                risk_dist = abs(entry_price - stop_loss)
-
-                if risk_dist > 0:
-                    take_profit = round(entry_price + (risk_dist * self.minimum_rr), 2 if point_size >= 0.01 else 5)
-                    rr = round(abs(take_profit - entry_price) / risk_dist, 2)
-
-                    if rr >= self.minimum_rr:
-                        reasons["setup_confirmation"] = {
-                            "htf_trend": htf_trend,
-                            "sweep": recent_bullish_sweep.to_dict(),
-                            "fvg": active_fvg.to_dict() if active_fvg else None,
-                            "order_block": active_ob.to_dict() if active_ob else None,
-                            "rr_satisfied": True
-                        }
-                        return TradeSignal(
-                            client_signal_id=signal_id,
-                            symbol=symbol,
-                            direction="LONG",
-                            timeframe="M5",
-                            setup_type="ICT_BULLISH_SWEEP_DISPLACEMENT_FVG",
-                            entry_price=entry_price,
-                            stop_loss=stop_loss,
-                            take_profit=take_profit,
-                            risk_reward=rr,
-                            confidence=0.85,
-                            status="APPROVED",
-                            reasons=reasons,
-                            timestamp=timestamp
-                        )
+                stop_loss, take_profit, rr = self._scalp_levels(symbol, "LONG", entry_price, point_size)
+                if abs(entry_price - stop_loss) > 0:
+                    reasons["setup_confirmation"] = {
+                        "htf_trend": htf_trend,
+                        "sweep": recent_bullish_sweep.to_dict(),
+                        "fvg": active_fvg.to_dict() if active_fvg else None,
+                        "order_block": active_ob.to_dict() if active_ob else None,
+                        "take_profit_pips": self.take_profit_pips,
+                        "stop_loss_pips": self.stop_loss_pips,
+                    }
+                    return TradeSignal(
+                        client_signal_id=signal_id,
+                        symbol=symbol,
+                        direction="LONG",
+                        timeframe=self.ltf,
+                        setup_type="SCALP_BULLISH_SWEEP",
+                        entry_price=entry_price,
+                        stop_loss=stop_loss,
+                        take_profit=take_profit,
+                        risk_reward=rr,
+                        confidence=0.85,
+                        status="APPROVED",
+                        reasons=reasons,
+                        timestamp=timestamp
+                    )
 
         # Evaluate SHORT Setup
         recent_bearish_sweep = next((s for s in reversed(sweeps) if s.sweep_type == "BEARISH_SWEEP"), None)
@@ -140,41 +163,34 @@ class StrategyEngine:
 
             if active_fvg or active_ob:
                 entry_price = latest_candle["close"]
-                sweep_high = recent_bearish_sweep.sweep_extreme_price
-                safety_buffer = 2.0 * point_size
-                stop_loss = round(sweep_high + safety_buffer, 2 if point_size >= 0.01 else 5)
-                risk_dist = abs(entry_price - stop_loss)
+                stop_loss, take_profit, rr = self._scalp_levels(symbol, "SHORT", entry_price, point_size)
+                if abs(entry_price - stop_loss) > 0:
+                    reasons["setup_confirmation"] = {
+                        "htf_trend": htf_trend,
+                        "sweep": recent_bearish_sweep.to_dict(),
+                        "fvg": active_fvg.to_dict() if active_fvg else None,
+                        "order_block": active_ob.to_dict() if active_ob else None,
+                        "take_profit_pips": self.take_profit_pips,
+                        "stop_loss_pips": self.stop_loss_pips,
+                    }
+                    return TradeSignal(
+                        client_signal_id=signal_id,
+                        symbol=symbol,
+                        direction="SHORT",
+                        timeframe=self.ltf,
+                        setup_type="SCALP_BEARISH_SWEEP",
+                        entry_price=entry_price,
+                        stop_loss=stop_loss,
+                        take_profit=take_profit,
+                        risk_reward=rr,
+                        confidence=0.85,
+                        status="APPROVED",
+                        reasons=reasons,
+                        timestamp=timestamp
+                    )
 
-                if risk_dist > 0:
-                    take_profit = round(entry_price - (risk_dist * self.minimum_rr), 2 if point_size >= 0.01 else 5)
-                    rr = round(abs(entry_price - take_profit) / risk_dist, 2)
-
-                    if rr >= self.minimum_rr:
-                        reasons["setup_confirmation"] = {
-                            "htf_trend": htf_trend,
-                            "sweep": recent_bearish_sweep.to_dict(),
-                            "fvg": active_fvg.to_dict() if active_fvg else None,
-                            "order_block": active_ob.to_dict() if active_ob else None,
-                            "rr_satisfied": True
-                        }
-                        return TradeSignal(
-                            client_signal_id=signal_id,
-                            symbol=symbol,
-                            direction="SHORT",
-                            timeframe="M5",
-                            setup_type="ICT_BEARISH_SWEEP_DISPLACEMENT_FVG",
-                            entry_price=entry_price,
-                            stop_loss=stop_loss,
-                            take_profit=take_profit,
-                            risk_reward=rr,
-                            confidence=0.85,
-                            status="APPROVED",
-                            reasons=reasons,
-                            timestamp=timestamp
-                        )
-
-        reasons["rejection_reason"] = "No confluent ICT setup satisfied (missing sweep, displacement, or valid entry zone)"
-        return self._build_rejected_signal(signal_id, symbol, "M5", 0.0, 0.0, 0.0, reasons, timestamp)
+        reasons["rejection_reason"] = "No scalp setup satisfied (missing sweep or valid entry zone)"
+        return self._build_rejected_signal(signal_id, symbol, self.ltf, 0.0, 0.0, 0.0, reasons, timestamp)
 
     def _build_rejected_signal(
         self,

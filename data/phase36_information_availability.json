@@ -1,0 +1,80 @@
+{
+  "phase": 36,
+  "manifest_hash": "25833aa4b8fd8428bf170e456c27398933bef0a03d0f56f8cbf47fccff1a6728",
+  "generated_at": "2026-08-20T17:03:00Z",
+  "sources": [
+    {
+      "source_name": "MetaTrader 5 Native Broker Feed",
+      "provider_type": "MARKET_DATA_PRICE",
+      "availability": "AVAILABLE",
+      "timestamp_resolution": "1_MILLISECOND",
+      "historical_depth": "FULL_TICK_1_YEAR",
+      "realtime_capability": true,
+      "typical_latency_ms": 12.5,
+      "licensing": "BROKER_CLIENT_AGREEMENT",
+      "limitations": [
+        "Broker OTC synthetic feed (Exness/Retail quote stream)",
+        "Volume represents tick volume (quote arrival frequency), not exchange contract volume",
+        "Slippage and spread markups vary dynamically around volatility events"
+      ]
+    },
+    {
+      "source_name": "CME / COMEX GC Futures (MDP 3.0)",
+      "provider_type": "FUTURES_VOLUME",
+      "availability": "AVAILABLE",
+      "timestamp_resolution": "1_MILLISECOND",
+      "historical_depth": "5_YEARS",
+      "realtime_capability": true,
+      "typical_latency_ms": 15.0,
+      "licensing": "CME_EXCHANGE_LICENSED",
+      "limitations": [
+        "Requires direct CME market data subscription",
+        "Contract rollovers require explicit continuous front-month adjustment",
+        "No synthetic institutional volume permitted; must use raw exchange match trade volume"
+      ]
+    },
+    {
+      "source_name": "Institutional Macroeconomic Calendar",
+      "provider_type": "ECONOMIC_CALENDAR",
+      "availability": "AVAILABLE",
+      "timestamp_resolution": "1_SECOND",
+      "historical_depth": "10_YEARS",
+      "realtime_capability": true,
+      "typical_latency_ms": 250.0,
+      "licensing": "COMMERCIAL_CALENDAR_FEED",
+      "limitations": [
+        "Unscheduled embargo releases or emergency press conferences occur with zero pre-warning",
+        "Subsequent statistical revisions must be segregated to avoid lookahead contamination"
+      ]
+    },
+    {
+      "source_name": "Level-2 Market Depth Feed (DOM 10-Level)",
+      "provider_type": "ORDER_BOOK_L2",
+      "availability": "AVAILABLE",
+      "timestamp_resolution": "1_MILLISECOND",
+      "historical_depth": "1_YEAR",
+      "realtime_capability": true,
+      "typical_latency_ms": 8.0,
+      "licensing": "DIRECT_FEED_LICENSED",
+      "limitations": [
+        "Requires high-throughput WebSocket / FIX bandwidth",
+        "Crossed order books and negative spreads must be scrubbed prior to feature calculation",
+        "Iceberg / hidden orders remain non-displayed"
+      ]
+    },
+    {
+      "source_name": "Cross-Asset Benchmark Feed (DXY, US10Y, SPX)",
+      "provider_type": "CROSS_ASSET_DATA",
+      "availability": "AVAILABLE",
+      "timestamp_resolution": "1_SECOND",
+      "historical_depth": "10_YEARS",
+      "realtime_capability": true,
+      "typical_latency_ms": 45.0,
+      "licensing": "MULTI_ASSET_COMMERCIAL",
+      "limitations": [
+        "Treasury yield updates depend on cash market trading hours",
+        "Intermarket leads/lags can exhibit structural regime shifts"
+      ]
+    }
+  ]
+}

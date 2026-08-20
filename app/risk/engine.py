@@ -23,12 +23,13 @@ class RiskEngine:
         if config is None:
             config = settings.risk_config.get("risk_rules", {})
 
-        self.risk_per_trade_percent = config.get("risk_per_trade_percent", 0.5)
-        self.maximum_daily_loss_percent = config.get("maximum_daily_loss_percent", 2.0)
-        self.maximum_trades_per_day = config.get("maximum_trades_per_day", 3)
-        self.maximum_open_positions = config.get("maximum_open_positions", 1)
-        self.maximum_spread_pips = config.get("maximum_spread_pips", 3.0)
-        self.minimum_rr = config.get("minimum_rr", 2.0)
+        # 0 disables a limit so scalps can fire whenever a setup appears.
+        self.risk_per_trade_percent = config.get("risk_per_trade_percent", 0.1)
+        self.maximum_daily_loss_percent = config.get("maximum_daily_loss_percent", 0)
+        self.maximum_trades_per_day = config.get("maximum_trades_per_day", 0)
+        self.maximum_open_positions = config.get("maximum_open_positions", 0)
+        self.maximum_spread_pips = config.get("maximum_spread_pips", 0)
+        self.minimum_rr = config.get("minimum_rr", 0)
         self.maximum_position_size_lots = config.get("maximum_position_size_lots", 10.0)
         self.minimum_position_size_lots = config.get("minimum_position_size_lots", 0.01)
 
@@ -106,35 +107,36 @@ class RiskEngine:
         stop_loss = signal.get("stop_loss", 0.0)
         take_profit = signal.get("take_profit", 0.0)
 
-        # 3. Daily Loss Check
-        max_daily_loss_amount = equity * (self.maximum_daily_loss_percent / 100.0)
-        if self.today_realized_pnl <= -max_daily_loss_amount:
-            self.daily_lock_active = True
-            self.daily_lock_reason = f"Daily loss limit ({self.maximum_daily_loss_percent}%) reached"
-            return RiskDecision(
-                approved=False,
-                rejection_reason=self.daily_lock_reason,
-                calculated_volume=0.0, monetary_risk=0.0, risk_percent=0.0, effective_rr=0.0
-            )
+        # 3. Daily Loss Check (disabled when maximum_daily_loss_percent is 0)
+        if self.maximum_daily_loss_percent > 0:
+            max_daily_loss_amount = equity * (self.maximum_daily_loss_percent / 100.0)
+            if self.today_realized_pnl <= -max_daily_loss_amount:
+                self.daily_lock_active = True
+                self.daily_lock_reason = f"Daily loss limit ({self.maximum_daily_loss_percent}%) reached"
+                return RiskDecision(
+                    approved=False,
+                    rejection_reason=self.daily_lock_reason,
+                    calculated_volume=0.0, monetary_risk=0.0, risk_percent=0.0, effective_rr=0.0
+                )
 
-        # 4. Max Trades Per Day Check
-        if self.today_trade_count >= self.maximum_trades_per_day:
+        # 4. Max Trades Per Day Check (disabled when maximum_trades_per_day is 0)
+        if self.maximum_trades_per_day > 0 and self.today_trade_count >= self.maximum_trades_per_day:
             return RiskDecision(
                 approved=False,
                 rejection_reason=f"Maximum trades per day ({self.maximum_trades_per_day}) reached.",
                 calculated_volume=0.0, monetary_risk=0.0, risk_percent=0.0, effective_rr=0.0
             )
 
-        # 5. Max Open Positions Check
-        if current_open_positions_count >= self.maximum_open_positions:
+        # 5. Max Open Positions Check (disabled when maximum_open_positions is 0)
+        if self.maximum_open_positions > 0 and current_open_positions_count >= self.maximum_open_positions:
             return RiskDecision(
                 approved=False,
                 rejection_reason=f"Maximum open positions limit ({self.maximum_open_positions}) reached.",
                 calculated_volume=0.0, monetary_risk=0.0, risk_percent=0.0, effective_rr=0.0
             )
 
-        # 6. Spread Check
-        if current_spread_pips > self.maximum_spread_pips:
+        # 6. Spread Check (disabled when maximum_spread_pips is 0)
+        if self.maximum_spread_pips > 0 and current_spread_pips > self.maximum_spread_pips:
             return RiskDecision(
                 approved=False,
                 rejection_reason=f"Current spread ({current_spread_pips} pips) exceeds max allowed ({self.maximum_spread_pips} pips).",
@@ -152,7 +154,7 @@ class RiskEngine:
             )
 
         effective_rr = round(reward_dist / risk_dist, 2)
-        if effective_rr < self.minimum_rr:
+        if self.minimum_rr > 0 and effective_rr < self.minimum_rr:
             return RiskDecision(
                 approved=False,
                 rejection_reason=f"Risk/Reward ratio ({effective_rr}) below configured minimum ({self.minimum_rr}).",

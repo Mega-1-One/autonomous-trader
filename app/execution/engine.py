@@ -48,9 +48,10 @@ class ExecutionEngine:
 
         # Configurable Position Management Rules
         pm_config = settings.risk_config.get("position_management", {})
-        self.break_even_enabled = pm_config.get("break_even_enabled", True)
-        self.break_even_trigger_r = pm_config.get("break_even_trigger_r", 1.0)
-        self.break_even_offset_pips = pm_config.get("break_even_offset_pips", 0.5)
+        self.break_even_enabled = pm_config.get("break_even_enabled", False)
+        self.break_even_trigger_r = pm_config.get("break_even_trigger_r", 0.5)
+        self.break_even_offset_pips = pm_config.get("break_even_offset_pips", 0.1)
+        self.max_holding_time_seconds = pm_config.get("max_holding_time_seconds", 30)
 
     def execute_signal(self, signal_dict: Dict[str, Any], current_spread_pips: float = 1.0) -> Dict[str, Any]:
         """Executes a strategy signal after broker position sync, idempotency check, safety check, and risk approval."""
@@ -65,9 +66,10 @@ class ExecutionEngine:
             logger.warning(f"IDEMPOTENCY BLOCK: Order {client_order_id} has already been processed.")
             return {"status": "REJECTED", "reason": f"Duplicate order ID {client_order_id}"}
 
-        # 2. Broker Position Sync: Query actual broker open positions directly
+        # 2. Broker Position Sync (only blocks if a max-open limit is configured)
         broker_positions = self.adapter.get_open_positions(symbol)
-        if len(broker_positions) > 0:
+        max_open = self.risk_engine.maximum_open_positions
+        if max_open > 0 and len(broker_positions) >= max_open:
             logger.warning(f"BROKER POSITION BLOCK: {len(broker_positions)} active position(s) found on MT5 for {symbol}.")
             return {"status": "REJECTED", "reason": f"Active MT5 broker position exists for {symbol}"}
 
@@ -201,9 +203,19 @@ class ExecutionEngine:
                     pos.break_even_activated = True
                     logger.info(f"BREAK EVEN ACTIVATED: Position {pos_id} SL moved to {new_sl}")
 
+            # Time stop: flatten scalps that overstay the holding window
+            if not closed and self.max_holding_time_seconds and self.max_holding_time_seconds > 0:
+                try:
+                    entry_dt = datetime.fromisoformat(pos.entry_time.replace("Z", "+00:00"))
+                    held_seconds = (datetime.now(timezone.utc) - entry_dt).total_seconds()
+                    if held_seconds >= self.max_holding_time_seconds:
+                        self._close_position(pos, curr_price, "MAX_HOLDING_TIME")
+                        closed = True
+                except (TypeError, ValueError):
+                    pass
+
             # SL / TP Hit Check
-            closed = False
-            if direction == "LONG":
+            if not closed and direction == "LONG":
                 if curr_price <= pos.stop_loss:
                     self._close_position(pos, pos.stop_loss, "STOP_LOSS")
                     closed = True
