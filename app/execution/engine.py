@@ -179,6 +179,7 @@ class ExecutionEngine:
             if pos.status != "OPEN":
                 continue
 
+            closed = False
             curr_price = current_prices.get(pos.symbol, pos.current_price)
             pos.current_price = curr_price
 

@@ -35,7 +35,7 @@ def test_scalp_strategy_buy_signal():
     feats_engine = FeatureEngine()
     feats = feats_engine.extract_features(buffer, point_size=0.001, digits=3)
 
-    strategy = ScalpStrategyEngine(max_allowed_spread=1.0, min_tick_velocity=1.0, min_imbalance_ratio=0.5)
+    strategy = ScalpStrategyEngine(max_allowed_spread=1.0, min_tick_velocity=1.0, min_imbalance_edge=0.5)
     sig = strategy.generate_signal(feats, point_size=0.001, digits=3)
 
     assert sig.status == "APPROVED"

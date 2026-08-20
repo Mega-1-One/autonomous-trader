@@ -129,11 +129,11 @@ class Phase39ForwardEngine:
             return {"total_trades": 0, "win_rate": 0.0, "expectancy_r": 0.0, "profit_factor": 0.0}
 
         total = len(self.trades)
-        wins = [t for t in self.trades if t.net_pnl_usd > 0]
-        losses = [t for t in self.trades if t.net_pnl_usd <= 0]
+        wins = [t for t in self.trades if t.outcome == "WIN"]
+        losses = [t for t in self.trades if t.outcome == "LOSS"]
         win_rate = round((len(wins) / total) * 100.0, 2)
 
-        gross_win = sum(t.net_pnl_usd for t in wins)
+        gross_win = sum(t.gross_pnl_usd for t in wins)
         gross_loss = abs(sum(t.net_pnl_usd for t in losses))
         pf = round(gross_win / gross_loss, 2) if gross_loss > 0 else (99.0 if gross_win > 0 else 0.0)
 
