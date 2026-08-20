@@ -32,6 +32,12 @@ class RealMT5Adapter(AbstractMT5Adapter):
             self._connected = False
             return False
 
+        # Attempt direct attach to active MT5 terminal first
+        if mt5.initialize():
+            self._connected = True
+            logger.info("Successfully connected to active MetaTrader 5 terminal.")
+            return True
+
         init_kwargs = {}
         if settings.MT5_PATH:
             init_kwargs["path"] = settings.MT5_PATH

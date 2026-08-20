@@ -1,8 +1,8 @@
 {
-  "account_login": 476536600,
+  "account_login": 476623191,
   "account_server": "Exness-MT5Trial9",
-  "final_balance": 27.65,
-  "final_equity": 27.65,
-  "ticks_processed": 6,
+  "final_balance": 50.0,
+  "final_equity": 50.0,
+  "ticks_processed": 12,
   "status": "STREAM_FINISHED"
 }
