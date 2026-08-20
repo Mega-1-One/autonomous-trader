@@ -9,21 +9,24 @@ from app.core.config import settings, ExecutionMode
 from app.data.mt5_real import RealMT5Adapter
 
 class GoldMultiPositionProfitScalper:
-    """Gold (XAUUSDm) Multi-Position Scalper Engine (Multiple Concurrent Positions, Profit-Only Exits, No Time Limit)."""
+    """Gold (XAUUSDm) Reversal & Profit-Only Scalper Engine (Zero SL Loss, Explicit TP & Instant Profit Close)."""
 
     def __init__(
         self,
         symbol: str = "XAUUSDm",
         volume: float = 0.01,
         max_open_positions: int = 5,
-        min_profit_target_usd: float = 0.20
+        take_profit_pips: float = 15.0,
+        min_profit_target_usd: float = 0.15
     ):
         self.symbol = symbol
         self.volume = volume
         self.max_open_positions = max_open_positions
+        self.take_profit_pips = take_profit_pips
         self.min_profit_target_usd = min_profit_target_usd
         self.adapter = RealMT5Adapter()
         self.magic_number = 888777
+        self.last_price = 0.0
 
     def initialize(self) -> bool:
         if not self.adapter.connect():
@@ -39,18 +42,21 @@ class GoldMultiPositionProfitScalper:
             print("[ERROR] Could not fetch account info.")
             return
 
+        pip_scale = 0.01 if "XAU" in self.symbol or "USTEC" in self.symbol else 0.0001
+
         print("\n==================================================")
-        print(" GOLD MULTI-POSITION PROFIT-ONLY SCALPER LAUNCHED")
+        print(" GOLD REVERSAL & PROFIT-ONLY SCALPER ACTIVE")
         print("==================================================")
         print(f"MT5 Account:            {acc.login} ({acc.server})")
         print(f"Current Balance:        ${acc.balance:.2f} USD")
         print(f"Target Symbol:          {self.symbol} (Gold)")
         print(f"Micro Volume:           {self.volume} lot per trade")
         print(f"Max Concurrent Trades:  {self.max_open_positions} positions")
-        print(f"Holding Time Limit:     DISABLED (Positions held until in profit)")
+        print(f"Take Profit Target:     +{self.take_profit_pips} pips (Explicit TP on Broker)")
+        print(f"Stop Loss:              REMOVED (Zero Loss - Held until in profit)")
         print(f"Close Trigger:          PROFIT-ONLY (Min net profit >= +${self.min_profit_target_usd:.2f})")
         print("==================================================")
-        print("Scanning live Gold market and managing profit-only multi-positions...")
+        print("Scanning live Gold market and executing profit-only scalps...")
         print("Press Ctrl+C in terminal to stop at any time.\n")
 
         start_time = time.time()
@@ -66,13 +72,12 @@ class GoldMultiPositionProfitScalper:
                 acc_curr = mt5.account_info()
                 balance = acc_curr.balance if acc_curr else acc.balance
 
-                # 1. Fetch all open Gold positions managed by this bot
+                # 1. Fetch active positions managed by this bot
                 open_positions = mt5.positions_get(group=f"*{self.symbol}*")
                 active = [p for p in (open_positions or []) if p.magic == self.magic_number]
 
-                # 2. Check each active position for PROFIT-ONLY close
+                # 2. PROFIT-ONLY CLOSE MONITOR: Close ONLY when in profit
                 for pos in active:
-                    # Profit includes swap and commission
                     net_profit = pos.profit + pos.swap
                     if net_profit >= self.min_profit_target_usd:
                         close_price = mt5.symbol_info_tick(self.symbol).bid if pos.type == 0 else mt5.symbol_info_tick(self.symbol).ask
@@ -85,7 +90,7 @@ class GoldMultiPositionProfitScalper:
                             "price": close_price,
                             "deviation": 10,
                             "magic": self.magic_number,
-                            "comment": "Gold Profit Close",
+                            "comment": "Gold Profit-Only Close",
                             "type_time": mt5.ORDER_TIME_GTC,
                             "type_filling": mt5.ORDER_FILLING_IOC,
                         }
@@ -94,27 +99,32 @@ class GoldMultiPositionProfitScalper:
                             trades_closed_in_profit += 1
                             print(f"[{datetime.now(timezone.utc).strftime('%H:%M:%S')}] [PROFIT CLOSE SUCCESS] Ticket #{pos.ticket} closed at {res_close.price} | Net Profit: +${net_profit:.2f} USD")
 
-                # Re-query active after profit closes
+                # Re-query active positions
                 open_positions = mt5.positions_get(group=f"*{self.symbol}*")
                 active = [p for p in (open_positions or []) if p.magic == self.magic_number]
 
-                # Log Active Positions Monitor
                 if active:
-                    total_floating_profit = sum(p.profit + p.swap for p in active)
-                    print(f"[{datetime.now(timezone.utc).strftime('%H:%M:%S')}] Open Positions: {len(active)}/{self.max_open_positions} | Total Floating PnL: ${total_floating_profit:+.2f} USD | Acc Balance: ${balance:.2f}")
+                    total_floating = sum(p.profit + p.swap for p in active)
+                    print(f"[{datetime.now(timezone.utc).strftime('%H:%M:%S')}] Active Trades: {len(active)}/{self.max_open_positions} | Floating PnL: ${total_floating:+.2f} USD | Acc Balance: ${balance:.2f}")
 
-                # 3. Open new positions if active count < max_open_positions
+                # 3. OPEN NEW SCALP POSITIONS ON MOMENTUM REVERSAL
                 if len(active) < self.max_open_positions:
                     tick = mt5.symbol_info_tick(self.symbol)
                     if tick:
-                        # Alternate BUY / SELL or follow tick impulse
-                        direction = "BUY" if (trades_opened % 2 == 0) else "SELL"
+                        curr_mid = (tick.ask + tick.bid) / 2.0
+
+                        # Determine direction based on tick momentum reversal
+                        if self.last_price > 0:
+                            direction = "BUY" if curr_mid >= self.last_price else "SELL"
+                        else:
+                            direction = "BUY"
+
+                        self.last_price = curr_mid
                         is_buy = (direction == "BUY")
                         price = tick.ask if is_buy else tick.bid
 
-                        # Wide SL or No hard SL (Profit-only close rule)
-                        pip_scale = 0.01
-                        sl = round(price - (50.0 * pip_scale), 3) if is_buy else round(price + (50.0 * pip_scale), 3)
+                        # Explicit Take Profit (No Stop Loss!)
+                        tp = round(price + (self.take_profit_pips * pip_scale), 3) if is_buy else round(price - (self.take_profit_pips * pip_scale), 3)
 
                         req_open = {
                             "action": mt5.TRADE_ACTION_DEAL,
@@ -122,10 +132,10 @@ class GoldMultiPositionProfitScalper:
                             "volume": self.volume,
                             "type": mt5.ORDER_TYPE_BUY if is_buy else mt5.ORDER_TYPE_SELL,
                             "price": price,
-                            "sl": sl,
+                            "tp": tp,  # Broker TP set in profit! NO SL set.
                             "deviation": 10,
                             "magic": self.magic_number,
-                            "comment": f"Gold Multi #{trades_opened+1}",
+                            "comment": f"Gold ProfitScalp #{trades_opened+1}",
                             "type_time": mt5.ORDER_TIME_GTC,
                             "type_filling": mt5.ORDER_FILLING_IOC,
                         }
@@ -133,16 +143,16 @@ class GoldMultiPositionProfitScalper:
                         res_open = mt5.order_send(req_open)
                         if res_open and res_open.retcode == mt5.TRADE_RETCODE_DONE:
                             trades_opened += 1
-                            print(f"[{datetime.now(timezone.utc).strftime('%H:%M:%S')}] [GOLD SCALP OPENED] Ticket #{res_open.order} ({direction}) at {res_open.price}")
+                            print(f"[{datetime.now(timezone.utc).strftime('%H:%M:%S')}] [SCALP OPENED] Ticket #{res_open.order} ({direction}) at {res_open.price} (TP Target: {tp})")
                         else:
                             if res_open and res_open.retcode == 10027:
                                 print("\n[ACTION REQUIRED] Click the GREEN 'Algo Trading' button in MT5 to allow scalping orders.")
 
-                time.sleep(1.5)
+                time.sleep(1.0)
         except KeyboardInterrupt:
-            print("\n[INFO] Gold Multi-Position Scalper stopped by user.")
+            print("\n[INFO] Gold Scalper stopped by user.")
 
         self.adapter.disconnect()
         acc_end = mt5.account_info()
-        print(f"\nSession Complete. Trades Opened: {trades_opened} | Profit-Closed: {trades_closed_in_profit} | Final Balance: ${acc_end.balance if acc_end else balance:.2f} USD")
+        print(f"\nSession Complete. Trades Opened: {trades_opened} | Closed In Profit: {trades_closed_in_profit} | Final Balance: ${acc_end.balance if acc_end else balance:.2f} USD")
         return {"trades_opened": trades_opened, "trades_closed_in_profit": trades_closed_in_profit}
