@@ -9,7 +9,7 @@ from app.core.config import settings, ExecutionMode
 from app.data.mt5_real import RealMT5Adapter
 
 class GoldMultiPositionProfitScalper:
-    """Gold (XAUUSDm) Reversal & Profit-Only Scalper Engine (Zero SL Loss, Explicit TP & Instant Profit Close)."""
+    """Gold (XAUUSDm) Reversal Scalper Engine (Explicit TP + protective SL, profit-target close)."""
 
     def __init__(
         self,
@@ -17,13 +17,19 @@ class GoldMultiPositionProfitScalper:
         volume: float = 0.01,
         max_open_positions: int = 5,
         take_profit_pips: float = 15.0,
-        min_profit_target_usd: float = 0.15
+        min_profit_target_usd: float = 0.15,
+        stop_loss_pips: float = 5.0,
+        max_loss_usd: float = 1.0,
+        max_holding_seconds: float = 120.0
     ):
         self.symbol = symbol
         self.volume = volume
         self.max_open_positions = max_open_positions
         self.take_profit_pips = take_profit_pips
         self.min_profit_target_usd = min_profit_target_usd
+        self.stop_loss_pips = stop_loss_pips
+        self.max_loss_usd = max_loss_usd
+        self.max_holding_seconds = max_holding_seconds
         self.adapter = RealMT5Adapter()
         self.magic_number = 888777
         self.last_price = 0.0
@@ -53,15 +59,17 @@ class GoldMultiPositionProfitScalper:
         print(f"Micro Volume:           {self.volume} lot per trade")
         print(f"Max Concurrent Trades:  {self.max_open_positions} positions")
         print(f"Take Profit Target:     +{self.take_profit_pips} pips (Explicit TP on Broker)")
-        print(f"Stop Loss:              REMOVED (Zero Loss - Held until in profit)")
-        print(f"Close Trigger:          PROFIT-ONLY (Min net profit >= +${self.min_profit_target_usd:.2f})")
+        print(f"Stop Loss:              -{self.stop_loss_pips} pips (Protective SL on Broker) + ${self.max_loss_usd:.2f} loss cap")
+        print(f"Close Triggers:         PROFIT >= +${self.min_profit_target_usd:.2f} | LOSS <= -${self.max_loss_usd:.2f} | HOLD >= {int(self.max_holding_seconds)}s")
         print("==================================================")
-        print("Scanning live Gold market and executing profit-only scalps...")
+        print("Scanning live Gold market and executing scalps...")
         print("Press Ctrl+C in terminal to stop at any time.\n")
 
         start_time = time.time()
         trades_opened = 0
         trades_closed_in_profit = 0
+        trades_closed_stoploss = 0
+        trades_closed_maxhold = 0
 
         try:
             while True:
@@ -76,28 +84,42 @@ class GoldMultiPositionProfitScalper:
                 open_positions = mt5.positions_get(group=f"*{self.symbol}*")
                 active = [p for p in (open_positions or []) if p.magic == self.magic_number]
 
-                # 2. PROFIT-ONLY CLOSE MONITOR: Close ONLY when in profit
+                # 2. CLOSE MONITOR: profit target, loss cap, and max-hold timeout.
+                # Phase 1 fix: losers are closed on STOP_LOSS / MAX_HOLD instead of held indefinitely.
                 for pos in active:
                     net_profit = pos.profit + pos.swap
+                    hold_time = now - pos.time
                     if net_profit >= self.min_profit_target_usd:
-                        close_price = mt5.symbol_info_tick(self.symbol).bid if pos.type == 0 else mt5.symbol_info_tick(self.symbol).ask
-                        req_close = {
-                            "action": mt5.TRADE_ACTION_DEAL,
-                            "symbol": self.symbol,
-                            "volume": pos.volume,
-                            "type": mt5.ORDER_TYPE_SELL if pos.type == 0 else mt5.ORDER_TYPE_BUY,
-                            "position": pos.ticket,
-                            "price": close_price,
-                            "deviation": 10,
-                            "magic": self.magic_number,
-                            "comment": "Gold Profit-Only Close",
-                            "type_time": mt5.ORDER_TIME_GTC,
-                            "type_filling": mt5.ORDER_FILLING_IOC,
-                        }
-                        res_close = mt5.order_send(req_close)
-                        if res_close and res_close.retcode == mt5.TRADE_RETCODE_DONE:
+                        reason, comment = "PROFIT", "Gold Profit-Only Close"
+                    elif net_profit <= -self.max_loss_usd:
+                        reason, comment = "STOP_LOSS", "Gold Stop-Loss Close"
+                    elif hold_time >= self.max_holding_seconds:
+                        reason, comment = "MAX_HOLD", "Gold Max-Hold Close"
+                    else:
+                        continue
+                    close_price = mt5.symbol_info_tick(self.symbol).bid if pos.type == 0 else mt5.symbol_info_tick(self.symbol).ask
+                    req_close = {
+                        "action": mt5.TRADE_ACTION_DEAL,
+                        "symbol": self.symbol,
+                        "volume": pos.volume,
+                        "type": mt5.ORDER_TYPE_SELL if pos.type == 0 else mt5.ORDER_TYPE_BUY,
+                        "position": pos.ticket,
+                        "price": close_price,
+                        "deviation": 10,
+                        "magic": self.magic_number,
+                        "comment": comment,
+                        "type_time": mt5.ORDER_TIME_GTC,
+                        "type_filling": mt5.ORDER_FILLING_IOC,
+                    }
+                    res_close = mt5.order_send(req_close)
+                    if res_close and res_close.retcode == mt5.TRADE_RETCODE_DONE:
+                        if reason == "PROFIT":
                             trades_closed_in_profit += 1
-                            print(f"[{datetime.now(timezone.utc).strftime('%H:%M:%S')}] [PROFIT CLOSE SUCCESS] Ticket #{pos.ticket} closed at {res_close.price} | Net Profit: +${net_profit:.2f} USD")
+                        elif reason == "STOP_LOSS":
+                            trades_closed_stoploss += 1
+                        else:
+                            trades_closed_maxhold += 1
+                        print(f"[{datetime.now(timezone.utc).strftime('%H:%M:%S')}] [{reason} CLOSE SUCCESS] Ticket #{pos.ticket} closed at {res_close.price} | Net Profit: ${net_profit:+.2f} USD (held {int(hold_time)}s)")
 
                 # Re-query active positions
                 open_positions = mt5.positions_get(group=f"*{self.symbol}*")
@@ -123,8 +145,9 @@ class GoldMultiPositionProfitScalper:
                         is_buy = (direction == "BUY")
                         price = tick.ask if is_buy else tick.bid
 
-                        # Explicit Take Profit (No Stop Loss!)
+                        # Explicit Take Profit + protective Stop Loss (Phase 1 fix: no more zero-SL holds)
                         tp = round(price + (self.take_profit_pips * pip_scale), 3) if is_buy else round(price - (self.take_profit_pips * pip_scale), 3)
+                        sl = round(price - (self.stop_loss_pips * pip_scale), 3) if is_buy else round(price + (self.stop_loss_pips * pip_scale), 3)
 
                         req_open = {
                             "action": mt5.TRADE_ACTION_DEAL,
@@ -132,7 +155,8 @@ class GoldMultiPositionProfitScalper:
                             "volume": self.volume,
                             "type": mt5.ORDER_TYPE_BUY if is_buy else mt5.ORDER_TYPE_SELL,
                             "price": price,
-                            "tp": tp,  # Broker TP set in profit! NO SL set.
+                            "sl": sl,
+                            "tp": tp,
                             "deviation": 10,
                             "magic": self.magic_number,
                             "comment": f"Gold ProfitScalp #{trades_opened+1}",
@@ -143,7 +167,7 @@ class GoldMultiPositionProfitScalper:
                         res_open = mt5.order_send(req_open)
                         if res_open and res_open.retcode == mt5.TRADE_RETCODE_DONE:
                             trades_opened += 1
-                            print(f"[{datetime.now(timezone.utc).strftime('%H:%M:%S')}] [SCALP OPENED] Ticket #{res_open.order} ({direction}) at {res_open.price} (TP Target: {tp})")
+                            print(f"[{datetime.now(timezone.utc).strftime('%H:%M:%S')}] [SCALP OPENED] Ticket #{res_open.order} ({direction}) at {res_open.price} (SL: {sl}, TP Target: {tp})")
                         else:
                             if res_open and res_open.retcode == 10027:
                                 print("\n[ACTION REQUIRED] Click the GREEN 'Algo Trading' button in MT5 to allow scalping orders.")
@@ -154,5 +178,5 @@ class GoldMultiPositionProfitScalper:
 
         self.adapter.disconnect()
         acc_end = mt5.account_info()
-        print(f"\nSession Complete. Trades Opened: {trades_opened} | Closed In Profit: {trades_closed_in_profit} | Final Balance: ${acc_end.balance if acc_end else balance:.2f} USD")
-        return {"trades_opened": trades_opened, "trades_closed_in_profit": trades_closed_in_profit}
+        print(f"\nSession Complete. Trades Opened: {trades_opened} | Closed In Profit: {trades_closed_in_profit} | Stop-Loss: {trades_closed_stoploss} | Max-Hold: {trades_closed_maxhold} | Final Balance: ${acc_end.balance if acc_end else balance:.2f} USD")
+        return {"trades_opened": trades_opened, "trades_closed_in_profit": trades_closed_in_profit, "trades_closed_stoploss": trades_closed_stoploss, "trades_closed_maxhold": trades_closed_maxhold}

@@ -22,7 +22,10 @@ def main():
         symbol="XAUUSDm",
         volume=0.01,
         max_open_positions=5,
-        min_profit_target_usd=0.20
+        min_profit_target_usd=0.20,
+        stop_loss_pips=5.0,
+        max_loss_usd=1.0,
+        max_holding_seconds=120.0
     )
 
     if scalper.initialize():

@@ -68,7 +68,7 @@ def test_strategy_engine_bullish_signal():
     signal = engine.evaluate_setup("XAUUSD", htf_candles, ltf_candles, point_size=0.01)
     assert signal.status == "APPROVED"
     assert signal.direction == "LONG"
-    assert signal.risk_reward >= 0.4
+    assert signal.risk_reward >= 1.5
     assert signal.stop_loss < signal.entry_price < signal.take_profit
 
 def test_strategy_engine_outside_session_rejection():

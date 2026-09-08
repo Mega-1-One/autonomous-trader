@@ -62,11 +62,13 @@ sessions:
     end_utc: "21:00"
 
 # Entry Model Requirements
+# Phase 1 exit-math fix: targets must pay for the stop (RR >= 1.5).
+# Old 2.0 TP / 5.0 SL (0.4R) closed winners on noise and held losers.
 entry:
-  minimum_rr: 0
+  minimum_rr: 1.5
   require_htf_alignment: false
   require_liquidity_sweep: true
   require_displacement: false
   require_mss_bos: false
-  take_profit_pips: 2.0
-  stop_loss_pips: 5.0
+  take_profit_pips: 5.0
+  stop_loss_pips: 3.0

@@ -130,6 +130,11 @@ class StrategyEngine:
             if active_fvg or active_ob:
                 entry_price = latest_candle["close"]
                 stop_loss, take_profit, rr = self._scalp_levels(symbol, "LONG", entry_price, point_size)
+                if self.minimum_rr > 0 and rr < self.minimum_rr:
+                    return self._build_rejected_signal(
+                        signal_id, symbol, self.ltf, entry_price, stop_loss, take_profit,
+                        {**reasons, "rejection_reason": f"Risk/Reward {rr} below minimum {self.minimum_rr}"}, timestamp
+                    )
                 if abs(entry_price - stop_loss) > 0:
                     reasons["setup_confirmation"] = {
                         "htf_trend": htf_trend,
@@ -164,6 +169,11 @@ class StrategyEngine:
             if active_fvg or active_ob:
                 entry_price = latest_candle["close"]
                 stop_loss, take_profit, rr = self._scalp_levels(symbol, "SHORT", entry_price, point_size)
+                if self.minimum_rr > 0 and rr < self.minimum_rr:
+                    return self._build_rejected_signal(
+                        signal_id, symbol, self.ltf, entry_price, stop_loss, take_profit,
+                        {**reasons, "rejection_reason": f"Risk/Reward {rr} below minimum {self.minimum_rr}"}, timestamp
+                    )
                 if abs(entry_price - stop_loss) > 0:
                     reasons["setup_confirmation"] = {
                         "htf_trend": htf_trend,

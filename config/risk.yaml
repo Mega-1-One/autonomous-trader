@@ -11,15 +11,16 @@ risk_rules:
   maximum_open_positions: 0
   maximum_symbol_exposure_percent: 0
   maximum_spread_pips: 0
-  minimum_rr: 0
+  minimum_rr: 1.5
   maximum_position_size_lots: 10.0
   minimum_position_size_lots: 0.01
 
-# Tight scalp stops and small profit targets (pips, not 2R)
+# Scalp stops and targets (pips). Phase 1 exit-math fix: 5.0 TP / 3.0 SL
+# (RR ~1.67) so winners pay for losers. Old 2.0/5.0 (0.4R) needed >71% win rate.
 stops_and_targets:
   take_profit_mode: "FIXED_PIPS"
-  take_profit_pips: 2.0
-  stop_loss_pips: 5.0
+  take_profit_pips: 5.0
+  stop_loss_pips: 3.0
   stop_loss_safety_buffer_pips: 0.2
 
 # Position Management Rules
