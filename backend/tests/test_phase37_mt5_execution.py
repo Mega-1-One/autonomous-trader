@@ -73,7 +73,7 @@ def test_phase37_paper_execution_flow():
         "direction": "LONG",
         "entry_price": 2400.0,
         "stop_loss": 2390.0,
-        "take_profit": 2410.0
+        "take_profit": 2420.0
     }
 
     result = engine.execute_signal(signal, current_spread_pips=1.0)

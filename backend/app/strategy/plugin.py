@@ -97,10 +97,11 @@ class UnvalidatedResearchStrategy(StrategyPlugin):
         trend = market_state.get("trend")
         last_close = market_state.get("last_close", 2400.0)
 
-        # Pip sizes
+        # Pip sizes (Phase 1 exit-math fix: 3.0 SL / 5.0 TP, RR ~1.67,
+        # so emitted signals pass the minimum_rr >= 1.5 risk gate)
         pip_unit = 0.1 if "XAU" in instrument else 0.0001
-        sl_dist = 5.0 * pip_unit
-        tp_dist = 2.0 * pip_unit
+        sl_dist = 3.0 * pip_unit
+        tp_dist = 5.0 * pip_unit
 
         direction = SignalDirection.LONG if trend == "BULLISH" else SignalDirection.SHORT
         entry = round(last_close, 3)
