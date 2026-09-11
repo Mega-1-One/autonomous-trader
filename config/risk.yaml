@@ -1,0 +1,40 @@
+# Scalp Risk Configuration
+# Limits set to 0 are disabled (the engine does not block on them).
+# Objective: fire on setups within seconds, take a small profit, recycle.
+
+risk_rules:
+  risk_per_trade_percent: 0.1
+  # Disabled swing-style locks (were 2% daily / 10% DD / 3 trades / 1 position / 3 pip spread / 2R)
+  maximum_daily_loss_percent: 0
+  maximum_total_drawdown_percent: 0
+  maximum_trades_per_day: 0
+  maximum_open_positions: 0
+  maximum_symbol_exposure_percent: 0
+  maximum_spread_pips: 0
+  minimum_rr: 1.5
+  maximum_position_size_lots: 10.0
+  minimum_position_size_lots: 0.01
+
+# Scalp stops and targets (pips). Phase 1 exit-math fix: 5.0 TP / 3.0 SL
+# (RR ~1.67) so winners pay for losers. Old 2.0/5.0 (0.4R) needed >71% win rate.
+stops_and_targets:
+  take_profit_mode: "FIXED_PIPS"
+  take_profit_pips: 5.0
+  stop_loss_pips: 3.0
+  stop_loss_safety_buffer_pips: 0.2
+
+# Position Management Rules
+position_management:
+  break_even_enabled: false
+  break_even_trigger_r: 0.5
+  break_even_offset_pips: 0.1
+  partial_tp_enabled: false
+  trailing_stop_enabled: false
+  max_holding_time_seconds: 30
+
+# Symbol Specific Mappings & Defaults
+symbol_mappings:
+  XAUUSD: ["XAUUSD", "XAUUSDm", "GOLD", "GOLDm"]
+  EURUSD: ["EURUSD", "EURUSDm"]
+  GBPUSD: ["GBPUSD", "GBPUSDm"]
+  NAS100: ["NAS100", "US100", "USTECH"]

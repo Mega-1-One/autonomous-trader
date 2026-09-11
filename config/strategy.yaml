@@ -1,0 +1,74 @@
+# Fast scalp strategy: detect on M1, act within seconds, small pip targets.
+
+enabled: true
+
+mode: "SCALP"
+
+# Timeframe rules
+timeframes:
+  htf: "M5"
+  ltf: "M1"
+  supported:
+    - "M1"
+    - "M5"
+    - "M15"
+    - "M30"
+    - "H1"
+    - "H4"
+
+scan:
+  interval_seconds: 1
+
+# Market Structure Parameters
+market_structure:
+  swing_lookback: 3
+  confirm_on_close: false
+
+# Liquidity Detection Parameters
+liquidity:
+  equal_highs_lows_tolerance_pips: 2.0
+  sweep_threshold_pips: 1.0
+  lookback_candles: 100
+
+# Displacement Parameters
+displacement:
+  enabled: true
+  atr_period: 14
+  atr_multiplier: 1.5
+  min_body_percentage: 60.0
+
+# Fair Value Gap (FVG) Parameters
+fvg:
+  enabled: true
+  min_gap_pips: 0.5
+  mitigation_rule: "TOUCH"
+
+# Order Block Parameters
+order_block:
+  enabled: true
+  require_displacement: false
+  require_structure_break: false
+
+# Sessions disabled: scalp whenever a setup appears
+sessions:
+  enabled: false
+  london:
+    enabled: false
+    start_utc: "07:00"
+    end_utc: "16:00"
+  new_york:
+    enabled: false
+    start_utc: "12:00"
+    end_utc: "21:00"
+
+# Entry Model Requirements
+# Phase 1 exit-math fix: targets must pay for the stop (RR >= 1.5).
+# Old 2.0 TP / 5.0 SL (0.4R) closed winners on noise and held losers.
+entry:
+  minimum_rr: 1.5
+  require_htf_alignment: false
+  require_liquidity_sweep: true
+  require_displacement: false
+  require_mss_bos: false
+  take_profit_pips: 5.0
+  stop_loss_pips: 3.0
