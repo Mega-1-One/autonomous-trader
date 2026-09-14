@@ -24,11 +24,17 @@ def main():
     scalper = GoldMultiPositionProfitScalper(
         symbol="XAUUSDm",
         volume=0.01,
-        max_open_positions=10,
+        take_profit_pips=15.0,
         min_profit_target_usd=0.15,
         stop_loss_pips=5.0,
         max_loss_usd=2.0,
-        max_holding_seconds=0
+        max_holding_seconds=120.0,
+        risk_per_trade_percent=0.5,
+        max_total_risk_percent=5.0,
+        max_daily_loss_percent=5.0,
+        max_drawdown_percent=10.0,
+        min_free_margin_percent=20.0,
+        max_margin_usage_percent=70.0
     )
 
     if scalper.initialize():
