@@ -129,48 +129,52 @@ class GoldMultiPositionProfitScalper:
                     total_floating = sum(p.profit + p.swap for p in active)
                     print(f"[{datetime.now(timezone.utc).strftime('%H:%M:%S')}] Active Trades: {len(active)}/{self.max_open_positions} | Floating PnL: ${total_floating:+.2f} USD | Acc Balance: ${balance:.2f}")
 
-                # 3. OPEN NEW SCALP POSITIONS ON MOMENTUM REVERSAL
-                if len(active) < self.max_open_positions:
+                # 3. OPEN NEW SCALP POSITIONS UP TO MAX CAPACITY
+                while len(active) < self.max_open_positions:
                     tick = mt5.symbol_info_tick(self.symbol)
-                    if tick:
-                        curr_mid = (tick.ask + tick.bid) / 2.0
+                    if not tick:
+                        break
+                    curr_mid = (tick.ask + tick.bid) / 2.0
 
-                        # Determine direction based on tick momentum reversal
-                        if self.last_price > 0:
-                            direction = "BUY" if curr_mid >= self.last_price else "SELL"
-                        else:
-                            direction = "BUY"
+                    # Determine direction based on tick momentum reversal
+                    if self.last_price > 0:
+                        direction = "BUY" if curr_mid >= self.last_price else "SELL"
+                    else:
+                        direction = "BUY"
 
-                        self.last_price = curr_mid
-                        is_buy = (direction == "BUY")
-                        price = tick.ask if is_buy else tick.bid
+                    self.last_price = curr_mid
+                    is_buy = (direction == "BUY")
+                    price = tick.ask if is_buy else tick.bid
 
-                        # Explicit Take Profit + protective Stop Loss (Phase 1 fix: no more zero-SL holds)
-                        tp = round(price + (self.take_profit_pips * pip_scale), 3) if is_buy else round(price - (self.take_profit_pips * pip_scale), 3)
-                        sl = round(price - (self.stop_loss_pips * pip_scale), 3) if is_buy else round(price + (self.stop_loss_pips * pip_scale), 3)
+                    # Explicit Take Profit + protective Stop Loss
+                    tp = round(price + (self.take_profit_pips * pip_scale), 3) if is_buy else round(price - (self.take_profit_pips * pip_scale), 3)
+                    sl = round(price - (self.stop_loss_pips * pip_scale), 3) if is_buy else round(price + (self.stop_loss_pips * pip_scale), 3)
 
-                        req_open = {
-                            "action": mt5.TRADE_ACTION_DEAL,
-                            "symbol": self.symbol,
-                            "volume": self.volume,
-                            "type": mt5.ORDER_TYPE_BUY if is_buy else mt5.ORDER_TYPE_SELL,
-                            "price": price,
-                            "sl": sl,
-                            "tp": tp,
-                            "deviation": 10,
-                            "magic": self.magic_number,
-                            "comment": f"Gold ProfitScalp #{trades_opened+1}",
-                            "type_time": mt5.ORDER_TIME_GTC,
-                            "type_filling": mt5.ORDER_FILLING_IOC,
-                        }
+                    req_open = {
+                        "action": mt5.TRADE_ACTION_DEAL,
+                        "symbol": self.symbol,
+                        "volume": self.volume,
+                        "type": mt5.ORDER_TYPE_BUY if is_buy else mt5.ORDER_TYPE_SELL,
+                        "price": price,
+                        "sl": sl,
+                        "tp": tp,
+                        "deviation": 10,
+                        "magic": self.magic_number,
+                        "comment": f"Gold ProfitScalp #{trades_opened+1}",
+                        "type_time": mt5.ORDER_TIME_GTC,
+                        "type_filling": mt5.ORDER_FILLING_IOC,
+                    }
 
-                        res_open = mt5.order_send(req_open)
-                        if res_open and res_open.retcode == mt5.TRADE_RETCODE_DONE:
-                            trades_opened += 1
-                            print(f"[{datetime.now(timezone.utc).strftime('%H:%M:%S')}] [SCALP OPENED] Ticket #{res_open.order} ({direction}) at {res_open.price} (SL: {sl}, TP Target: {tp})")
-                        else:
-                            if res_open and res_open.retcode == 10027:
-                                print("\n[ACTION REQUIRED] Click the GREEN 'Algo Trading' button in MT5 to allow scalping orders.")
+                    res_open = mt5.order_send(req_open)
+                    if res_open and res_open.retcode == mt5.TRADE_RETCODE_DONE:
+                        trades_opened += 1
+                        print(f"[{datetime.now(timezone.utc).strftime('%H:%M:%S')}] [SCALP OPENED] Ticket #{res_open.order} ({direction}) at {res_open.price} (SL: {sl}, TP Target: {tp})")
+                        open_positions = mt5.positions_get(group=f"*{self.symbol}*")
+                        active = [p for p in (open_positions or []) if p.magic == self.magic_number]
+                    else:
+                        if res_open and res_open.retcode == 10027:
+                            print("\n[ACTION REQUIRED] Click the GREEN 'Algo Trading' button in MT5 to allow scalping orders.")
+                        break
 
                 time.sleep(1.0)
         except KeyboardInterrupt:
