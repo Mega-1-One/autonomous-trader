@@ -9,6 +9,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class ExecutionMode(str, Enum):
     BACKTEST = "BACKTEST"
     PAPER = "PAPER"
+    DEMO = "DEMO"
     LIVE = "LIVE"
 
 class Settings(BaseSettings):

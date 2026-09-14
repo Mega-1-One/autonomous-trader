@@ -93,7 +93,7 @@ class GoldMultiPositionProfitScalper:
                         reason, comment = "PROFIT", "Gold Profit-Only Close"
                     elif net_profit <= -self.max_loss_usd:
                         reason, comment = "STOP_LOSS", "Gold Stop-Loss Close"
-                    elif hold_time >= self.max_holding_seconds:
+                    elif self.max_holding_seconds and self.max_holding_seconds > 0 and hold_time >= self.max_holding_seconds:
                         reason, comment = "MAX_HOLD", "Gold Max-Hold Close"
                     else:
                         continue
