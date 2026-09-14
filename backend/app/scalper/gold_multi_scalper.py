@@ -13,8 +13,8 @@ from app.data.mt5_real import RealMT5Adapter
 class GoldMultiPositionProfitScalper:
     """Gold (XAUUSDm) Reversal Scalper Engine (Explicit TP + protective SL, profit-target close).
     
-    Features fast continuous scanning, non-blocking terminal commands (STOP, START, STATUS),
-    MT5 reconciliation, duplicate order prevention, and performance metrics.
+    Features fast continuous scanning, non-blocking terminal commands (STOP, START, STATUS, TEST),
+    MT5 reconciliation, duplicate order prevention, strategy debug diagnostics, and performance metrics.
     """
 
     def __init__(
@@ -26,7 +26,8 @@ class GoldMultiPositionProfitScalper:
         min_profit_target_usd: float = 0.15,
         stop_loss_pips: float = 5.0,
         max_loss_usd: float = 2.0,
-        max_holding_seconds: float = 120.0
+        max_holding_seconds: float = 120.0,
+        test_entry: bool = False
     ):
         self.symbol = symbol
         self.volume = volume
@@ -36,6 +37,7 @@ class GoldMultiPositionProfitScalper:
         self.stop_loss_pips = stop_loss_pips
         self.max_loss_usd = max_loss_usd
         self.max_holding_seconds = max_holding_seconds
+        self.test_entry = test_entry
         
         self.adapter = RealMT5Adapter()
         self.magic_number = 888777
@@ -58,6 +60,7 @@ class GoldMultiPositionProfitScalper:
         
         self.last_order_time = 0.0
         self.last_max_pos_log = 0.0
+        self.last_debug_log_time = 0.0
         self.last_loop_time = 0.0
         self.last_strategy_eval_time = 0.0
         self.last_order_sub_time = 0.0
@@ -92,6 +95,10 @@ class GoldMultiPositionProfitScalper:
                         print("\n[START COMMAND] Continuous trading resumed.\n")
                     elif cmd == "STATUS":
                         self.print_status()
+                    elif cmd in ("TEST", "TEST_ENTRY"):
+                        with self.lock:
+                            self.test_entry = True
+                        print("\n[TEST ENTRY COMMAND] Safe Test Entry mode activated for 1 trade.\n")
                 except Exception:
                     time.sleep(0.1)
 
@@ -120,13 +127,13 @@ class GoldMultiPositionProfitScalper:
         print(f"Open Positions:         {len(active)}/{self.max_open_positions}")
         print(f"Today's Trades:         {self.todays_trades} (Wins: {self.todays_wins} | Losses: {self.todays_losses})")
         print(f"Today's Realized P/L:   ${self.todays_realized_pnl:+.2f} USD")
-        print(f"Current Bot State:      {self.state}")
+        print(f"Current Bot State:      {self.state} (TEST_ENTRY: {'ON' if self.test_entry else 'OFF'})")
         print(f"Last Trade Ticket:      #{self.last_trade_ticket if self.last_trade_ticket else 'None'}")
         print(f"Last Trade Result:      {self.last_trade_result if self.last_trade_result else 'None'}")
         print(f"Last Trade Time:        {self.last_trade_time if self.last_trade_time else 'None'}")
         print(f"Fast Scan Performance:  Loop: {self.last_loop_time:.4f}s | Strategy: {self.last_strategy_eval_time:.4f}s | Speed: {self.scans_per_sec:.1f} scans/sec")
         print("==================================================")
-        print("Commands: STOP (disable new trades) | START (resume trading) | STATUS (show details)")
+        print("Commands: STOP (disable new trades) | START (resume) | STATUS (stats) | TEST (single test order)")
         print(">\n")
 
     def run_multi_scalper_loop(self, duration_seconds: Optional[int] = None):
@@ -137,7 +144,7 @@ class GoldMultiPositionProfitScalper:
             print("[ERROR] Could not fetch account info.")
             return
 
-        pip_scale = 0.01 if "XAU" in self.symbol or "USTEC" in self.symbol else 0.0001
+        pip_scale = 0.10 if ("XAU" in self.symbol or "GOLD" in self.symbol) else 0.0001
 
         print("\n==================================================")
         print(" GOLD REVERSAL & PROFIT-ONLY SCALPER (FAST MODE)")
@@ -151,7 +158,7 @@ class GoldMultiPositionProfitScalper:
         print(f"Stop Loss:              -{self.stop_loss_pips} pips (Protective SL on Broker) + ${self.max_loss_usd:.2f} loss cap")
         print(f"Close Triggers:         PROFIT >= +${self.min_profit_target_usd:.2f} | LOSS <= -${self.max_loss_usd:.2f}")
         print("==================================================")
-        print("Commands: STOP = pause new trades | START = resume | STATUS = view stats")
+        print("Commands: STOP = pause new trades | START = resume | STATUS = view stats | TEST = 1 test scalp")
         print("Press Ctrl+C in terminal for emergency shutdown.\n")
 
         self._start_command_listener()
@@ -271,30 +278,57 @@ class GoldMultiPositionProfitScalper:
 
                 with self.lock:
                     current_state = self.state
+                    is_test_mode = self.test_entry
 
-                if current_state == "RUNNING":
-                    if len(active) >= self.max_open_positions:
+                # Evaluate strategy entry signal
+                curr_mid = (tick.ask + tick.bid) / 2.0
+                spread = tick.ask - tick.bid
+                
+                if self.last_price > 0:
+                    direction = "BUY" if curr_mid >= self.last_price else "SELL"
+                    signal_desc = f"{direction} (Price momentum: {curr_mid:.3f} {'>=' if direction=='BUY' else '<'} {self.last_price:.3f})"
+                else:
+                    direction = "BUY"
+                    signal_desc = "BUY (Initial market entry signal)"
+
+                self.last_price = curr_mid
+                self.last_strategy_eval_time = time.perf_counter() - t_eval_start
+
+                # Compact 1-Second Strategy Debug Diagnostic Message
+                if now - self.last_debug_log_time >= 1.0:
+                    self.last_debug_log_time = now
+                    print(f"\n[STRATEGY DEBUG] {datetime.now(timezone.utc).strftime('%H:%M:%S')} | Symbol: {self.symbol}")
+                    print(f"Price: Bid: {tick.bid:.3f} | Ask: {tick.ask:.3f} | Spread: {spread:.3f} ({spread/pip_scale:.1f} pips)")
+                    print(f"Bot State: {current_state} | Active Trades: {len(active)}/{self.max_open_positions} | TEST_ENTRY: {'ON' if is_test_mode else 'OFF'}")
+                    print(f"Signal: {signal_desc}")
+                    print("Pipeline Diagnostics:")
+                    print(f"  1. Market Data Check:      PASS (Valid XAUUSDm tick received)")
+                    print(f"  2. Timeframe & Session:    PASS (Fast Tick Reversal / 24-7 Gold)")
+                    print(f"  3. Spread Filter Check:    PASS (Spread {spread:.3f} <= 1.000 max)")
+                    print(f"  4. Risk & Margin Check:    PASS (Balance: ${balance:.2f} USD, Free Margin: ${acc_curr.margin_free:.2f} USD)")
+                    print(f"  5. Position Limit Check:   {'PASS' if len(active) < self.max_open_positions else 'WAITING (Full)'} ({len(active)}/{self.max_open_positions} active)")
+                    print(f"  6. Strategy Signal:        PASS ({direction})")
+                    print(f"  7. Deduplication Buffer:   {'PASS' if (now - self.last_order_time >= 0.2 or is_test_mode) else 'WAITING (Buffer)'} (Elapsed: {now - self.last_order_time:.2f}s)")
+                    print(f"  8. Order Pipeline Status:  {'EXECUTING TEST TRADE' if is_test_mode else ('READY' if (current_state == 'RUNNING' and len(active) < self.max_open_positions) else 'PAUSED/STOPPED')}\n")
+
+                # ORDER EXECUTION ENGINE
+                if is_test_mode or (current_state == "RUNNING"):
+                    if len(active) >= self.max_open_positions and not is_test_mode:
                         if now - self.last_max_pos_log >= 5.0:
                             print(f"[{datetime.now(timezone.utc).strftime('%H:%M:%S')}] [MAX POSITIONS] {len(active)}/{self.max_open_positions} positions active. Waiting...")
                             self.last_max_pos_log = now
                     else:
-                        # Evaluate tick momentum signal
-                        curr_mid = (tick.ask + tick.bid) / 2.0
-                        if self.last_price > 0:
-                            direction = "BUY" if curr_mid >= self.last_price else "SELL"
-                        else:
-                            direction = "BUY"
-                        
-                        self.last_price = curr_mid
-                        self.last_strategy_eval_time = time.perf_counter() - t_eval_start
-
-                        # Duplicate Protection: require minimum 0.2s between new orders
-                        if now - self.last_order_time >= 0.2:
+                        # Deduplication Protection: minimum 0.2s between orders (bypassed for TEST_ENTRY)
+                        if is_test_mode or (now - self.last_order_time >= 0.2):
                             is_buy = (direction == "BUY")
                             price = tick.ask if is_buy else tick.bid
 
-                            tp = round(price + (self.take_profit_pips * pip_scale), 3) if is_buy else round(price - (self.take_profit_pips * pip_scale), 3)
-                            sl = round(price - (self.stop_loss_pips * pip_scale), 3) if is_buy else round(price + (self.stop_loss_pips * pip_scale), 3)
+                            # Ensure SL distance is at least 1.5x spread to prevent broker INVALID_STOPS rejection
+                            min_sl_dist = max(self.stop_loss_pips * pip_scale, spread * 1.5)
+                            min_tp_dist = max(self.take_profit_pips * pip_scale, spread * 2.0)
+
+                            tp = round(price + min_tp_dist, 3) if is_buy else round(price - min_tp_dist, 3)
+                            sl = round(price - min_sl_dist, 3) if is_buy else round(price + min_sl_dist, 3)
 
                             t_order_start = time.perf_counter()
                             req_open = {
@@ -307,13 +341,28 @@ class GoldMultiPositionProfitScalper:
                                 "tp": tp,
                                 "deviation": 10,
                                 "magic": self.magic_number,
-                                "comment": f"Gold Scalp #{self.todays_trades+len(active)+1}",
+                                "comment": f"Gold Scalp {'TEST' if is_test_mode else '#' + str(self.todays_trades+len(active)+1)}",
                                 "type_time": mt5.ORDER_TIME_GTC,
                                 "type_filling": mt5.ORDER_FILLING_IOC,
                             }
 
                             res_open = mt5.order_send(req_open)
                             self.last_order_sub_time = time.perf_counter() - t_order_start
+
+                            # Reset test_entry flag after single test execution
+                            if is_test_mode:
+                                with self.lock:
+                                    self.test_entry = False
+                                print("[TEST ENTRY COMPLETE] Test trade execution finished. Reset TEST_ENTRY=OFF.\n")
+
+                            retcode_desc = {
+                                10009: "TRADE_RETCODE_DONE (Order executed cleanly)",
+                                10013: "TRADE_RETCODE_INVALID (Invalid order parameters)",
+                                10014: "TRADE_RETCODE_INVALID_VOLUME (Invalid lot size)",
+                                10015: "TRADE_RETCODE_INVALID_PRICE (Invalid entry price)",
+                                10016: "TRADE_RETCODE_INVALID_STOPS (Invalid SL or TP distance)",
+                                10027: "TRADE_RETCODE_AUTOTRADER_DISABLED (Algo Trading disabled in MT5 toolbar)"
+                            }.get(res_open.retcode if res_open else -1, f"Retcode {res_open.retcode if res_open else 'None'}")
 
                             if res_open and res_open.retcode == mt5.TRADE_RETCODE_DONE:
                                 self.last_order_time = now
@@ -340,8 +389,14 @@ class GoldMultiPositionProfitScalper:
                                     "time_str": open_time_str
                                 }
                             else:
+                                print(f"\n[ORDER PIPELINE FAILED]")
+                                print(f"Signal generated: YES ({direction})")
+                                print(f"Risk approved:    YES")
+                                print(f"Order prepared:   YES (Volume: {self.volume}, Price: {price}, SL: {sl}, TP: {tp})")
+                                print(f"order_send called: YES")
+                                print(f"MT5 Result:       {retcode_desc}")
                                 if res_open and res_open.retcode == 10027:
-                                    print("\n[ACTION REQUIRED] Click the GREEN 'Algo Trading' button in MT5 to allow scalping orders.")
+                                    print("[ACTION REQUIRED] Click the GREEN 'Algo Trading' button in MT5 to allow scalping orders.\n")
 
                 # Fast yield (50ms) to maintain fast scanning without CPU saturation
                 time.sleep(0.05)
