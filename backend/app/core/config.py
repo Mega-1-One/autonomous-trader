@@ -3,7 +3,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, Optional
 import yaml
-from pydantic import Field, model_validator
+from pydantic import AliasChoices, Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class ExecutionMode(str, Enum):
@@ -40,6 +40,13 @@ class Settings(BaseSettings):
 
     # Config directory path
     CONFIG_DIR: Path = Path(__file__).resolve().parent.parent.parent.parent / "config"
+
+    # State directory for cross-process files (e.g. the emergency-stop sentinel).
+    # Env vars: AUTOTRADER_STATE_DIR (preferred) or STATE_DIR
+    STATE_DIR: Path = Field(
+        default=Path(__file__).resolve().parent.parent.parent / "state",
+        validation_alias=AliasChoices("AUTOTRADER_STATE_DIR", "STATE_DIR"),
+    )
 
     strategy_config: Dict[str, Any] = Field(default_factory=dict)
     risk_config: Dict[str, Any] = Field(default_factory=dict)

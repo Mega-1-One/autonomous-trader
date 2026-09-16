@@ -3,6 +3,7 @@ from dataclasses import dataclass, asdict
 from typing import Any, Dict, List, Optional
 from app.core.config import settings
 from app.core.logging import logger
+from app.core import stop_state
 
 @dataclass
 class RiskDecision:
@@ -86,8 +87,8 @@ class RiskEngine:
         current_spread_pips: float = 1.0
     ) -> RiskDecision:
         """Evaluates trade setup against all active risk limits."""
-        # 1. Global Emergency Stop Check
-        if self.emergency_stop_active:
+        # 1. Global Emergency Stop Check (in-memory flag + cross-process sentinel)
+        if self.emergency_stop_active or stop_state.is_active() is not None:
             return RiskDecision(
                 approved=False,
                 rejection_reason="Emergency Stop is currently ACTIVE. All new entries blocked.",
@@ -182,11 +183,17 @@ class RiskEngine:
         )
 
     def trigger_emergency_stop(self, reason: str = "User Initiated Emergency Stop") -> None:
-        """Triggers global emergency stop blocking all future entries."""
+        """Triggers global emergency stop blocking all future entries.
+
+        Also writes the cross-process sentinel file (ADR-8) so every process's
+        order paths observe the stop.
+        """
         self.emergency_stop_active = True
+        stop_state.trigger(reason)
         logger.critical(f"GLOBAL EMERGENCY STOP ACTIVATED: {reason}")
 
     def reset_emergency_stop(self) -> None:
-        """Resets global emergency stop."""
+        """Resets global emergency stop (in-process flag and cross-process sentinel)."""
         self.emergency_stop_active = False
+        stop_state.reset()
         logger.info("Global Emergency Stop has been reset.")
