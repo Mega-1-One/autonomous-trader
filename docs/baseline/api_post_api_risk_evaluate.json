@@ -1,0 +1,43 @@
+{
+  "method": "POST",
+  "path": "/api/risk/evaluate",
+  "result": {
+    "json": {
+      "detail": [
+        {
+          "input": {
+            "confidence": 0.8,
+            "direction": "BUY",
+            "entry_price": 2400.0,
+            "stop_loss_pips": 3.0,
+            "symbol": "XAUUSD",
+            "take_profit_pips": 5.0
+          },
+          "loc": [
+            "body",
+            "stop_loss"
+          ],
+          "msg": "Field required",
+          "type": "missing"
+        },
+        {
+          "input": {
+            "confidence": 0.8,
+            "direction": "BUY",
+            "entry_price": 2400.0,
+            "stop_loss_pips": 3.0,
+            "symbol": "XAUUSD",
+            "take_profit_pips": 5.0
+          },
+          "loc": [
+            "body",
+            "take_profit"
+          ],
+          "msg": "Field required",
+          "type": "missing"
+        }
+      ]
+    },
+    "status": 422
+  }
+}

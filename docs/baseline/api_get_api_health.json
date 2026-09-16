@@ -1,0 +1,18 @@
+{
+  "method": "GET",
+  "path": "/api/health",
+  "result": {
+    "json": {
+      "app_name": "Autonomous Trader",
+      "database_connected": true,
+      "enable_live_trading": false,
+      "execution_mode": "PAPER",
+      "live_trading_confirmation": false,
+      "mt5_adapter": "MockMT5Adapter",
+      "mt5_connected": true,
+      "status": "healthy",
+      "timestamp": "2026-09-16T21:42:24.743801+00:00"
+    },
+    "status": 200
+  }
+}

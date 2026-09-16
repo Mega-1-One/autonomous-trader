@@ -1,0 +1,69 @@
+{
+  "method": "GET",
+  "path": "/api/market/symbols",
+  "result": {
+    "json": {
+      "specifications": {
+        "EURUSD": {
+          "base_price": 1.085,
+          "broker_name": "EURUSD",
+          "canonical_name": "EURUSD",
+          "contract_size": 100000.0,
+          "digits": 5,
+          "max_volume": 100.0,
+          "min_volume": 0.01,
+          "point_size": 1e-05,
+          "tick_size": 1e-05,
+          "tick_value": 1.0,
+          "volume_step": 0.01
+        },
+        "GBPUSD": {
+          "base_price": 1.28,
+          "broker_name": "GBPUSD",
+          "canonical_name": "GBPUSD",
+          "contract_size": 100000.0,
+          "digits": 5,
+          "max_volume": 100.0,
+          "min_volume": 0.01,
+          "point_size": 1e-05,
+          "tick_size": 1e-05,
+          "tick_value": 1.0,
+          "volume_step": 0.01
+        },
+        "NAS100": {
+          "base_price": 19500.0,
+          "broker_name": "NAS100",
+          "canonical_name": "NAS100",
+          "contract_size": 20.0,
+          "digits": 2,
+          "max_volume": 100.0,
+          "min_volume": 0.01,
+          "point_size": 0.01,
+          "tick_size": 0.01,
+          "tick_value": 1.0,
+          "volume_step": 0.01
+        },
+        "XAUUSD": {
+          "base_price": 2400.0,
+          "broker_name": "XAUUSD",
+          "canonical_name": "XAUUSD",
+          "contract_size": 100.0,
+          "digits": 2,
+          "max_volume": 100.0,
+          "min_volume": 0.01,
+          "point_size": 0.01,
+          "tick_size": 0.01,
+          "tick_value": 1.0,
+          "volume_step": 0.01
+        }
+      },
+      "symbols": [
+        "XAUUSD",
+        "EURUSD",
+        "GBPUSD",
+        "NAS100"
+      ]
+    },
+    "status": 200
+  }
+}

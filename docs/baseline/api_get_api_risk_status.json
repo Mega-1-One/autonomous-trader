@@ -1,0 +1,22 @@
+{
+  "method": "GET",
+  "path": "/api/risk/status",
+  "result": {
+    "json": {
+      "daily_lock_active": false,
+      "daily_lock_reason": null,
+      "emergency_stop_active": false,
+      "risk_parameters": {
+        "maximum_daily_loss_percent": 0,
+        "maximum_open_positions": 0,
+        "maximum_spread_pips": 0,
+        "maximum_trades_per_day": 0,
+        "minimum_rr": 1.5,
+        "risk_per_trade_percent": 0.1
+      },
+      "today_realized_pnl": 0.0,
+      "today_trade_count": 0
+    },
+    "status": 200
+  }
+}

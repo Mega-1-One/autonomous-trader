@@ -1,0 +1,34 @@
+{
+  "method": "GET",
+  "path": "/api/strategy/signals",
+  "result": {
+    "json": {
+      "signal": {
+        "client_signal_id": "SIG_C550CCA4",
+        "confidence": 0.0,
+        "direction": "NEUTRAL",
+        "entry_price": 0.0,
+        "reasons": {
+          "htf_context": {
+            "trend": "RANGING"
+          },
+          "rejection_reason": "No scalp setup satisfied (missing sweep or valid entry zone)",
+          "session_check": {
+            "active": true,
+            "session": "Always On (Scalp)"
+          }
+        },
+        "risk_reward": 0.0,
+        "setup_type": "NO_SETUP",
+        "status": "REJECTED",
+        "stop_loss": 0.0,
+        "symbol": "XAUUSD",
+        "take_profit": 0.0,
+        "timeframe": "M1",
+        "timestamp": "2026-09-16T21:42:24.822722+00:00"
+      },
+      "symbol": "XAUUSD"
+    },
+    "status": 200
+  }
+}

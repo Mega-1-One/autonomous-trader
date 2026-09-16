@@ -1,0 +1,13 @@
+{
+  "method": "GET",
+  "path": "/",
+  "result": {
+    "json": {
+      "docs": "/docs",
+      "health": "/api/health",
+      "name": "Autonomous Trader",
+      "version": "1.0.0"
+    },
+    "status": 200
+  }
+}

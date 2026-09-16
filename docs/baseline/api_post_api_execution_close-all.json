@@ -1,0 +1,33 @@
+{
+  "method": "POST",
+  "path": "/api/execution/close-all",
+  "result": {
+    "json": {
+      "closed_count": 1,
+      "positions": [
+        {
+          "break_even_activated": false,
+          "broker_ticket": 1000001,
+          "client_order_id": "ORD_2C2CDB16",
+          "current_price": 2400.0,
+          "direction": "BUY",
+          "entry_price": 2400.0,
+          "entry_time": "2026-09-16T21:42:26.131341+00:00",
+          "exit_reason": "EMERGENCY_CLOSE_ALL",
+          "exit_time": "2026-09-16T21:42:26.131341+00:00",
+          "floating_pnl": 0.0,
+          "position_id": "POS_6049D867",
+          "r_multiple": 0.0,
+          "realized_pnl": 0.0,
+          "status": "CLOSED",
+          "stop_loss": 2399.7,
+          "symbol": "XAUUSD",
+          "take_profit": 2400.5,
+          "volume": 0.33
+        }
+      ],
+      "status": "ALL_POSITIONS_CLOSED"
+    },
+    "status": 200
+  }
+}

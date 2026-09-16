@@ -1,0 +1,1029 @@
+{
+  "method": "GET",
+  "path": "/openapi.json",
+  "result": {
+    "json": {
+      "components": {
+        "schemas": {
+          "BacktestRunRequest": {
+            "properties": {
+              "candle_count": {
+                "default": 500,
+                "title": "Candle Count",
+                "type": "integer"
+              },
+              "commission_per_lot": {
+                "default": 7.0,
+                "title": "Commission Per Lot",
+                "type": "number"
+              },
+              "initial_balance": {
+                "default": 10000.0,
+                "title": "Initial Balance",
+                "type": "number"
+              },
+              "slippage_pips": {
+                "default": 0.5,
+                "title": "Slippage Pips",
+                "type": "number"
+              },
+              "spread_pips": {
+                "default": 1.0,
+                "title": "Spread Pips",
+                "type": "number"
+              },
+              "symbol": {
+                "default": "XAUUSD",
+                "title": "Symbol",
+                "type": "string"
+              },
+              "timeframe": {
+                "default": "M5",
+                "title": "Timeframe",
+                "type": "string"
+              }
+            },
+            "title": "BacktestRunRequest",
+            "type": "object"
+          },
+          "Body_close_all_positions_api_execution_close_all_post": {
+            "properties": {
+              "reason": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Reason"
+              }
+            },
+            "title": "Body_close_all_positions_api_execution_close_all_post",
+            "type": "object"
+          },
+          "Body_trigger_emergency_stop_api_system_emergency_stop_post": {
+            "properties": {
+              "reason": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Reason"
+              }
+            },
+            "title": "Body_trigger_emergency_stop_api_system_emergency_stop_post",
+            "type": "object"
+          },
+          "HTTPValidationError": {
+            "properties": {
+              "detail": {
+                "items": {
+                  "$ref": "#/components/schemas/ValidationError"
+                },
+                "title": "Detail",
+                "type": "array"
+              }
+            },
+            "title": "HTTPValidationError",
+            "type": "object"
+          },
+          "MonteCarloRequest": {
+            "properties": {
+              "candle_count": {
+                "default": 500,
+                "title": "Candle Count",
+                "type": "integer"
+              },
+              "initial_balance": {
+                "default": 10000.0,
+                "title": "Initial Balance",
+                "type": "number"
+              },
+              "iterations": {
+                "default": 200,
+                "title": "Iterations",
+                "type": "integer"
+              },
+              "symbol": {
+                "default": "XAUUSD",
+                "title": "Symbol",
+                "type": "string"
+              },
+              "timeframe": {
+                "default": "M5",
+                "title": "Timeframe",
+                "type": "string"
+              }
+            },
+            "title": "MonteCarloRequest",
+            "type": "object"
+          },
+          "OrderSubmitRequest": {
+            "properties": {
+              "client_signal_id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Client Signal Id"
+              },
+              "direction": {
+                "default": "LONG",
+                "title": "Direction",
+                "type": "string"
+              },
+              "entry_price": {
+                "title": "Entry Price",
+                "type": "number"
+              },
+              "spread_pips": {
+                "default": 1.0,
+                "title": "Spread Pips",
+                "type": "number"
+              },
+              "stop_loss": {
+                "title": "Stop Loss",
+                "type": "number"
+              },
+              "symbol": {
+                "default": "XAUUSD",
+                "title": "Symbol",
+                "type": "string"
+              },
+              "take_profit": {
+                "title": "Take Profit",
+                "type": "number"
+              }
+            },
+            "required": [
+              "entry_price",
+              "stop_loss",
+              "take_profit"
+            ],
+            "title": "OrderSubmitRequest",
+            "type": "object"
+          },
+          "RiskEvaluateRequest": {
+            "properties": {
+              "entry_price": {
+                "title": "Entry Price",
+                "type": "number"
+              },
+              "spread_pips": {
+                "default": 1.0,
+                "title": "Spread Pips",
+                "type": "number"
+              },
+              "stop_loss": {
+                "title": "Stop Loss",
+                "type": "number"
+              },
+              "symbol": {
+                "default": "XAUUSD",
+                "title": "Symbol",
+                "type": "string"
+              },
+              "take_profit": {
+                "title": "Take Profit",
+                "type": "number"
+              }
+            },
+            "required": [
+              "entry_price",
+              "stop_loss",
+              "take_profit"
+            ],
+            "title": "RiskEvaluateRequest",
+            "type": "object"
+          },
+          "ValidationError": {
+            "properties": {
+              "ctx": {
+                "title": "Context",
+                "type": "object"
+              },
+              "input": {
+                "title": "Input"
+              },
+              "loc": {
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "integer"
+                    }
+                  ]
+                },
+                "title": "Location",
+                "type": "array"
+              },
+              "msg": {
+                "title": "Message",
+                "type": "string"
+              },
+              "type": {
+                "title": "Error Type",
+                "type": "string"
+              }
+            },
+            "required": [
+              "loc",
+              "msg",
+              "type"
+            ],
+            "title": "ValidationError",
+            "type": "object"
+          }
+        }
+      },
+      "info": {
+        "description": "Autonomous MT5 Quantitative Trading System",
+        "title": "Autonomous Trader",
+        "version": "1.0.0"
+      },
+      "openapi": "3.1.0",
+      "paths": {
+        "/": {
+          "get": {
+            "operationId": "root__get",
+            "responses": {
+              "200": {
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                },
+                "description": "Successful Response"
+              }
+            },
+            "summary": "Root"
+          }
+        },
+        "/api/backtest/monte-carlo": {
+          "post": {
+            "description": "Runs Monte Carlo simulation over backtested trade results.",
+            "operationId": "run_monte_carlo_api_backtest_monte_carlo_post",
+            "requestBody": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/MonteCarloRequest"
+                  }
+                }
+              },
+              "required": true
+            },
+            "responses": {
+              "200": {
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                },
+                "description": "Successful Response"
+              },
+              "422": {
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/HTTPValidationError"
+                    }
+                  }
+                },
+                "description": "Validation Error"
+              }
+            },
+            "summary": "Run Monte Carlo",
+            "tags": [
+              "Backtesting & Monte Carlo"
+            ]
+          }
+        },
+        "/api/backtest/run": {
+          "post": {
+            "description": "Runs zero-lookahead backtest using exact live strategy and risk logic.",
+            "operationId": "run_backtest_api_backtest_run_post",
+            "requestBody": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/BacktestRunRequest"
+                  }
+                }
+              },
+              "required": true
+            },
+            "responses": {
+              "200": {
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                },
+                "description": "Successful Response"
+              },
+              "422": {
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/HTTPValidationError"
+                    }
+                  }
+                },
+                "description": "Validation Error"
+              }
+            },
+            "summary": "Run Backtest",
+            "tags": [
+              "Backtesting & Monte Carlo"
+            ]
+          }
+        },
+        "/api/execution/close-all": {
+          "post": {
+            "description": "Emergency closes all active positions immediately.",
+            "operationId": "close_all_positions_api_execution_close_all_post",
+            "requestBody": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/Body_close_all_positions_api_execution_close_all_post"
+                  }
+                }
+              }
+            },
+            "responses": {
+              "200": {
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                },
+                "description": "Successful Response"
+              },
+              "422": {
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/HTTPValidationError"
+                    }
+                  }
+                },
+                "description": "Validation Error"
+              }
+            },
+            "summary": "Close All Positions",
+            "tags": [
+              "Execution & Position Management"
+            ]
+          }
+        },
+        "/api/execution/orders": {
+          "post": {
+            "description": "Submits order to execution engine with idempotency & safety checks.",
+            "operationId": "submit_order_api_execution_orders_post",
+            "requestBody": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/OrderSubmitRequest"
+                  }
+                }
+              },
+              "required": true
+            },
+            "responses": {
+              "200": {
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                },
+                "description": "Successful Response"
+              },
+              "422": {
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/HTTPValidationError"
+                    }
+                  }
+                },
+                "description": "Validation Error"
+              }
+            },
+            "summary": "Submit Order",
+            "tags": [
+              "Execution & Position Management"
+            ]
+          }
+        },
+        "/api/execution/positions": {
+          "get": {
+            "description": "Returns active and historical simulated positions with real-time floating P&L and metrics.",
+            "operationId": "get_positions_api_execution_positions_get",
+            "responses": {
+              "200": {
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                },
+                "description": "Successful Response"
+              }
+            },
+            "summary": "Get Positions",
+            "tags": [
+              "Execution & Position Management"
+            ]
+          }
+        },
+        "/api/execution/positions/{position_id}/close": {
+          "post": {
+            "description": "Manually closes an individual open position.",
+            "operationId": "close_position_api_execution_positions__position_id__close_post",
+            "parameters": [
+              {
+                "in": "path",
+                "name": "position_id",
+                "required": true,
+                "schema": {
+                  "title": "Position Id",
+                  "type": "string"
+                }
+              }
+            ],
+            "responses": {
+              "200": {
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                },
+                "description": "Successful Response"
+              },
+              "422": {
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/HTTPValidationError"
+                    }
+                  }
+                },
+                "description": "Validation Error"
+              }
+            },
+            "summary": "Close Position",
+            "tags": [
+              "Execution & Position Management"
+            ]
+          }
+        },
+        "/api/health": {
+          "get": {
+            "description": "Health check endpoint evaluating system status, DB connection, and MT5 connection status.",
+            "operationId": "health_check_api_health_get",
+            "responses": {
+              "200": {
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                },
+                "description": "Successful Response"
+              }
+            },
+            "summary": "Health Check",
+            "tags": [
+              "Health"
+            ]
+          }
+        },
+        "/api/liquidity/levels": {
+          "get": {
+            "description": "Returns all detected Buy-Side and Sell-Side liquidity pools.",
+            "operationId": "get_liquidity_levels_api_liquidity_levels_get",
+            "parameters": [
+              {
+                "description": "Symbol name",
+                "in": "query",
+                "name": "symbol",
+                "required": false,
+                "schema": {
+                  "default": "XAUUSD",
+                  "description": "Symbol name",
+                  "title": "Symbol",
+                  "type": "string"
+                }
+              },
+              {
+                "description": "Timeframe",
+                "in": "query",
+                "name": "timeframe",
+                "required": false,
+                "schema": {
+                  "default": "M5",
+                  "description": "Timeframe",
+                  "title": "Timeframe",
+                  "type": "string"
+                }
+              },
+              {
+                "description": "Candle count",
+                "in": "query",
+                "name": "count",
+                "required": false,
+                "schema": {
+                  "default": 300,
+                  "description": "Candle count",
+                  "maximum": 1000,
+                  "minimum": 50,
+                  "title": "Count",
+                  "type": "integer"
+                }
+              },
+              {
+                "description": "Equal high/low tolerance in pips",
+                "in": "query",
+                "name": "tolerance_pips",
+                "required": false,
+                "schema": {
+                  "default": 2.0,
+                  "description": "Equal high/low tolerance in pips",
+                  "maximum": 10.0,
+                  "minimum": 0.1,
+                  "title": "Tolerance Pips",
+                  "type": "number"
+                }
+              }
+            ],
+            "responses": {
+              "200": {
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                },
+                "description": "Successful Response"
+              },
+              "422": {
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/HTTPValidationError"
+                    }
+                  }
+                },
+                "description": "Validation Error"
+              }
+            },
+            "summary": "Get Liquidity Levels",
+            "tags": [
+              "Liquidity"
+            ]
+          }
+        },
+        "/api/market/candles": {
+          "get": {
+            "description": "Fetches historical candles with normalized UTC timestamps.",
+            "operationId": "get_candles_api_market_candles_get",
+            "parameters": [
+              {
+                "description": "Canonical symbol name",
+                "in": "query",
+                "name": "symbol",
+                "required": false,
+                "schema": {
+                  "default": "XAUUSD",
+                  "description": "Canonical symbol name",
+                  "title": "Symbol",
+                  "type": "string"
+                }
+              },
+              {
+                "description": "Timeframe (M1, M5, M15, M30, H1, H4)",
+                "in": "query",
+                "name": "timeframe",
+                "required": false,
+                "schema": {
+                  "default": "M5",
+                  "description": "Timeframe (M1, M5, M15, M30, H1, H4)",
+                  "title": "Timeframe",
+                  "type": "string"
+                }
+              },
+              {
+                "description": "Number of candles",
+                "in": "query",
+                "name": "count",
+                "required": false,
+                "schema": {
+                  "default": 100,
+                  "description": "Number of candles",
+                  "maximum": 1000,
+                  "minimum": 1,
+                  "title": "Count",
+                  "type": "integer"
+                }
+              }
+            ],
+            "responses": {
+              "200": {
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                },
+                "description": "Successful Response"
+              },
+              "422": {
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/HTTPValidationError"
+                    }
+                  }
+                },
+                "description": "Validation Error"
+              }
+            },
+            "summary": "Get Candles",
+            "tags": [
+              "Market Data"
+            ]
+          }
+        },
+        "/api/market/status": {
+          "get": {
+            "description": "Returns connection state and data freshness for core instruments.",
+            "operationId": "get_market_status_api_market_status_get",
+            "responses": {
+              "200": {
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                },
+                "description": "Successful Response"
+              }
+            },
+            "summary": "Get Market Status",
+            "tags": [
+              "Market Data"
+            ]
+          }
+        },
+        "/api/market/symbols": {
+          "get": {
+            "description": "Returns list of supported instruments and their specifications.",
+            "operationId": "get_symbols_api_market_symbols_get",
+            "responses": {
+              "200": {
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                },
+                "description": "Successful Response"
+              }
+            },
+            "summary": "Get Symbols",
+            "tags": [
+              "Market Data"
+            ]
+          }
+        },
+        "/api/risk/evaluate": {
+          "post": {
+            "description": "Evaluates risk and calculates lot size for a proposed trade.",
+            "operationId": "evaluate_trade_risk_api_risk_evaluate_post",
+            "requestBody": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/RiskEvaluateRequest"
+                  }
+                }
+              },
+              "required": true
+            },
+            "responses": {
+              "200": {
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                },
+                "description": "Successful Response"
+              },
+              "422": {
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/HTTPValidationError"
+                    }
+                  }
+                },
+                "description": "Validation Error"
+              }
+            },
+            "summary": "Evaluate Trade Risk",
+            "tags": [
+              "Risk & System Control"
+            ]
+          }
+        },
+        "/api/risk/status": {
+          "get": {
+            "description": "Returns risk engine parameters, daily loss lock status, and emergency stop state.",
+            "operationId": "get_risk_status_api_risk_status_get",
+            "responses": {
+              "200": {
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                },
+                "description": "Successful Response"
+              }
+            },
+            "summary": "Get Risk Status",
+            "tags": [
+              "Risk & System Control"
+            ]
+          }
+        },
+        "/api/strategy/patterns": {
+          "get": {
+            "description": "Returns detected FVGs, Order Blocks, Liquidity Sweeps, and Displacement candles.",
+            "operationId": "get_strategy_patterns_api_strategy_patterns_get",
+            "parameters": [
+              {
+                "description": "Symbol name",
+                "in": "query",
+                "name": "symbol",
+                "required": false,
+                "schema": {
+                  "default": "XAUUSD",
+                  "description": "Symbol name",
+                  "title": "Symbol",
+                  "type": "string"
+                }
+              },
+              {
+                "description": "Timeframe",
+                "in": "query",
+                "name": "timeframe",
+                "required": false,
+                "schema": {
+                  "default": "M5",
+                  "description": "Timeframe",
+                  "title": "Timeframe",
+                  "type": "string"
+                }
+              },
+              {
+                "description": "Candle count",
+                "in": "query",
+                "name": "count",
+                "required": false,
+                "schema": {
+                  "default": 200,
+                  "description": "Candle count",
+                  "maximum": 1000,
+                  "minimum": 30,
+                  "title": "Count",
+                  "type": "integer"
+                }
+              }
+            ],
+            "responses": {
+              "200": {
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                },
+                "description": "Successful Response"
+              },
+              "422": {
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/HTTPValidationError"
+                    }
+                  }
+                },
+                "description": "Validation Error"
+              }
+            },
+            "summary": "Get Strategy Patterns",
+            "tags": [
+              "Strategy Patterns"
+            ]
+          }
+        },
+        "/api/strategy/signals": {
+          "get": {
+            "description": "Evaluates live market state against the ICT/SMC strategy engine.",
+            "operationId": "evaluate_signals_api_strategy_signals_get",
+            "parameters": [
+              {
+                "description": "Symbol name",
+                "in": "query",
+                "name": "symbol",
+                "required": false,
+                "schema": {
+                  "default": "XAUUSD",
+                  "description": "Symbol name",
+                  "title": "Symbol",
+                  "type": "string"
+                }
+              }
+            ],
+            "responses": {
+              "200": {
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                },
+                "description": "Successful Response"
+              },
+              "422": {
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/HTTPValidationError"
+                    }
+                  }
+                },
+                "description": "Validation Error"
+              }
+            },
+            "summary": "Evaluate Signals",
+            "tags": [
+              "Strategy Engine"
+            ]
+          }
+        },
+        "/api/structure/analyze": {
+          "get": {
+            "description": "Performs deterministic market structure analysis returning trend, swing points, BOS, and MSS.",
+            "operationId": "analyze_structure_api_structure_analyze_get",
+            "parameters": [
+              {
+                "description": "Symbol name",
+                "in": "query",
+                "name": "symbol",
+                "required": false,
+                "schema": {
+                  "default": "XAUUSD",
+                  "description": "Symbol name",
+                  "title": "Symbol",
+                  "type": "string"
+                }
+              },
+              {
+                "description": "Timeframe",
+                "in": "query",
+                "name": "timeframe",
+                "required": false,
+                "schema": {
+                  "default": "M5",
+                  "description": "Timeframe",
+                  "title": "Timeframe",
+                  "type": "string"
+                }
+              },
+              {
+                "description": "Candle count",
+                "in": "query",
+                "name": "count",
+                "required": false,
+                "schema": {
+                  "default": 200,
+                  "description": "Candle count",
+                  "maximum": 1000,
+                  "minimum": 20,
+                  "title": "Count",
+                  "type": "integer"
+                }
+              },
+              {
+                "description": "Swing lookback window",
+                "in": "query",
+                "name": "swing_lookback",
+                "required": false,
+                "schema": {
+                  "default": 3,
+                  "description": "Swing lookback window",
+                  "maximum": 20,
+                  "minimum": 1,
+                  "title": "Swing Lookback",
+                  "type": "integer"
+                }
+              }
+            ],
+            "responses": {
+              "200": {
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                },
+                "description": "Successful Response"
+              },
+              "422": {
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/HTTPValidationError"
+                    }
+                  }
+                },
+                "description": "Validation Error"
+              }
+            },
+            "summary": "Analyze Structure",
+            "tags": [
+              "Market Structure"
+            ]
+          }
+        },
+        "/api/system/emergency-stop": {
+          "post": {
+            "description": "Triggers global emergency stop, blocking all new trade entries immediately.",
+            "operationId": "trigger_emergency_stop_api_system_emergency_stop_post",
+            "requestBody": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/Body_trigger_emergency_stop_api_system_emergency_stop_post"
+                  }
+                }
+              }
+            },
+            "responses": {
+              "200": {
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                },
+                "description": "Successful Response"
+              },
+              "422": {
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/HTTPValidationError"
+                    }
+                  }
+                },
+                "description": "Validation Error"
+              }
+            },
+            "summary": "Trigger Emergency Stop",
+            "tags": [
+              "Risk & System Control"
+            ]
+          }
+        },
+        "/api/system/reset-emergency-stop": {
+          "post": {
+            "description": "Resets global emergency stop.",
+            "operationId": "reset_emergency_stop_api_system_reset_emergency_stop_post",
+            "responses": {
+              "200": {
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                },
+                "description": "Successful Response"
+              }
+            },
+            "summary": "Reset Emergency Stop",
+            "tags": [
+              "Risk & System Control"
+            ]
+          }
+        }
+      }
+    },
+    "status": 200
+  }
+}

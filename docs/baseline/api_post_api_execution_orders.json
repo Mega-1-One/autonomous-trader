@@ -1,0 +1,30 @@
+{
+  "method": "POST",
+  "path": "/api/execution/orders",
+  "result": {
+    "json": {
+      "position": {
+        "break_even_activated": false,
+        "broker_ticket": 1000001,
+        "client_order_id": "ORD_2C2CDB16",
+        "current_price": 2400.0,
+        "direction": "BUY",
+        "entry_price": 2400.0,
+        "entry_time": "2026-09-16T21:42:26.131341+00:00",
+        "exit_reason": null,
+        "exit_time": null,
+        "floating_pnl": 0.0,
+        "position_id": "POS_6049D867",
+        "r_multiple": 0.0,
+        "realized_pnl": 0.0,
+        "status": "OPEN",
+        "stop_loss": 2399.7,
+        "symbol": "XAUUSD",
+        "take_profit": 2400.5,
+        "volume": 0.33
+      },
+      "status": "EXECUTED"
+    },
+    "status": 200
+  }
+}

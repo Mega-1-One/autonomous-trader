@@ -1,0 +1,12 @@
+{
+  "method": "GET",
+  "path": "/api/execution/positions",
+  "result": {
+    "json": {
+      "closed_positions": [],
+      "open_positions": [],
+      "total_positions": 0
+    },
+    "status": 200
+  }
+}

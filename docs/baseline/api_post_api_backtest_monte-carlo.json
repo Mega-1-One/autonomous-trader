@@ -1,0 +1,23 @@
+{
+  "method": "POST",
+  "path": "/api/backtest/monte-carlo",
+  "result": {
+    "json": {
+      "simulation": {
+        "drawdown_distribution": [],
+        "expected_losing_streak": 0.0,
+        "initial_balance": 10000.0,
+        "iterations": 200,
+        "median_max_drawdown_percent": 0.0,
+        "median_net_profit": 0.0,
+        "p5_net_profit": 0.0,
+        "p95_max_drawdown_percent": 0.0,
+        "p95_net_profit": 0.0,
+        "probability_of_ruin_percent": 0.0
+      },
+      "symbol": "XAUUSD",
+      "timeframe": "M5"
+    },
+    "status": 200
+  }
+}

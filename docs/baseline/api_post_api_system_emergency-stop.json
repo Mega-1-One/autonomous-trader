@@ -1,0 +1,12 @@
+{
+  "method": "POST",
+  "path": "/api/system/emergency-stop",
+  "result": {
+    "json": {
+      "emergency_stop_active": true,
+      "message": "Global emergency stop activated. All new entries are strictly prohibited.",
+      "status": "EMERGENCY_STOP_ACTIVATED"
+    },
+    "status": 200
+  }
+}

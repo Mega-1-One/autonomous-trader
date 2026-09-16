@@ -1,0 +1,111 @@
+{
+  "method": "GET",
+  "path": "/api/structure/analyze",
+  "result": {
+    "json": {
+      "analysis": {
+        "events": [],
+        "latest_bos": null,
+        "latest_mss": null,
+        "swing_points": [
+          {
+            "index": 5,
+            "label": "HIGH",
+            "point_type": "HIGH",
+            "price": 2403.49,
+            "timestamp": "2026-09-16T05:27:24.759508+00:00"
+          },
+          {
+            "index": 20,
+            "label": "LOW",
+            "point_type": "LOW",
+            "price": 2396.51,
+            "timestamp": "2026-09-16T06:42:24.759508+00:00"
+          },
+          {
+            "index": 36,
+            "label": "HH",
+            "point_type": "HIGH",
+            "price": 2403.5,
+            "timestamp": "2026-09-16T08:02:24.759508+00:00"
+          },
+          {
+            "index": 52,
+            "label": "LL",
+            "point_type": "LOW",
+            "price": 2396.5,
+            "timestamp": "2026-09-16T09:22:24.759508+00:00"
+          },
+          {
+            "index": 67,
+            "label": "LH",
+            "point_type": "HIGH",
+            "price": 2403.49,
+            "timestamp": "2026-09-16T10:37:24.759508+00:00"
+          },
+          {
+            "index": 83,
+            "label": "LL",
+            "point_type": "LOW",
+            "price": 2396.5,
+            "timestamp": "2026-09-16T11:57:24.759508+00:00"
+          },
+          {
+            "index": 99,
+            "label": "HH",
+            "point_type": "HIGH",
+            "price": 2403.5,
+            "timestamp": "2026-09-16T13:17:24.759508+00:00"
+          },
+          {
+            "index": 115,
+            "label": "HL",
+            "point_type": "LOW",
+            "price": 2396.51,
+            "timestamp": "2026-09-16T14:37:24.759508+00:00"
+          },
+          {
+            "index": 130,
+            "label": "LH",
+            "point_type": "HIGH",
+            "price": 2403.5,
+            "timestamp": "2026-09-16T15:52:24.759508+00:00"
+          },
+          {
+            "index": 146,
+            "label": "LL",
+            "point_type": "LOW",
+            "price": 2396.5,
+            "timestamp": "2026-09-16T17:12:24.759508+00:00"
+          },
+          {
+            "index": 162,
+            "label": "LH",
+            "point_type": "HIGH",
+            "price": 2403.5,
+            "timestamp": "2026-09-16T18:32:24.759508+00:00"
+          },
+          {
+            "index": 177,
+            "label": "HL",
+            "point_type": "LOW",
+            "price": 2396.51,
+            "timestamp": "2026-09-16T19:47:24.759508+00:00"
+          },
+          {
+            "index": 193,
+            "label": "LH",
+            "point_type": "HIGH",
+            "price": 2403.5,
+            "timestamp": "2026-09-16T21:07:24.759508+00:00"
+          }
+        ],
+        "trend": "RANGING"
+      },
+      "swing_lookback": 3,
+      "symbol": "XAUUSD",
+      "timeframe": "M5"
+    },
+    "status": 200
+  }
+}

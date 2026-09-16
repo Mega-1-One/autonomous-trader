@@ -1,0 +1,12 @@
+{
+  "method": "POST",
+  "path": "/api/system/reset-emergency-stop",
+  "result": {
+    "json": {
+      "emergency_stop_active": false,
+      "message": "Global emergency stop reset successfully.",
+      "status": "EMERGENCY_STOP_RESET"
+    },
+    "status": 200
+  }
+}
