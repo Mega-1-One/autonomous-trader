@@ -1,5 +1,4 @@
 from typing import Any, Dict, List, Optional
-import uuid
 
 from app.core.pricing import contract_size as spec_contract_size
 from app.strategy.engine import StrategyEngine
@@ -28,6 +27,9 @@ class BacktestEngine:
 
         self.strategy_engine = StrategyEngine()
         self.risk_engine = RiskEngine()
+        # ADR-5b: non-breaking trades access. run() records the completed
+        # trades here; the /api/backtest/run JSON shape is unchanged.
+        self.last_trades: List[BacktestTradeRecord] = []
 
     def run(
         self,
@@ -66,6 +68,7 @@ class BacktestEngine:
 
         n = len(candles)
         if n < 30:
+            self.last_trades = []
             return BacktestMetricsCalculator.calculate(self.initial_balance, [], [])
 
         peak_equity = self.initial_balance
@@ -160,7 +163,9 @@ class BacktestEngine:
 
                     if decision.approved:
                         open_position = {
-                            "trade_id": f"BT_{uuid.uuid4().hex[:6].upper()}",
+                            # Deterministic trade ID (P-09/C-02): symbol, entry
+                            # bar index, direction. No uuid randomness.
+                            "trade_id": f"BT_{symbol}_{i}_{signal.direction}",
                             "direction": signal.direction,
                             "entry_price": signal.entry_price,
                             "stop_loss": signal.stop_loss,
@@ -181,4 +186,5 @@ class BacktestEngine:
                 )
             )
 
+        self.last_trades = trades
         return BacktestMetricsCalculator.calculate(self.initial_balance, trades, equity_curve)

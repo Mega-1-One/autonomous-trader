@@ -69,9 +69,9 @@ async def run_monte_carlo(
     engine = BacktestEngine(initial_balance=req.initial_balance)
     report = engine.run(symbol=req.symbol, candles=candles, point_size=point_size, symbol_info=info)
 
-    # Reconstruct trades from report or run simulation
+    # Monte Carlo over the actual backtest trades (ADR-5b last_trades; P-03 fix).
     simulator = MonteCarloSimulator(iterations=req.iterations)
-    res = simulator.run_simulation(req.initial_balance, [])
+    res = simulator.run_simulation(req.initial_balance, engine.last_trades)
 
     return {
         "symbol": req.symbol,

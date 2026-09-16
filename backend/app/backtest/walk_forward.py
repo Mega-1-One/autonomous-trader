@@ -72,7 +72,7 @@ class WalkForwardValidator:
 class TickMonteCarloSimulator:
     """500-Iteration Trade Sequence Randomization & Drawdown Distribution Analysis."""
 
-    def run_monte_carlo(self, trades: List[Dict[str, Any]], iterations: int = 500, initial_balance: float = 10000.0) -> Dict[str, Any]:
+    def run_monte_carlo(self, trades: List[Dict[str, Any]], iterations: int = 500, initial_balance: float = 10000.0, seed: int = 42) -> Dict[str, Any]:
         if not trades:
             return {
                 "iterations": iterations,
@@ -88,8 +88,10 @@ class TickMonteCarloSimulator:
         losing_streaks = []
         ruin_count = 0
 
+        rng = np.random.default_rng(seed)  # P-09/C-02: seeded reproducibility
+
         for _ in range(iterations):
-            shuffled = np.random.choice(pnls, size=len(pnls), replace=True)
+            shuffled = rng.choice(pnls, size=len(pnls), replace=True)
             equity = initial_balance
             peak = initial_balance
             max_dd = 0.0
