@@ -87,7 +87,20 @@ def test_real_live_requires_flags(mode_env):
     assert ensure_trading_allowed("REAL", account_trade_mode=1) is None
 
 
-def test_sentinel_blocks_all_destinations(mode_env):
+def test_run_demo_trader_style_real_send_refused_in_paper(mode_env):
+    """The run_demo_trader.py --enable-demo scenario: a REAL send with a demo
+    account (trade_mode 0) is still refused while EXECUTION_MODE=PAPER."""
+    mode_env(ExecutionMode.PAPER)
+    with pytest.raises(SafetyViolation, match="forbids real broker order submission"):
+        ensure_trading_allowed("REAL", account_trade_mode=0)
+
+
+def test_mock_paper_execution_remains_valid(mode_env):
+    """Legitimate mock paper flows are preserved by the table."""
+    mode_env(ExecutionMode.PAPER)
+    assert ensure_trading_allowed("MOCK") is None
+    mode_env(ExecutionMode.BACKTEST)
+    assert ensure_trading_allowed("MOCK") is None
     from app.core import stop_state
     mode_env(ExecutionMode.LIVE, live=True, confirm=True)
     try:

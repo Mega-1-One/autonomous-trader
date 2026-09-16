@@ -1,32 +1,13 @@
 """B-01 tests: shared application state, DI wiring, and explicit RiskEngine injection.
 
-- P-01 in-process: POST /api/system/emergency-stop must block POST /api/execution/orders.
 - R-06: ExecutionEngine must reuse the injected RiskEngine, not build its own.
+- (API emergency-stop propagation lives in test_emergency_stop_propagation.py.)
 """
 import pytest
 
 from app.api import deps
 from app.execution.engine import ExecutionEngine
 from app.risk.engine import RiskEngine
-
-
-@pytest.mark.asyncio
-async def test_api_emergency_stop_blocks_order_submission(async_client):
-    """API emergency stop must block the API order path (same shared engine)."""
-    res = await async_client.post("/api/system/emergency-stop", json={"reason": "DI test"})
-    assert res.status_code == 200
-    assert res.json()["emergency_stop_active"] is True
-
-    res_order = await async_client.post("/api/execution/orders", json={
-        "symbol": "XAUUSD", "direction": "LONG",
-        "entry_price": 2400.0, "stop_loss": 2390.0, "take_profit": 2420.0,
-    })
-    assert res_order.status_code == 400
-    assert "EMERGENCY STOP" in res_order.json()["detail"].upper()
-
-    # Reset to restore clean state for other tests
-    res_reset = await async_client.post("/api/system/reset-emergency-stop")
-    assert res_reset.status_code == 200
 
 
 @pytest.mark.asyncio
