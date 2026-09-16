@@ -41,6 +41,13 @@ class Settings(BaseSettings):
     # Config directory path
     CONFIG_DIR: Path = Path(__file__).resolve().parent.parent.parent.parent / "config"
 
+    # CORS origins for the dashboard (comma-separated; replaces wildcard, C-06/P-05)
+    CORS_ORIGINS: str = "http://localhost:3000"
+
+    # Optional bearer token for mutating API endpoints in production (D-01).
+    # Unset by default: local dev flow stays open.
+    AUTOMATION_API_TOKEN: Optional[str] = None
+
     # State directory for cross-process files (e.g. the emergency-stop sentinel).
     # Env vars: AUTOTRADER_STATE_DIR (preferred) or STATE_DIR
     STATE_DIR: Path = Field(
