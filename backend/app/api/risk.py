@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Body
 from pydantic import BaseModel
 from typing import Dict, Any, Optional
 
-from app.api.deps import get_market_service, get_risk_engine
+from app.api.deps import get_market_service, get_risk_engine, require_api_token
 from app.risk.engine import RiskEngine
 from app.services.market_data import MarketDataService
 
@@ -70,6 +70,7 @@ async def evaluate_trade_risk_endpoint(
 async def trigger_emergency_stop(
     reason: Optional[str] = Body(None, embed=True),
     risk_engine: RiskEngine = Depends(get_risk_engine),
+    _: None = Depends(require_api_token),
 ):
     """Triggers global emergency stop, blocking all new trade entries immediately."""
     risk_engine.trigger_emergency_stop(reason or "User API emergency stop trigger")
@@ -80,7 +81,10 @@ async def trigger_emergency_stop(
     }
 
 @router.post("/api/system/reset-emergency-stop", status_code=status.HTTP_200_OK)
-async def reset_emergency_stop_endpoint(risk_engine: RiskEngine = Depends(get_risk_engine)):
+async def reset_emergency_stop_endpoint(
+    risk_engine: RiskEngine = Depends(get_risk_engine),
+    _: None = Depends(require_api_token),
+):
     """Resets global emergency stop."""
     risk_engine.reset_emergency_stop()
     return {

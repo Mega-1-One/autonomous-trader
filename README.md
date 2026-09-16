@@ -4,6 +4,8 @@ A production-grade, deterministic algorithmic trading system connecting to MetaT
 
 > [!WARNING]
 > Live trading is disabled by default (`EXECUTION_MODE=PAPER`). Live execution requires explicit safety configuration (`ENABLE_LIVE_TRADING=true` AND `LIVE_TRADING_CONFIRMATION=true`).
+>
+> Mutating API endpoints (order submission, close-all/close-position, emergency-stop) require a bearer token **only** when `APP_ENV=production` **and** `AUTOMATION_API_TOKEN` is set (`Authorization: Bearer <token>`; the dashboard sends it via `NEXT_PUBLIC_API_TOKEN`). Production deployments without the token configured must front the API with a reverse proxy or accept the exposure in writing.
 
 ## Architecture
 

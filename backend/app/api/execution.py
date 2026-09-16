@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Body
 from pydantic import BaseModel
 from typing import Dict, Any, Optional
 
-from app.api.deps import get_market_service, get_execution_engine
+from app.api.deps import get_market_service, get_execution_engine, require_api_token
 from app.execution.engine import ExecutionEngine
 from app.services.market_data import MarketDataService
 
@@ -44,6 +44,7 @@ async def get_positions(
 async def submit_order(
     req: OrderSubmitRequest,
     execution_engine: ExecutionEngine = Depends(get_execution_engine),
+    _: None = Depends(require_api_token),
 ):
     """Submits order to execution engine with idempotency & safety checks."""
     result = execution_engine.execute_signal(req.model_dump(), current_spread_pips=req.spread_pips)
@@ -65,6 +66,7 @@ async def submit_order(
 async def close_position(
     position_id: str,
     execution_engine: ExecutionEngine = Depends(get_execution_engine),
+    _: None = Depends(require_api_token),
 ):
     """Manually closes an individual open position."""
     pos = execution_engine.positions.get(position_id)
@@ -81,6 +83,7 @@ async def close_position(
 async def close_all_positions(
     reason: Optional[str] = Body(None, embed=True),
     execution_engine: ExecutionEngine = Depends(get_execution_engine),
+    _: None = Depends(require_api_token),
 ):
     """Emergency closes all active positions immediately."""
     closed = execution_engine.close_all_positions(reason or "EMERGENCY_CLOSE_ALL")

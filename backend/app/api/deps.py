@@ -6,10 +6,12 @@ For test environments that do not run lifespan events (httpx ASGITransport),
 the accessors lazily build and cache the same state on ``app.state`` so the
 test suite keeps working without per-test wiring.
 """
-from typing import Any
+from typing import Any, Optional
 
-from fastapi import Request
+from fastapi import Depends, HTTPException, Request, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
+from app.core import config as _config
 from app.data.mt5_interface import AbstractMT5Adapter
 from app.data.mt5_real import RealMT5Adapter
 from app.data.mt5_mock import MockMT5Adapter
@@ -17,6 +19,35 @@ from app.services.market_data import MarketDataService
 from app.risk.engine import RiskEngine
 from app.execution.engine import ExecutionEngine
 from app.strategy.engine import StrategyEngine
+
+_bearer_scheme = HTTPBearer(auto_error=False)
+
+
+def token_enforcement_active() -> bool:
+    """Token gate is armed only in production WITH a token configured (D-01/ADR-6)."""
+    return _config.settings.APP_ENV == "production" and bool(_config.settings.AUTOMATION_API_TOKEN)
+
+
+async def require_api_token(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(_bearer_scheme),
+) -> None:
+    """Bearer-token guard for mutating endpoints (D-01).
+
+    Open by default (local dev). Enforced only when APP_ENV=production and
+    AUTOMATION_API_TOKEN is set; the bundled dashboard sends the token via
+    NEXT_PUBLIC_API_TOKEN (C-05). Production deployments without the token
+    configured must front the API with a reverse proxy or accept the exposure
+    in writing.
+    """
+    if not token_enforcement_active():
+        return
+    expected = _config.settings.AUTOMATION_API_TOKEN
+    provided = credentials.credentials if credentials else None
+    if not provided or provided != expected:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or missing API token",
+        )
 
 
 def build_adapter() -> AbstractMT5Adapter:
