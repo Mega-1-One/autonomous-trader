@@ -24,7 +24,8 @@ def main():
         grid_step_pips=5.0,
         lot_multiplier=1.5,
         max_grid_orders=3,
-        basket_profit_target_usd=0.20,
+        basket_profit_target_usd=0.50,
+        max_basket_loss_usd=0.50,
         max_drawdown_pct=20.0
     )
 

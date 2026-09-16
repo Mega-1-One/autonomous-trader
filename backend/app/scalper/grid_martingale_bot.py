@@ -18,7 +18,9 @@ class MT5GridMartingaleScalper:
         grid_step_pips: float = 10.0,
         lot_multiplier: float = 1.5,
         max_grid_orders: int = 3,
-        basket_profit_target_usd: float = 0.25,
+        basket_profit_target_usd: float = 0.50,
+        max_basket_loss_usd: float = 0.50,
+        commission_per_lot: float = 7.0,
         max_drawdown_pct: float = 20.0
     ):
         self.symbol = symbol
@@ -27,6 +29,8 @@ class MT5GridMartingaleScalper:
         self.lot_multiplier = lot_multiplier
         self.max_grid_orders = max_grid_orders
         self.basket_profit_target_usd = basket_profit_target_usd
+        self.max_basket_loss_usd = max_basket_loss_usd
+        self.commission_per_lot = commission_per_lot
         self.max_drawdown_pct = max_drawdown_pct
         self.adapter = RealMT5Adapter()
         self.magic_number = 888999
@@ -46,7 +50,7 @@ class MT5GridMartingaleScalper:
             return {"status": "ERROR"}
 
         start_balance = acc.balance
-        pip_scale = 0.01 if "XAU" in self.symbol or "USTEC" in self.symbol else 0.0001
+        pip_scale = 0.10 if "XAU" in self.symbol or "USTEC" in self.symbol else 0.0001
         is_buy = (direction == "BUY")
 
         print("\n==================================================")
@@ -57,7 +61,8 @@ class MT5GridMartingaleScalper:
         print(f"Symbol:                 {self.symbol}")
         print(f"Base Volume:            {self.base_volume} lot (Multiplier: {self.lot_multiplier}x)")
         print(f"Grid Step:              {self.grid_step_pips} pips | Max Orders: {self.max_grid_orders}")
-        print(f"Basket Target Profit:   +${self.basket_profit_target_usd:.2f} USD")
+        print(f"Basket Target Profit:   +${self.basket_profit_target_usd:.2f} USD (net of commission)")
+        print(f"Basket Stop Loss:       -${self.max_basket_loss_usd:.2f} USD (close-all, no uncapped holds)")
         print(f"Max Equity Risk:        {self.max_drawdown_pct}% (Stop Guard)")
         print("==================================================\n")
 
@@ -116,13 +121,19 @@ class MT5GridMartingaleScalper:
                 cycle_status = "TARGET_PROFIT_REACHED"
                 break
 
-            total_profit = sum(p.profit + p.swap for p in active_grid)
-            print(f"[{int(time.time() - start_ts)}s] Active Grid Orders: {len(active_grid)} | Basket Profit: ${total_profit:+.2f} USD")
+            total_profit = sum((p.profit or 0.0) + (p.swap or 0.0) - (p.volume or 0.0) * self.commission_per_lot for p in active_grid)
+            print(f"[{int(time.time() - start_ts)}s] Active Grid Orders: {len(active_grid)} | Basket Profit (net): ${total_profit:+.2f} USD")
 
             if total_profit >= self.basket_profit_target_usd:
                 print(f"\n[BASKET TARGET REACHED (+${total_profit:.2f})] Closing all grid orders in profit!")
                 self._close_all_grid_positions(grid_tickets)
                 cycle_status = "TARGET_PROFIT_REACHED"
+                break
+
+            if total_profit <= -self.max_basket_loss_usd:
+                print(f"\n[BASKET STOP LOSS ({total_profit:+.2f})] Closing all grid orders to cap the loss!")
+                self._close_all_grid_positions(grid_tickets)
+                cycle_status = "BASKET_STOP_LOSS"
                 break
 
             # Check Grid Step for Order Averaging
