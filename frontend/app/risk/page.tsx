@@ -1,20 +1,20 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { apiGet, apiPost, ApiError, RiskStatusResponse } from "../../lib/api";
 
 export default function RiskPage() {
-  const [riskData, setRiskData] = useState<any>(null);
+  const [riskData, setRiskData] = useState<RiskStatusResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   async function fetchRisk() {
     try {
-      const res = await fetch("http://localhost:8000/api/risk/status");
-      if (res.ok) {
-        const json = await res.json();
-        setRiskData(json);
-      }
+      const json = await apiGet<RiskStatusResponse>("/api/risk/status");
+      setRiskData(json);
+      setError(null);
     } catch (err) {
-      console.error(err);
+      setError(err instanceof ApiError ? err.message : "Failed to reach backend API");
     } finally {
       setLoading(false);
     }
@@ -25,12 +25,23 @@ export default function RiskPage() {
   }, []);
 
   async function toggleEmergencyStop() {
-    const endpoint = riskData?.emergency_stop_active
-      ? "http://localhost:8000/api/system/reset-emergency-stop"
-      : "http://localhost:8000/api/system/emergency-stop";
-
-    await fetch(endpoint, { method: "POST" });
-    fetchRisk();
+    const activating = !riskData?.emergency_stop_active;
+    const confirmed = window.confirm(
+      activating
+        ? "TRIGGER the global emergency stop? All new entries will be blocked."
+        : "RESET the global emergency stop? New entries will be allowed again."
+    );
+    if (!confirmed) return;
+    try {
+      if (activating) {
+        await apiPost("/api/system/emergency-stop", { reason: "Dashboard emergency stop" });
+      } else {
+        await apiPost("/api/system/reset-emergency-stop");
+      }
+      await fetchRisk();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Emergency-stop request failed");
+    }
   }
 
   return (
@@ -55,6 +66,12 @@ export default function RiskPage() {
         </button>
       </div>
 
+      {error && (
+        <div className="p-4 bg-danger/10 border border-danger/40 rounded-lg text-danger text-sm font-semibold">
+          {error}
+        </div>
+      )}
+
       {loading ? (
         <div className="p-8 text-center text-textSecondary">Loading risk status...</div>
       ) : (
@@ -69,7 +86,7 @@ export default function RiskPage() {
               <div className="flex justify-between py-2 border-b border-border">
                 <span className="text-textSecondary">Max Daily Loss</span>
                 <span className="font-bold text-textPrimary">
-                  {riskData?.risk_parameters?.maximum_daily_loss_percent > 0
+                  {(riskData?.risk_parameters?.maximum_daily_loss_percent ?? 0) > 0
                     ? `${riskData?.risk_parameters?.maximum_daily_loss_percent}%`
                     : "Unlimited (Scalp Mode)"}
                 </span>
@@ -77,7 +94,7 @@ export default function RiskPage() {
               <div className="flex justify-between py-2 border-b border-border">
                 <span className="text-textSecondary">Max Trades Per Day</span>
                 <span className="font-bold text-textPrimary">
-                  {riskData?.risk_parameters?.maximum_trades_per_day > 0
+                  {(riskData?.risk_parameters?.maximum_trades_per_day ?? 0) > 0
                     ? riskData?.risk_parameters?.maximum_trades_per_day
                     : "Unlimited (Scalp Mode)"}
                 </span>
@@ -85,7 +102,7 @@ export default function RiskPage() {
               <div className="flex justify-between py-2 border-b border-border">
                 <span className="text-textSecondary">Max Open Positions</span>
                 <span className="font-bold text-textPrimary">
-                  {riskData?.risk_parameters?.maximum_open_positions > 0
+                  {(riskData?.risk_parameters?.maximum_open_positions ?? 0) > 0
                     ? riskData?.risk_parameters?.maximum_open_positions
                     : "Unlimited"}
                 </span>
@@ -93,7 +110,7 @@ export default function RiskPage() {
               <div className="flex justify-between py-2 border-b border-border">
                 <span className="text-textSecondary">Max Spread Threshold</span>
                 <span className="font-bold text-textPrimary">
-                  {riskData?.risk_parameters?.maximum_spread_pips > 0
+                  {(riskData?.risk_parameters?.maximum_spread_pips ?? 0) > 0
                     ? `${riskData?.risk_parameters?.maximum_spread_pips} pips`
                     : "Dynamic / Disabled"}
                 </span>
@@ -101,7 +118,7 @@ export default function RiskPage() {
               <div className="flex justify-between py-2">
                 <span className="text-textSecondary">Minimum R:R Ratio</span>
                 <span className="font-bold text-textPrimary">
-                  {riskData?.risk_parameters?.minimum_rr > 0
+                  {(riskData?.risk_parameters?.minimum_rr ?? 0) > 0
                     ? `${riskData?.risk_parameters?.minimum_rr}R`
                     : "Fast Scalp (Dynamic)"}
                 </span>
@@ -127,7 +144,7 @@ export default function RiskPage() {
               <div className="flex justify-between items-center">
                 <span className="text-textSecondary">Today Trades Executed</span>
                 <span className="font-bold text-textPrimary">
-                  {riskData?.today_trade_count || 0} {riskData?.risk_parameters?.maximum_trades_per_day > 0 ? `/ ${riskData?.risk_parameters?.maximum_trades_per_day}` : "(Unlimited)"}
+                  {riskData?.today_trade_count || 0} {(riskData?.risk_parameters?.maximum_trades_per_day ?? 0) > 0 ? `/ ${riskData?.risk_parameters?.maximum_trades_per_day}` : "(Unlimited)"}
                 </span>
               </div>
             </div>

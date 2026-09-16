@@ -1,22 +1,24 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { apiGet, ApiError, PatternResponse } from "../../lib/api";
 
 export default function StrategyMonitorPage() {
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<PatternResponse | null>(null);
   const [symbol, setSymbol] = useState("XAUUSD");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchPatterns() {
       try {
-        const res = await fetch(`http://localhost:8000/api/strategy/patterns?symbol=${symbol}&timeframe=M5&count=200`);
-        if (res.ok) {
-          const json = await res.json();
-          setData(json);
-        }
+        const json = await apiGet<PatternResponse>(
+          `/api/strategy/patterns?symbol=${symbol}&timeframe=M5&count=200`
+        );
+        setData(json);
+        setError(null);
       } catch (err) {
-        console.error(err);
+        setError(err instanceof ApiError ? err.message : "Failed to reach backend API");
       } finally {
         setLoading(false);
       }
@@ -44,6 +46,12 @@ export default function StrategyMonitorPage() {
           <option value="NAS100">NAS100</option>
         </select>
       </div>
+
+      {error && (
+        <div className="p-4 bg-danger/10 border border-danger/40 rounded-lg text-danger text-sm font-semibold">
+          {error}
+        </div>
+      )}
 
       {loading ? (
         <div className="p-8 text-center text-textSecondary">Loading market patterns...</div>
@@ -88,7 +96,7 @@ export default function StrategyMonitorPage() {
               {data?.fair_value_gaps?.length === 0 ? (
                 <p className="text-sm text-textSecondary">No active FVGs detected in recent candles.</p>
               ) : (
-                data?.fair_value_gaps?.map((fvg: any, idx: number) => (
+                data?.fair_value_gaps?.map((fvg, idx: number) => (
                   <div key={idx} className="p-3 bg-background rounded-lg border border-border flex items-center justify-between text-xs">
                     <div>
                       <span className={`font-bold ${fvg.fvg_type === "BULLISH" ? "text-success" : "text-danger"}`}>
