@@ -33,7 +33,7 @@ class UltraTickScalperEngine:
             print("[ERROR] Could not fetch account info.")
             return
 
-        pip_scale = 0.01 if "XAU" in self.symbol or "USTEC" in self.symbol else 0.0001
+        pip_scale = 0.10 if "XAU" in self.symbol or "USTEC" in self.symbol else 0.0001
 
         print("\n==================================================")
         print(" ULTRA-AGGRESSIVE TICK SCALPER ENGINE STARTED")

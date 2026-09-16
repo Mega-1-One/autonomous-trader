@@ -25,10 +25,11 @@ class GoldMultiPositionProfitScalper:
         volume: float = 0.01,
         max_open_positions: Optional[int] = None,
         take_profit_pips: float = 15.0,
-        min_profit_target_usd: float = 0.15,
+        min_profit_target_usd: float = 0.60,
         stop_loss_pips: float = 5.0,
-        max_loss_usd: float = 2.0,
+        max_loss_usd: float = 0.50,
         max_holding_seconds: float = 120.0,
+        commission_per_lot: float = 7.0,
         test_entry: bool = False
     ):
         self.symbol = symbol
@@ -39,6 +40,7 @@ class GoldMultiPositionProfitScalper:
         self.stop_loss_pips = stop_loss_pips
         self.max_loss_usd = max_loss_usd
         self.max_holding_seconds = max_holding_seconds
+        self.commission_per_lot = commission_per_lot
         self.test_entry = test_entry
         
         self.adapter = RealMT5Adapter()
@@ -75,6 +77,15 @@ class GoldMultiPositionProfitScalper:
             print("[ERROR] Failed to connect MT5 adapter.")
             return False
         return True
+
+    def _net_profit(self, pos: Any) -> float:
+        """Net floating P/L after estimated commission.
+
+        MT5 pos.profit is net of spread but commission posts separately to
+        balance, so close decisions must subtract it or sub-cost 'wins'
+        (e.g. +$0.20 gross ≈ +$0.13 net on 0.01 lot) look profitable.
+        """
+        return (pos.profit or 0.0) + (pos.swap or 0.0) - (pos.volume or 0.0) * self.commission_per_lot
 
     def _start_command_listener(self):
         """Non-blocking background thread listening for terminal user commands."""
@@ -291,7 +302,7 @@ class GoldMultiPositionProfitScalper:
                             "time_str": datetime.fromtimestamp(pos.time, timezone.utc).strftime("%H:%M:%S")
                         }
 
-                    net_profit = pos.profit + pos.swap
+                    net_profit = self._net_profit(pos)
                     hold_time = now - pos.time
 
                     if net_profit >= self.min_profit_target_usd:

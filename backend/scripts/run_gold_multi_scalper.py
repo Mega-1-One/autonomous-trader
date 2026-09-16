@@ -25,9 +25,9 @@ def main():
         symbol="XAUUSDm",
         volume=0.01,
         take_profit_pips=15.0,
-        min_profit_target_usd=0.15,
+        min_profit_target_usd=0.60,
         stop_loss_pips=5.0,
-        max_loss_usd=2.0,
+        max_loss_usd=0.50,
         max_holding_seconds=120.0
     )
 

@@ -46,7 +46,7 @@ class MT5DemoMicroScalper:
             print(f"[ERROR] Could not fetch live tick for {self.symbol}")
             return
 
-        pip_scale = 0.01 if "XAU" in self.symbol or "USTEC" in self.symbol else 0.0001
+        pip_scale = 0.10 if "XAU" in self.symbol or "USTEC" in self.symbol else 0.0001
         is_buy = (direction == "BUY")
 
         price = tick.ask if is_buy else tick.bid
