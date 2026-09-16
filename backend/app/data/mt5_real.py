@@ -189,7 +189,8 @@ class RealMT5Adapter(AbstractMT5Adapter):
             "sl": float(order_request.get("stop_loss", 0.0)),
             "tp": float(order_request.get("take_profit", 0.0)),
             "deviation": 20,
-            "magic": 100001,
+            # Caller-supplied attribution (P-16/C-07); default preserves prior behavior.
+            "magic": int(order_request.get("magic", 100001)),
             "comment": order_request.get("comment", "Autonomous Trader Order"),
             "type_time": mt5.ORDER_TIME_GTC,
             "type_filling": mt5.ORDER_FILLING_IOC,
