@@ -5,6 +5,7 @@ import uuid
 
 from app.core.config import settings
 from app.core.logging import logger
+from app.core.pricing import pnl as spec_pnl, contract_size as spec_contract_size
 from app.core.safety import (
     ensure_trading_allowed,
     destination_for_adapter,
@@ -194,6 +195,9 @@ class ExecutionEngine:
         """Updates active positions with live prices, checks SL/TP hits, and applies Break-Even rules."""
         updated: List[Dict[str, Any]] = []
 
+        # Broker symbol-info per symbol (ADR-4 precedence) for contract-aware PnL.
+        contract_sizes: Dict[str, float] = {}
+
         for pos_id, pos in list(self.positions.items()):
             if pos.status != "OPEN":
                 continue
@@ -209,9 +213,15 @@ class ExecutionEngine:
             vol = pos.volume
             risk_dist = abs(entry - sl)
 
-            # Floating PnL calculation
+            # Floating PnL calculation (spec-based contract size, P-04/C-01)
             price_diff = (curr_price - entry) if direction == "LONG" else (entry - curr_price)
-            pos.floating_pnl = round(price_diff * 100.0 * vol, 2)
+            if pos.symbol not in contract_sizes:
+                try:
+                    info = self.adapter.get_symbol_info(pos.symbol)
+                except Exception:
+                    info = None
+                contract_sizes[pos.symbol] = spec_contract_size(pos.symbol, info)
+            pos.floating_pnl = round(price_diff * contract_sizes[pos.symbol] * vol, 2)
             pos.r_multiple = round(price_diff / risk_dist, 2) if risk_dist > 0 else 0.0
 
             # Break-Even Adjustment Check
@@ -260,7 +270,13 @@ class ExecutionEngine:
         pos.exit_time = datetime.now(timezone.utc).isoformat()
         pos.exit_reason = reason
         price_diff = (exit_price - pos.entry_price) if pos.direction == "LONG" else (pos.entry_price - exit_price)
-        pos.realized_pnl = round(price_diff * 100.0 * pos.volume, 2)
+        # Spec-based contract size (P-04/C-01); broker symbol_info takes precedence.
+        info = None
+        try:
+            info = self.adapter.get_symbol_info(pos.symbol)
+        except Exception:
+            info = None
+        pos.realized_pnl = round(spec_pnl(price_diff, pos.volume, pos.symbol, symbol_info=info), 2)
         pos.floating_pnl = 0.0
         logger.info(f"POSITION CLOSED: {pos.position_id} exited @ {exit_price} ({reason}). Realized PnL: ${pos.realized_pnl}")
 

@@ -40,6 +40,35 @@ class MarketDataService:
         self.ensure_connected()
         return self.adapter.get_symbol_info(symbol)
 
+    def get_latest_price(self, symbol: str) -> Optional[float]:
+        """Latest tradable price for a symbol (P-17/N-06 fix).
+
+        Prefers the adapter's live bid/ask, then falls back to the last
+        cached candle close, then to one freshly fetched candle. Never
+        returns a hard-coded constant.
+        """
+        self.ensure_connected()
+        info = self.adapter.get_symbol_info(symbol) or {}
+        bid = info.get("bid")
+        if bid is not None:
+            return float(bid)
+        ask = info.get("ask")
+        if ask is not None:
+            return float(ask)
+        cached = self._candle_cache.get(symbol, {})
+        for timeframe in ("M1", "M5", "M15", "M30", "H1", "H4"):
+            series = cached.get(timeframe)
+            if series:
+                close = series[-1].get("close")
+                if close is not None:
+                    return float(close)
+        candles = self.fetch_candles(symbol, "M5", count=1)
+        if candles:
+            close = candles[-1].get("close")
+            if close is not None:
+                return float(close)
+        return None
+
     def fetch_candles(
         self, symbol: str, timeframe: str, count: int = 500
     ) -> List[Dict[str, Any]]:

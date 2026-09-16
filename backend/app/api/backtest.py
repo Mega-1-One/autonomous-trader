@@ -48,7 +48,7 @@ async def run_backtest(
         commission_per_lot=req.commission_per_lot
     )
 
-    report = engine.run(symbol=req.symbol, candles=candles, point_size=point_size)
+    report = engine.run(symbol=req.symbol, candles=candles, point_size=point_size, symbol_info=info)
 
     return {
         "symbol": req.symbol,
@@ -67,7 +67,7 @@ async def run_monte_carlo(
     point_size = info.get("point_size", 0.01)
 
     engine = BacktestEngine(initial_balance=req.initial_balance)
-    report = engine.run(symbol=req.symbol, candles=candles, point_size=point_size)
+    report = engine.run(symbol=req.symbol, candles=candles, point_size=point_size, symbol_info=info)
 
     # Reconstruct trades from report or run simulation
     simulator = MonteCarloSimulator(iterations=req.iterations)

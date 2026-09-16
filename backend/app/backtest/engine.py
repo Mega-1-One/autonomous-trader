@@ -1,6 +1,7 @@
 from typing import Any, Dict, List, Optional
 import uuid
 
+from app.core.pricing import contract_size as spec_contract_size
 from app.strategy.engine import StrategyEngine
 from app.risk.engine import RiskEngine
 from app.backtest.metrics import (
@@ -32,7 +33,8 @@ class BacktestEngine:
         self,
         symbol: str,
         candles: List[Dict[str, Any]],
-        point_size: float = 0.01
+        point_size: float = 0.01,
+        symbol_info: Optional[Dict[str, Any]] = None,
     ) -> BacktestMetricsReport:
         """Executes backtest over historical candle series without look-ahead bias."""
         balance = self.initial_balance
@@ -41,13 +43,25 @@ class BacktestEngine:
         equity_curve: List[EquityPoint] = []
 
         open_position: Optional[Dict[str, Any]] = None
+        # Spec-derived symbol info (ADR-4 precedence: broker symbol_info overrides
+        # the static spec for point/tick/contract/volume; legacy point-size
+        # fallback only when no broker info is available).
+        broker = symbol_info or {}
+        tick_size = broker.get("tick_size", point_size)
+        tick_value = broker.get("tick_value", 1.0 if point_size >= 0.01 else 10.0)
+        contract = broker.get("contract_size")
+        if not contract or contract <= 0:
+            contract = spec_contract_size(
+                symbol,
+                symbol_info={"point_size": broker.get("point_size", point_size)},
+            )
         symbol_info = {
-            "tick_size": point_size,
-            "tick_value": 1.0 if point_size >= 0.01 else 10.0,
-            "contract_size": 100.0 if point_size >= 0.01 else 100000.0,
-            "min_volume": 0.01,
-            "max_volume": 100.0,
-            "volume_step": 0.01,
+            "tick_size": tick_size,
+            "tick_value": tick_value,
+            "contract_size": contract,
+            "min_volume": broker.get("min_volume", 0.01),
+            "max_volume": broker.get("max_volume", 100.0),
+            "volume_step": broker.get("volume_step", 0.01),
         }
 
         n = len(candles)

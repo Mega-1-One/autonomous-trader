@@ -200,7 +200,7 @@ class _FakeRisk:
                             risk_percent=0.1, effective_rr=2.0)
 
 
-def _run_mini_backtest(point_size, entry, sl, tp, exit_candles):
+def _run_mini_backtest(point_size, entry, sl, tp, exit_candles, symbol="XAUUSD"):
     """Backtest with injected strategy/risk so the contract heuristic is exercised deterministically."""
     engine = BacktestEngine(initial_balance=10000.0, slippage_pips=0.0, commission_per_lot=7.0)
     engine.strategy_engine = _FakeStrategy(entry, sl, tp)
@@ -208,7 +208,7 @@ def _run_mini_backtest(point_size, entry, sl, tp, exit_candles):
     candles = [{"timestamp": f"t{i}", "open": entry, "high": entry, "low": entry, "close": entry,
                 "tick_volume": 1, "volume": 1, "spread": 0} for i in range(30)]
     candles += exit_candles
-    return engine.run("XAUUSD", candles, point_size=point_size)
+    return engine.run(symbol, candles, point_size=point_size)
 
 
 def test_backtest_contract_heuristic_xau_shaped_point():
@@ -224,12 +224,30 @@ def test_backtest_contract_heuristic_xau_shaped_point():
     assert report.net_profit == 46.5
 
 def test_backtest_contract_heuristic_fx_shaped_point():
-    # point_size 0.00001 -> contract 100000, tick_value 10.0 (current heuristic).
+    # C-01 intended change (register #5): the old heuristic was symbol-blind and
+    # guessed contract 100000 purely from point_size; the spec-based rule
+    # resolves via the symbol. For a real FX symbol (EURUSD) the corrected
+    # contract is still 100000, so the locked value holds.
     report = _run_mini_backtest(
         point_size=0.00001, entry=1.08500, sl=1.08400, tp=1.08700,
         exit_candles=[{"timestamp": "tX", "open": 1.08700, "high": 1.08750, "low": 1.08520,
                        "close": 1.08720, "tick_volume": 1, "volume": 1, "spread": 0}],
+        symbol="EURUSD",
     )
     assert report.total_trades == 1
     # pnl = diff 0.002 * contract 100000 * vol 0.5 - commission 3.5
     assert report.net_profit == 96.5
+
+
+def test_backtest_contract_now_resolved_by_symbol_not_point_size():
+    # Same FX-shaped point size, but a gold symbol: the old heuristic used
+    # contract 100000 (net 96.5); the corrected spec rule uses 100
+    # (diff 0.002 * 100 * 0.5 - 3.5 = -3.4). Intended correction (register #5).
+    report = _run_mini_backtest(
+        point_size=0.00001, entry=1.08500, sl=1.08400, tp=1.08700,
+        exit_candles=[{"timestamp": "tX", "open": 1.08700, "high": 1.08750, "low": 1.08520,
+                       "close": 1.08720, "tick_volume": 1, "volume": 1, "spread": 0}],
+        symbol="XAUUSD",
+    )
+    assert report.total_trades == 1
+    assert report.net_profit == -3.4

@@ -4,6 +4,7 @@ from typing import Dict, List, Optional, Any
 import time
 
 from app.core.logging import logger
+from app.core.pricing import pnl as spec_pnl
 
 @dataclass
 class ScalpPosition:
@@ -56,7 +57,7 @@ class ScalpPositionManager:
             pos.holding_time_seconds = round(now - pos.entry_time, 2)
 
             price_diff = (curr_price - pos.entry_price) if pos.direction == "BUY" else (pos.entry_price - curr_price)
-            pos.floating_pnl = round(price_diff * 100.0 * pos.volume, 2)
+            pos.floating_pnl = round(spec_pnl(price_diff, pos.volume, pos.symbol), 2)
 
             # 1. Take Profit Hit
             if (pos.direction == "BUY" and curr_price >= pos.take_profit) or \
@@ -91,6 +92,6 @@ class ScalpPositionManager:
         pos.exit_reason = reason
         pos.holding_time_seconds = round(now - pos.entry_time, 2)
         price_diff = (exit_price - pos.entry_price) if pos.direction == "BUY" else (pos.entry_price - exit_price)
-        pos.realized_pnl = round(price_diff * 100.0 * pos.volume, 2)
+        pos.realized_pnl = round(spec_pnl(price_diff, pos.volume, pos.symbol), 2)
         pos.floating_pnl = 0.0
         logger.info(f"[SCALP_POSITION_CLOSED] {pos.position_id} exited @ {exit_price} ({reason}). Realized PnL: ${pos.realized_pnl} (Held: {pos.holding_time_seconds}s)")

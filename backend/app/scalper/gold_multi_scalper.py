@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from typing import List, Dict, Any, Optional, Tuple
 
 from app.core.config import settings, ExecutionMode
+from app.core.pricing import pnl as spec_pnl
 from app.core.safety import ensure_trading_allowed, account_trade_mode_from_mt5, SafetyViolation
 from app.data.mt5_real import RealMT5Adapter
 
@@ -146,17 +147,17 @@ class GoldMultiPositionProfitScalper:
         total_floating_pnl = sum(p.profit + p.swap for p in active_positions)
         net_daily_pnl = self.todays_realized_pnl + total_floating_pnl
 
-        # Calculate open SL risk for monitoring
+        # Calculate open SL risk for monitoring (spec-based contract, gold => 100)
         current_open_risk_usd = 0.0
         for pos in active_positions:
             if pos.sl > 0:
-                current_open_risk_usd += abs(pos.price_open - pos.sl) * pos.volume * 100.0
+                current_open_risk_usd += spec_pnl(abs(pos.price_open - pos.sl), pos.volume, self.symbol)
             else:
                 current_open_risk_usd += self.max_loss_usd
 
         entry_price = tick.ask if proposed_direction == "BUY" else tick.bid
         proposed_sl_dist = abs(entry_price - proposed_sl_price)
-        new_trade_sl_risk_usd = proposed_sl_dist * proposed_volume * 100.0
+        new_trade_sl_risk_usd = spec_pnl(proposed_sl_dist, proposed_volume, self.symbol)
         projected_total_risk_usd = current_open_risk_usd + new_trade_sl_risk_usd
 
         risk_used_pct = (current_open_risk_usd / balance * 100.0) if balance > 0 else 0.0
@@ -201,7 +202,7 @@ class GoldMultiPositionProfitScalper:
         
         margin_usage_pct = (margin_used / equity * 100.0) if (equity and equity > 0) else 0.0
         current_drawdown_pct = ((self.peak_equity - equity) / self.peak_equity * 100.0) if (self.peak_equity and self.peak_equity > 0) else 0.0
-        current_open_risk = sum((abs(p.price_open - p.sl) * p.volume * 100.0) if p.sl > 0 else self.max_loss_usd for p in active)
+        current_open_risk = sum((spec_pnl(abs(p.price_open - p.sl), p.volume, self.symbol)) if p.sl > 0 else self.max_loss_usd for p in active)
         risk_used_pct = (current_open_risk / balance * 100.0) if (balance and balance > 0) else 0.0
 
         print("\n==================================================")

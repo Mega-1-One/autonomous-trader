@@ -23,13 +23,13 @@ async def get_positions(
     execution_engine: ExecutionEngine = Depends(get_execution_engine),
 ):
     """Returns active and historical simulated positions with real-time floating P&L and metrics."""
-    # Update active positions with live prices
+    # Update active positions with live prices (no hard-coded fallback, P-17/C-01)
     symbols = market_service.get_supported_symbols()
     current_prices = {}
     for s in symbols:
-        info = market_service.get_symbol_info(s)
-        if info:
-            current_prices[s] = info.get("bid", 2400.0)
+        price = market_service.get_latest_price(s)
+        if price is not None:
+            current_prices[s] = price
 
     updated = execution_engine.update_positions(current_prices)
     all_positions = [p.to_dict() for p in execution_engine.positions.values()]
@@ -47,6 +47,13 @@ async def submit_order(
 ):
     """Submits order to execution engine with idempotency & safety checks."""
     result = execution_engine.execute_signal(req.model_dump(), current_spread_pips=req.spread_pips)
+    if result["status"] == "FAILED":
+        # Broker rejected/failed the send: surface as a bad-gateway failure
+        # path (C-01 owns this change exclusively; success shapes unchanged).
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=result.get("reason", "Broker order send failed"),
+        )
     if result["status"] == "REJECTED":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
