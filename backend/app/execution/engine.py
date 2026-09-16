@@ -218,7 +218,8 @@ class ExecutionEngine:
             if pos.symbol not in contract_sizes:
                 try:
                     info = self.adapter.get_symbol_info(pos.symbol)
-                except Exception:
+                except Exception as exc:
+                    logger.debug(f"symbol_info lookup failed for {pos.symbol}: {exc}")
                     info = None
                 contract_sizes[pos.symbol] = spec_contract_size(pos.symbol, info)
             pos.floating_pnl = round(price_diff * contract_sizes[pos.symbol] * vol, 2)
@@ -241,8 +242,13 @@ class ExecutionEngine:
                     if held_seconds >= self.max_holding_time_seconds:
                         self._close_position(pos, curr_price, "MAX_HOLDING_TIME")
                         closed = True
-                except (TypeError, ValueError):
-                    pass
+                except (TypeError, ValueError) as exc:
+                    # D-03: log skipped max-holding-time enforcement instead of
+                    # silently skipping it.
+                    logger.warning(
+                        f"MAX_HOLDING_TIME skipped for {pos_id} "
+                        f"(unparseable entry_time {pos.entry_time!r}): {exc}"
+                    )
 
             # SL / TP Hit Check
             if not closed and direction == "LONG":
@@ -274,7 +280,8 @@ class ExecutionEngine:
         info = None
         try:
             info = self.adapter.get_symbol_info(pos.symbol)
-        except Exception:
+        except Exception as exc:
+            logger.debug(f"symbol_info lookup failed for {pos.symbol}: {exc}")
             info = None
         pos.realized_pnl = round(spec_pnl(price_diff, pos.volume, pos.symbol, symbol_info=info), 2)
         pos.floating_pnl = 0.0

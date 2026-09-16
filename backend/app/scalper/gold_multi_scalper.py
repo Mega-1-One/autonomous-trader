@@ -120,7 +120,10 @@ class GoldMultiPositionProfitScalper:
                         with self.lock:
                             self.test_entry = True
                         print("\n[TEST ENTRY COMMAND] Safe Test Entry mode activated for 1 trade.\n")
-                except Exception:
+                except Exception as exc:
+                    # D-03: log command-listener exceptions with context instead
+                    # of silently swallowing them.
+                    logging.getLogger("autotrader").warning(f"[COMMAND LISTENER ERROR] {exc}")
                     time.sleep(0.1)
 
         t = threading.Thread(target=listener, daemon=True)
