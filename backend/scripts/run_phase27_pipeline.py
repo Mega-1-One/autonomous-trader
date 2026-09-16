@@ -14,39 +14,7 @@ from app.research.data_pipeline.candle_builder import DeterministicCandleBuilder
 from app.research.data_pipeline.dataset_splitter import DatasetSplitter
 from app.research.data_pipeline.dataset_manifest import DatasetManifestGenerator
 
-def fetch_real_ticks(symbol_map: dict) -> dict:
-    adapter = RealMT5Adapter()
-    if not adapter.connect():
-        print("[ERROR] Failed to connect to MT5 terminal")
-        return {}
-
-    import MetaTrader5 as mt5
-
-    dataset = {}
-    utc_from = datetime(2026, 8, 10, 0, 0, tzinfo=timezone.utc)
-    utc_to = datetime(2026, 8, 18, 0, 0, tzinfo=timezone.utc)
-
-    for canonical, broker_symbol in symbol_map.items():
-        print(f"Ingesting raw ticks for {canonical} ({broker_symbol})...")
-        raw_ticks = mt5.copy_ticks_range(broker_symbol, utc_from, utc_to, mt5.COPY_TICKS_ALL)
-        if raw_ticks is not None and len(raw_ticks) > 0:
-            step = max(1, len(raw_ticks) // 25000)
-            sampled = raw_ticks[::step]
-            parsed = []
-            for t in sampled:
-                parsed.append({
-                    "symbol": canonical,
-                    "bid": float(t[1]),
-                    "ask": float(t[2]),
-                    "last": float(t[3]) if len(t) > 3 and t[3] > 0 else float(t[1]),
-                    "timestamp": float(t[0]),
-                    "volume": int(t[4]) if len(t) > 4 else 1
-                })
-            dataset[canonical] = parsed
-            print(f"  -> {canonical}: Loaded {len(parsed):,} raw Exness ticks.")
-
-    adapter.disconnect()
-    return dataset
+from app.research.common.mt5_ticks import fetch_real_ticks  # C-04 shared helper
 
 def run_phase27_pipeline():
     symbol_map = {

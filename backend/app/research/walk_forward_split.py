@@ -1,6 +1,7 @@
 from dataclasses import dataclass, asdict
 from typing import List, Dict, Any, Tuple
 
+from app.research.common.splits import chronological_split_indices
 from app.research.dataset import SignalResearchObservation
 from app.research.calibration import ProbabilityCalibrator, CalibrationModelResult
 
@@ -46,8 +47,7 @@ class WalkForwardCalibrator:
                 summary=f"INSUFFICIENT DATA: Total observations ({n}) below minimum threshold (50)"
             )
 
-        split1 = int(n * 0.60)
-        split2 = int(n * 0.80)
+        split1, split2 = chronological_split_indices(n)
 
         train_obs = observations[:split1]
         val_obs = observations[split1:split2]

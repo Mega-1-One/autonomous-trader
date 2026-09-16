@@ -3,15 +3,9 @@ import os
 from pathlib import Path
 
 # Automatically add venv site-packages to sys.path so scripts run standalone
-backend_dir = Path(__file__).resolve().parent.parent
-venv_site = backend_dir / "venv" / "Lib" / "site-packages"
-parent_venv = backend_dir.parent / "venv" / "Lib" / "site-packages"
-if str(backend_dir) not in sys.path:
-    sys.path.insert(0, str(backend_dir))
-if venv_site.exists() and str(venv_site) not in sys.path:
-    sys.path.append(str(venv_site))
-if parent_venv.exists() and str(parent_venv) not in sys.path:
-    sys.path.append(str(parent_venv))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import _bootstrap  # noqa: E402  (backend root + venv site-packages on sys.path)
+backend_dir = _bootstrap.ensure_backend_on_path()
 
 import logging
 logging.getLogger("autotrader").setLevel(logging.ERROR)
