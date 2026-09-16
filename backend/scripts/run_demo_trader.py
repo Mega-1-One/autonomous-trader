@@ -9,6 +9,7 @@ logging.getLogger("autotrader").setLevel(logging.ERROR)
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from app.core.config import settings, ExecutionMode
+from app.core.safety import ensure_trading_allowed, account_trade_mode_from_mt5, SafetyViolation
 from app.data.mt5_real import RealMT5Adapter
 
 def run_demo_trader():
@@ -41,6 +42,16 @@ def run_demo_trader():
 
         if len(sys.argv) > 1 and sys.argv[1] == "--enable-demo":
             print("\nExecuting Test 0.01 Lot Demo Order on EURUSDm...")
+            # Destination-aware safety gate (ADR-3): --enable-demo sends a REAL
+            # broker order and requires EXECUTION_MODE=DEMO with a demo account
+            # (or LIVE with both live flags). This closes the old bypass where
+            # --enable-demo sent regardless of EXECUTION_MODE.
+            try:
+                ensure_trading_allowed("REAL", account_trade_mode=account_trade_mode_from_mt5())
+            except SafetyViolation as exc:
+                print(f"[SAFETY GATE REFUSED] {exc}")
+                adapter.disconnect()
+                return
             symbol = "EURUSDm"
             tick = mt5.symbol_info_tick(symbol)
             if not tick:
@@ -69,6 +80,10 @@ def run_demo_trader():
             }
 
             result = mt5.order_send(request)
+            if result is None:
+                print("\n[ERROR] order_send returned None (request failed)")
+                adapter.disconnect()
+                return
             print("\n[BROKER ORDER RESULT]")
             print(f"  Return Code: {result.retcode}")
             print(f"  Order Ticket: {result.order}")
