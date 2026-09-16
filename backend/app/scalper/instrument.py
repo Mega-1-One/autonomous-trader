@@ -27,7 +27,12 @@ class InstrumentSpecification:
 
     @classmethod
     def get_default_spec(cls, symbol: str) -> "InstrumentSpecification":
-        clean_sym = symbol.upper().replace("M", "")
+        # Strip only a trailing broker-suffix "M"/"m" (e.g. XAUUSDm -> XAUUSD).
+        # Never strip interior "M" characters (P-18: previous replace("M", "")
+        # mangled symbols like "M100" -> "100").
+        clean_sym = symbol.upper()
+        if clean_sym.endswith("M") and len(clean_sym) > 1:
+            clean_sym = clean_sym[:-1]
 
         if "XAU" in clean_sym or "GOLD" in clean_sym:
             return cls(

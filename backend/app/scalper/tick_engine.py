@@ -5,6 +5,7 @@ from typing import Dict, List, Optional
 import time
 
 from app.core.logging import logger
+from app.core.pricing import spread_in_pips
 
 @dataclass
 class TickData:
@@ -67,14 +68,9 @@ class TickEngine:
         if last is None:
             last = bid
 
-        # Calculate spread in pips
-        raw_diff = abs(ask - bid)
-        if digits == 3:
-            spread_pips = round(raw_diff / (point_size * 100.0), 1)
-        elif digits == 5:
-            spread_pips = round(raw_diff / (point_size * 10.0), 1)
-        else:
-            spread_pips = round(raw_diff / point_size, 1)
+        # Calculate spread in pips (canonical pip_size per ADR-4; legacy
+        # digits rules only for symbols with no specification)
+        spread_pips = spread_in_pips(bid, ask, symbol=symbol, digits=digits, point_size=point_size)
 
         tick = TickData(
             symbol=symbol,
