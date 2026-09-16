@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from typing import List, Dict, Any, Optional
 
 from app.core.config import settings, ExecutionMode
+from app.core.safety import ensure_trading_allowed, account_trade_mode_from_mt5, SafetyViolation
 from app.data.mt5_real import RealMT5Adapter
 
 class MT5GridMartingaleScalper:
@@ -89,7 +90,15 @@ class MT5GridMartingaleScalper:
             "type_filling": mt5.ORDER_FILLING_IOC,
         }
 
+        try:
+            ensure_trading_allowed("REAL", account_trade_mode=account_trade_mode_from_mt5())
+        except SafetyViolation as exc:
+            print(f"[SAFETY GATE REFUSED] {exc}")
+            return {"status": "REJECTED_BY_SAFETY_GATE", "reason": str(exc)}
         res_1 = mt5.order_send(req_1)
+        if res_1 is None:
+            print("[BROKER RESPONSE] order_send returned None (request failed)")
+            return {"status": "ERROR"}
         if res_1.retcode != mt5.TRADE_RETCODE_DONE:
             print(f"[BROKER RESPONSE] Code: {res_1.retcode} | Comment: {res_1.comment}")
             if res_1.retcode == 10027:
@@ -159,8 +168,17 @@ class MT5GridMartingaleScalper:
                         "type_time": mt5.ORDER_TIME_GTC,
                         "type_filling": mt5.ORDER_FILLING_IOC,
                     }
+                    try:
+                        ensure_trading_allowed("REAL", account_trade_mode=account_trade_mode_from_mt5())
+                    except SafetyViolation as exc:
+                        print(f"[SAFETY GATE REFUSED] {exc}")
+                        self._close_all_grid_positions(grid_tickets)
+                        cycle_status = "SAFETY_GATE_STOP"
+                        break
                     avg_res = mt5.order_send(avg_req)
-                    if avg_res.retcode == mt5.TRADE_RETCODE_DONE:
+                    if avg_res is None:
+                        print("[BROKER RESPONSE] order_send returned None (request failed)")
+                    elif avg_res.retcode == mt5.TRADE_RETCODE_DONE:
                         grid_tickets.append(avg_res.order)
                         print(f"[GRID #{len(active_grid)+1} OPENED] Ticket #{avg_res.order} at {avg_res.price}")
 
@@ -197,6 +215,11 @@ class MT5GridMartingaleScalper:
                     "type_time": mt5.ORDER_TIME_GTC,
                     "type_filling": mt5.ORDER_FILLING_IOC,
                 }
+                try:
+                    ensure_trading_allowed("REAL", account_trade_mode=account_trade_mode_from_mt5())
+                except SafetyViolation as exc:
+                    print(f"[SAFETY GATE REFUSED] {exc}")
+                    return
                 res = mt5.order_send(req)
                 if res and res.retcode == mt5.TRADE_RETCODE_DONE:
                     print(f"  Closed Grid Ticket #{pos.ticket} at {res.price}")

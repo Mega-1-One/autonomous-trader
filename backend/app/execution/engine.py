@@ -3,8 +3,14 @@ from dataclasses import dataclass, asdict
 from typing import Any, Dict, List, Optional
 import uuid
 
-from app.core.config import settings, ExecutionMode
+from app.core.config import settings
 from app.core.logging import logger
+from app.core.safety import (
+    ensure_trading_allowed,
+    destination_for_adapter,
+    account_trade_mode_from_adapter,
+    SafetyViolation,
+)
 from app.data.mt5_interface import AbstractMT5Adapter
 from app.data.mt5_mock import MockMT5Adapter
 from app.risk.engine import RiskEngine
@@ -80,11 +86,18 @@ class ExecutionEngine:
             return {"status": "REJECTED", "reason": f"Active MT5 broker position exists for {symbol}"}
 
 
-        # 3. Safety Mode Verification
-        if settings.EXECUTION_MODE == ExecutionMode.LIVE:
-            if not (settings.ENABLE_LIVE_TRADING and settings.LIVE_TRADING_CONFIRMATION):
-                logger.critical("SAFETY BLOCK: Live trading flag disabled in LIVE execution mode.")
-                return {"status": "REJECTED", "reason": "Live trading safety flag disabled"}
+        # 3. Destination-aware safety gate (ADR-3): mode × destination × sentinel.
+        # The gate consults the cross-process stop sentinel first (defense-in-depth
+        # beyond the RiskEngine check below).
+        destination = destination_for_adapter(self.adapter)
+        try:
+            ensure_trading_allowed(
+                destination,
+                account_trade_mode=account_trade_mode_from_adapter(self.adapter),
+            )
+        except SafetyViolation as exc:
+            logger.warning(f"SAFETY GATE REJECT: {exc}")
+            return {"status": "REJECTED", "reason": str(exc)}
 
         symbol_info = self.adapter.get_symbol_info(symbol) or {
             "digits": 2, "point_size": 0.01, "tick_size": 0.01, "tick_value": 1.0,

@@ -22,7 +22,7 @@ async def test_api_emergency_stop_blocks_order_submission(async_client):
         "entry_price": 2400.0, "stop_loss": 2390.0, "take_profit": 2420.0,
     })
     assert res_order.status_code == 400
-    assert "Emergency Stop" in res_order.json()["detail"]
+    assert "EMERGENCY STOP" in res_order.json()["detail"].upper()
 
     # Reset to restore clean state for other tests
     res_reset = await async_client.post("/api/system/reset-emergency-stop")
@@ -71,5 +71,5 @@ async def test_injected_risk_engine_is_consulted(async_client):
         "client_signal_id": "SIG_WIRING_TEST",
     })
     assert result["status"] == "REJECTED"
-    assert "Emergency Stop" in result["reason"]
+    assert "EMERGENCY STOP" in result["reason"].upper()
     app.state.risk_engine.reset_emergency_stop()

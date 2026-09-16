@@ -7,6 +7,7 @@ from typing import List, Dict, Any, Optional
 import numpy as np
 
 from app.core.config import settings, ExecutionMode
+from app.core.safety import ensure_trading_allowed, account_trade_mode_from_mt5, SafetyViolation
 from app.data.mt5_real import RealMT5Adapter
 
 class AutonomousScalperDaemon:
@@ -127,6 +128,11 @@ class AutonomousScalperDaemon:
                             "type_time": mt5.ORDER_TIME_GTC,
                             "type_filling": mt5.ORDER_FILLING_IOC,
                         }
+                        try:
+                            ensure_trading_allowed("REAL", account_trade_mode=account_trade_mode_from_mt5())
+                        except SafetyViolation as exc:
+                            print(f"[SAFETY GATE REFUSED] {exc}")
+                            break
                         res_close = mt5.order_send(req_close)
                         if res_close and res_close.retcode == mt5.TRADE_RETCODE_DONE:
                             print(f"\n[AUTOCLOSED TICKET #{pos.ticket}] Closed at price {res_close.price} | Profit: ${pos.profit:+.2f} USD")
@@ -163,6 +169,11 @@ class AutonomousScalperDaemon:
                                 }
 
                                 print(f"\n[SIGNAL DETECTED: {sig}] Submitting Autonomous Scalp Order to MT5...")
+                                try:
+                                    ensure_trading_allowed("REAL", account_trade_mode=account_trade_mode_from_mt5())
+                                except SafetyViolation as exc:
+                                    print(f"[SAFETY GATE REFUSED] {exc}")
+                                    break
                                 res_open = mt5.order_send(req_open)
                                 if res_open and res_open.retcode == mt5.TRADE_RETCODE_DONE:
                                     trades_executed += 1

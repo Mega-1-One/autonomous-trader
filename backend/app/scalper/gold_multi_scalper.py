@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from typing import List, Dict, Any, Optional, Tuple
 
 from app.core.config import settings, ExecutionMode
+from app.core.safety import ensure_trading_allowed, account_trade_mode_from_mt5, SafetyViolation
 from app.data.mt5_real import RealMT5Adapter
 
 class GoldMultiPositionProfitScalper:
@@ -328,6 +329,11 @@ class GoldMultiPositionProfitScalper:
                         "type_time": mt5.ORDER_TIME_GTC,
                         "type_filling": mt5.ORDER_FILLING_IOC,
                     }
+                    try:
+                        ensure_trading_allowed("REAL", account_trade_mode=account_trade_mode_from_mt5())
+                    except SafetyViolation as exc:
+                        print(f"[SAFETY GATE REFUSED] {exc}")
+                        return {"error": str(exc)}
                     res_close = mt5.order_send(req_close)
                     if res_close and res_close.retcode == mt5.TRADE_RETCODE_DONE:
                         self.todays_trades += 1
@@ -437,7 +443,17 @@ class GoldMultiPositionProfitScalper:
                                 "type_filling": mt5.ORDER_FILLING_IOC,
                             }
 
+                            try:
+                                ensure_trading_allowed("REAL", account_trade_mode=account_trade_mode_from_mt5())
+                            except SafetyViolation as exc:
+                                print(f"[SAFETY GATE REFUSED] {exc}")
+                                return {"error": str(exc)}
+
                             res_open = mt5.order_send(req_open)
+                            if res_open is None:
+                                print("[BROKER RESPONSE] order_send returned None (request failed)")
+                                self.last_order_sub_time = time.perf_counter() - t_order_start
+                                continue
                             self.last_order_sub_time = time.perf_counter() - t_order_start
 
                             # Reset test_entry flag after single test execution

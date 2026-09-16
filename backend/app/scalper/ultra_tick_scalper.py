@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from typing import List, Dict, Any, Optional
 
 from app.core.config import settings, ExecutionMode
+from app.core.safety import ensure_trading_allowed, account_trade_mode_from_mt5, SafetyViolation
 from app.data.mt5_real import RealMT5Adapter
 
 class UltraTickScalperEngine:
@@ -83,8 +84,17 @@ class UltraTickScalperEngine:
                 }
 
                 print(f"[{datetime.now(timezone.utc).strftime('%H:%M:%S')}] Triggering Instant Scalp #{completed_scalps+1} ({direction})...")
+                try:
+                    ensure_trading_allowed("REAL", account_trade_mode=account_trade_mode_from_mt5())
+                except SafetyViolation as exc:
+                    print(f"[SAFETY GATE REFUSED] {exc}")
+                    break
                 res = mt5.order_send(req)
 
+                if res is None:
+                    print("  [ERROR] order_send returned None (request failed)")
+                    time.sleep(2.0)
+                    continue
                 if res and res.retcode == mt5.TRADE_RETCODE_DONE:
                     print(f"  [SCALP OPENED] Ticket #{res.order} at {res.price} (SL: {sl}, TP: {tp})")
                     ticket = res.order
@@ -116,6 +126,11 @@ class UltraTickScalperEngine:
                             "type_time": mt5.ORDER_TIME_GTC,
                             "type_filling": mt5.ORDER_FILLING_IOC,
                         }
+                        try:
+                            ensure_trading_allowed("REAL", account_trade_mode=account_trade_mode_from_mt5())
+                        except SafetyViolation as exc:
+                            print(f"[SAFETY GATE REFUSED] {exc}")
+                            break
                         c_res = mt5.order_send(close_req)
                         if c_res and c_res.retcode == mt5.TRADE_RETCODE_DONE:
                             print(f"  [SCALP 15s AUTOCLOSED] Closed ticket #{ticket} at {c_res.price}")

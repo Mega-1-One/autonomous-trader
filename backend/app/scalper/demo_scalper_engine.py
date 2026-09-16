@@ -5,6 +5,7 @@ from pathlib import Path
 from datetime import datetime, timezone
 
 from app.core.config import settings, ExecutionMode
+from app.core.safety import ensure_trading_allowed, account_trade_mode_from_mt5, SafetyViolation
 from app.data.mt5_real import RealMT5Adapter
 
 class MT5DemoMicroScalper:
@@ -69,9 +70,18 @@ class MT5DemoMicroScalper:
         }
 
         print(f"Submitting Instant Micro-Scalp Order to MT5...")
+        try:
+            ensure_trading_allowed("REAL", account_trade_mode=account_trade_mode_from_mt5())
+        except SafetyViolation as exc:
+            print(f"[SAFETY GATE REFUSED] {exc}")
+            self.adapter.disconnect()
+            return
         start_ts = time.time()
         result = mt5.order_send(request)
 
+        if result is None:
+            print("[BROKER RESPONSE] order_send returned None (request failed)")
+            return
         if result.retcode != mt5.TRADE_RETCODE_DONE:
             print(f"[BROKER RESPONSE] Code: {result.retcode} | Comment: {result.comment}")
             if result.retcode == 10027:
@@ -110,8 +120,15 @@ class MT5DemoMicroScalper:
                 "type_time": mt5.ORDER_TIME_GTC,
                 "type_filling": mt5.ORDER_FILLING_IOC,
             }
+            try:
+                ensure_trading_allowed("REAL", account_trade_mode=account_trade_mode_from_mt5())
+            except SafetyViolation as exc:
+                print(f"[SAFETY GATE REFUSED] {exc}")
+                return
             close_res = mt5.order_send(close_req)
-            if close_res.retcode == mt5.TRADE_RETCODE_DONE:
+            if close_res is None:
+                print("[BROKER RESPONSE] close order_send returned None")
+            elif close_res.retcode == mt5.TRADE_RETCODE_DONE:
                 print(f"[SCALP AUTOCLOSED] Closed ticket #{ticket} at {close_res.price}")
 
         acc_after = mt5.account_info()
