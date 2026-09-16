@@ -3,23 +3,18 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.deps import get_adapter
 from app.core.config import settings
 from app.core.database import get_db_session
-from app.data.mt5_real import RealMT5Adapter
-from app.data.mt5_mock import MockMT5Adapter
+from app.data.mt5_interface import AbstractMT5Adapter
 
 router = APIRouter(prefix="/api", tags=["Health"])
 
-# Initialize MT5 adapter (tries Real MT5 terminal connection first; falls back to Mock if terminal not open)
-real_mt5 = RealMT5Adapter()
-if not real_mt5.connect():
-    mt5_adapter = MockMT5Adapter()
-    mt5_adapter.connect()
-else:
-    mt5_adapter = real_mt5
-
 @router.get("/health", status_code=status.HTTP_200_OK)
-async def health_check(db: AsyncSession = Depends(get_db_session)):
+async def health_check(
+    db: AsyncSession = Depends(get_db_session),
+    mt5_adapter: AbstractMT5Adapter = Depends(get_adapter),
+):
     """Health check endpoint evaluating system status, DB connection, and MT5 connection status."""
     db_status = False
     try:

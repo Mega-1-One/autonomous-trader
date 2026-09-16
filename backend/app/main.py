@@ -11,6 +11,7 @@ from app.api.signals import router as signals_router
 from app.api.risk import router as risk_router
 from app.api.backtest import router as backtest_router
 from app.api.execution import router as execution_router
+from app.api.deps import init_app_state
 from app.core.config import settings
 from app.core.database import engine
 from app.core.logging import logger
@@ -21,11 +22,15 @@ async def lifespan(app: FastAPI):
     logger.info("Initializing Autonomous Trading Engine...")
     logger.info(f"Execution Mode: {settings.EXECUTION_MODE.value}")
     logger.info(f"Safety Live Trading Enabled: {settings.ENABLE_LIVE_TRADING}")
-    
+
     # Initialize database tables for dev/testing
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    
+
+    # Build the shared in-process engine set (ADR-2/B-01). MT5 adapter
+    # connection previously attempted at health.py import time.
+    init_app_state(app)
+
     yield
 
     logger.info("Shutting down Autonomous Trading Engine...")

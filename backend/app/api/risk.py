@@ -1,13 +1,12 @@
-from fastapi import APIRouter, HTTPException, status, Body
+from fastapi import APIRouter, Depends, HTTPException, status, Body
 from pydantic import BaseModel
 from typing import Dict, Any, Optional
 
+from app.api.deps import get_market_service, get_risk_engine
 from app.risk.engine import RiskEngine
 from app.services.market_data import MarketDataService
 
 router = APIRouter(tags=["Risk & System Control"])
-risk_engine = RiskEngine()
-market_service = MarketDataService()
 
 class RiskEvaluateRequest(BaseModel):
     symbol: str = "XAUUSD"
@@ -17,7 +16,7 @@ class RiskEvaluateRequest(BaseModel):
     spread_pips: float = 1.0
 
 @router.get("/api/risk/status", status_code=status.HTTP_200_OK)
-async def get_risk_status():
+async def get_risk_status(risk_engine: RiskEngine = Depends(get_risk_engine)):
     """Returns risk engine parameters, daily loss lock status, and emergency stop state."""
     return {
         "emergency_stop_active": risk_engine.emergency_stop_active,
@@ -36,7 +35,11 @@ async def get_risk_status():
     }
 
 @router.post("/api/risk/evaluate", status_code=status.HTTP_200_OK)
-async def evaluate_trade_risk(req: RiskEvaluateRequest):
+async def evaluate_trade_risk_endpoint(
+    req: RiskEvaluateRequest,
+    risk_engine: RiskEngine = Depends(get_risk_engine),
+    market_service: MarketDataService = Depends(get_market_service),
+):
     """Evaluates risk and calculates lot size for a proposed trade."""
     info = market_service.get_symbol_info(req.symbol) or {
         "digits": 2, "point_size": 0.01, "tick_size": 0.01, "tick_value": 1.0,
@@ -64,7 +67,10 @@ async def evaluate_trade_risk(req: RiskEvaluateRequest):
     }
 
 @router.post("/api/system/emergency-stop", status_code=status.HTTP_200_OK)
-async def trigger_emergency_stop(reason: Optional[str] = Body(None, embed=True)):
+async def trigger_emergency_stop(
+    reason: Optional[str] = Body(None, embed=True),
+    risk_engine: RiskEngine = Depends(get_risk_engine),
+):
     """Triggers global emergency stop, blocking all new trade entries immediately."""
     risk_engine.trigger_emergency_stop(reason or "User API emergency stop trigger")
     return {
@@ -74,7 +80,7 @@ async def trigger_emergency_stop(reason: Optional[str] = Body(None, embed=True))
     }
 
 @router.post("/api/system/reset-emergency-stop", status_code=status.HTTP_200_OK)
-async def reset_emergency_stop():
+async def reset_emergency_stop_endpoint(risk_engine: RiskEngine = Depends(get_risk_engine)):
     """Resets global emergency stop."""
     risk_engine.reset_emergency_stop()
     return {

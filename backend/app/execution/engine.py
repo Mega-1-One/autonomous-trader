@@ -36,12 +36,18 @@ class PositionRecord:
 class ExecutionEngine:
     """Execution Engine managing order validation, idempotency, execution, and position management."""
 
-    def __init__(self, adapter: Optional[AbstractMT5Adapter] = None):
+    def __init__(
+        self,
+        adapter: Optional[AbstractMT5Adapter] = None,
+        risk_engine: Optional[RiskEngine] = None,
+    ):
         if adapter is None:
             adapter = MockMT5Adapter()
             adapter.connect()
         self.adapter = adapter
-        self.risk_engine = RiskEngine()
+        # Explicit injection (R-06): reuse the injected shared RiskEngine;
+        # only build a default when none is provided (standalone/test use).
+        self.risk_engine = risk_engine if risk_engine is not None else RiskEngine()
 
         self.positions: Dict[str, PositionRecord] = {}
         self.executed_order_ids: set[str] = set()

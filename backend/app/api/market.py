@@ -1,12 +1,12 @@
 from typing import Optional
-from fastapi import APIRouter, Query, HTTPException, status
+from fastapi import APIRouter, Depends, Query, HTTPException, status
+from app.api.deps import get_market_service
 from app.services.market_data import MarketDataService
 
 router = APIRouter(prefix="/api/market", tags=["Market Data"])
-market_service = MarketDataService()
 
 @router.get("/symbols", status_code=status.HTTP_200_OK)
-async def get_symbols():
+async def get_symbols(market_service: MarketDataService = Depends(get_market_service)):
     """Returns list of supported instruments and their specifications."""
     symbols = market_service.get_supported_symbols()
     specs = {}
@@ -18,7 +18,8 @@ async def get_symbols():
 async def get_candles(
     symbol: str = Query("XAUUSD", description="Canonical symbol name"),
     timeframe: str = Query("M5", description="Timeframe (M1, M5, M15, M30, H1, H4)"),
-    count: int = Query(100, ge=1, le=1000, description="Number of candles")
+    count: int = Query(100, ge=1, le=1000, description="Number of candles"),
+    market_service: MarketDataService = Depends(get_market_service),
 ):
     """Fetches historical candles with normalized UTC timestamps."""
     candles = market_service.fetch_candles(symbol, timeframe, count)
@@ -41,7 +42,7 @@ async def get_candles(
     }
 
 @router.get("/status", status_code=status.HTTP_200_OK)
-async def get_market_status():
+async def get_market_status(market_service: MarketDataService = Depends(get_market_service)):
     """Returns connection state and data freshness for core instruments."""
     connected = market_service.ensure_connected()
     freshness = {}

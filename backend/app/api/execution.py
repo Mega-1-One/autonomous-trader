@@ -1,13 +1,12 @@
-from fastapi import APIRouter, HTTPException, status, Body
+from fastapi import APIRouter, Depends, HTTPException, status, Body
 from pydantic import BaseModel
 from typing import Dict, Any, Optional
 
+from app.api.deps import get_market_service, get_execution_engine
 from app.execution.engine import ExecutionEngine
 from app.services.market_data import MarketDataService
 
 router = APIRouter(prefix="/api/execution", tags=["Execution & Position Management"])
-market_service = MarketDataService()
-execution_engine = ExecutionEngine(adapter=market_service.adapter)
 
 class OrderSubmitRequest(BaseModel):
     client_signal_id: Optional[str] = None
@@ -19,7 +18,10 @@ class OrderSubmitRequest(BaseModel):
     spread_pips: float = 1.0
 
 @router.get("/positions", status_code=status.HTTP_200_OK)
-async def get_positions():
+async def get_positions(
+    market_service: MarketDataService = Depends(get_market_service),
+    execution_engine: ExecutionEngine = Depends(get_execution_engine),
+):
     """Returns active and historical simulated positions with real-time floating P&L and metrics."""
     # Update active positions with live prices
     symbols = market_service.get_supported_symbols()
@@ -39,7 +41,10 @@ async def get_positions():
     }
 
 @router.post("/orders", status_code=status.HTTP_200_OK)
-async def submit_order(req: OrderSubmitRequest):
+async def submit_order(
+    req: OrderSubmitRequest,
+    execution_engine: ExecutionEngine = Depends(get_execution_engine),
+):
     """Submits order to execution engine with idempotency & safety checks."""
     result = execution_engine.execute_signal(req.model_dump(), current_spread_pips=req.spread_pips)
     if result["status"] == "REJECTED":
@@ -50,7 +55,10 @@ async def submit_order(req: OrderSubmitRequest):
     return result
 
 @router.post("/positions/{position_id}/close", status_code=status.HTTP_200_OK)
-async def close_position(position_id: str):
+async def close_position(
+    position_id: str,
+    execution_engine: ExecutionEngine = Depends(get_execution_engine),
+):
     """Manually closes an individual open position."""
     pos = execution_engine.positions.get(position_id)
     if not pos or pos.status != "OPEN":
@@ -63,7 +71,10 @@ async def close_position(position_id: str):
     return {"status": "CLOSED", "position": pos.to_dict()}
 
 @router.post("/close-all", status_code=status.HTTP_200_OK)
-async def close_all_positions(reason: Optional[str] = Body(None, embed=True)):
+async def close_all_positions(
+    reason: Optional[str] = Body(None, embed=True),
+    execution_engine: ExecutionEngine = Depends(get_execution_engine),
+):
     """Emergency closes all active positions immediately."""
     closed = execution_engine.close_all_positions(reason or "EMERGENCY_CLOSE_ALL")
     return {

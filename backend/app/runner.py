@@ -5,6 +5,7 @@ from app.core.logging import logger
 from app.core.pricing import spread_in_pips
 from app.data.mt5_real import RealMT5Adapter
 from app.data.mt5_mock import MockMT5Adapter
+from app.risk.engine import RiskEngine
 from app.services.market_data import MarketDataService
 from app.strategy.engine import StrategyEngine
 from app.execution.engine import ExecutionEngine
@@ -39,7 +40,9 @@ async def run_autonomous_trader(symbol: str = "XAUUSD", poll_interval_seconds: i
 
     market_service = MarketDataService(adapter=adapter)
     strategy_engine = StrategyEngine()
-    execution_engine = ExecutionEngine(adapter=adapter)
+    # One RiskEngine per process (ADR-2): explicitly injected into the engine.
+    risk_engine = RiskEngine()
+    execution_engine = ExecutionEngine(adapter=adapter, risk_engine=risk_engine)
 
     info = market_service.get_symbol_info(symbol) or {"digits": 3, "point_size": 0.001}
     digits = info.get("digits", 3)

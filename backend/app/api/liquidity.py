@@ -1,17 +1,18 @@
-from fastapi import APIRouter, Query, HTTPException, status
+from fastapi import APIRouter, Depends, Query, HTTPException, status
+from app.api.deps import get_market_service
 from app.services.market_data import MarketDataService
 from app.strategy.structure import StructureEngine
 from app.strategy.liquidity import LiquidityEngine
 
 router = APIRouter(prefix="/api/liquidity", tags=["Liquidity"])
-market_service = MarketDataService()
 
 @router.get("/levels", status_code=status.HTTP_200_OK)
 async def get_liquidity_levels(
     symbol: str = Query("XAUUSD", description="Symbol name"),
     timeframe: str = Query("M5", description="Timeframe"),
     count: int = Query(300, ge=50, le=1000, description="Candle count"),
-    tolerance_pips: float = Query(2.0, ge=0.1, le=10.0, description="Equal high/low tolerance in pips")
+    tolerance_pips: float = Query(2.0, ge=0.1, le=10.0, description="Equal high/low tolerance in pips"),
+    market_service: MarketDataService = Depends(get_market_service),
 ):
     """Returns all detected Buy-Side and Sell-Side liquidity pools."""
     candles = market_service.fetch_candles(symbol, timeframe, count)

@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Query, HTTPException, status
+from fastapi import APIRouter, Depends, Query, HTTPException, status
+from app.api.deps import get_market_service
 from app.services.market_data import MarketDataService
 from app.strategy.structure import StructureEngine
 from app.strategy.liquidity import LiquidityEngine
@@ -8,13 +9,13 @@ from app.strategy.sweeps import SweepEngine
 from app.strategy.order_block import OrderBlockEngine
 
 router = APIRouter(prefix="/api/strategy", tags=["Strategy Patterns"])
-market_service = MarketDataService()
 
 @router.get("/patterns", status_code=status.HTTP_200_OK)
 async def get_strategy_patterns(
     symbol: str = Query("XAUUSD", description="Symbol name"),
     timeframe: str = Query("M5", description="Timeframe"),
-    count: int = Query(200, ge=30, le=1000, description="Candle count")
+    count: int = Query(200, ge=30, le=1000, description="Candle count"),
+    market_service: MarketDataService = Depends(get_market_service),
 ):
     """Returns detected FVGs, Order Blocks, Liquidity Sweeps, and Displacement candles."""
     candles = market_service.fetch_candles(symbol, timeframe, count)
