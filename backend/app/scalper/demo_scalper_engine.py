@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 from app.core.config import settings, ExecutionMode
 from app.core.safety import ensure_trading_allowed, account_trade_mode_from_mt5, SafetyViolation
 from app.data.mt5_real import RealMT5Adapter
+from app.scalper.mt5_orders import build_close_request, build_market_order, pip_scale_for
 
 class MT5DemoMicroScalper:
     """High-Speed Micro-Scalper Engine for MT5 Demo Account (30s max holding, tight 5/10 pip SL/TP)."""
@@ -47,27 +48,25 @@ class MT5DemoMicroScalper:
             print(f"[ERROR] Could not fetch live tick for {self.symbol}")
             return
 
-        pip_scale = 0.10 if "XAU" in self.symbol or "USTEC" in self.symbol else 0.0001
+        pip_scale = pip_scale_for(self.symbol)
         is_buy = (direction == "BUY")
 
         price = tick.ask if is_buy else tick.bid
         sl = round(price - (sl_pips * pip_scale), 3 if "XAU" in self.symbol else 5) if is_buy else round(price + (sl_pips * pip_scale), 3 if "XAU" in self.symbol else 5)
         tp = round(price + (tp_pips * pip_scale), 3 if "XAU" in self.symbol else 5) if is_buy else round(price - (tp_pips * pip_scale), 3 if "XAU" in self.symbol else 5)
 
-        request = {
-            "action": mt5.TRADE_ACTION_DEAL,
-            "symbol": self.symbol,
-            "volume": self.volume,
-            "type": mt5.ORDER_TYPE_BUY if is_buy else mt5.ORDER_TYPE_SELL,
-            "price": price,
-            "sl": sl,
-            "tp": tp,
-            "deviation": 10,
-            "magic": 999111,
-            "comment": "MicroScalp 30s",
-            "type_time": mt5.ORDER_TIME_GTC,
-            "type_filling": mt5.ORDER_FILLING_IOC,
-        }
+        request = build_market_order(
+            mt5,
+            symbol=self.symbol,
+            order_type=mt5.ORDER_TYPE_BUY if is_buy else mt5.ORDER_TYPE_SELL,
+            volume=self.volume,
+            price=price,
+            sl=sl,
+            tp=tp,
+            deviation=10,
+            magic=999111,
+            comment="MicroScalp 30s",
+        )
 
         print(f"Submitting Instant Micro-Scalp Order to MT5...")
         try:
@@ -107,19 +106,17 @@ class MT5DemoMicroScalper:
             pos = positions[0]
             print(f"[MAX HORIZON REACHED ({max_hold_sec}s)] Autoclosing micro-scalp position #{ticket}...")
             close_price = mt5.symbol_info_tick(self.symbol).bid if pos.type == 0 else mt5.symbol_info_tick(self.symbol).ask
-            close_req = {
-                "action": mt5.TRADE_ACTION_DEAL,
-                "symbol": self.symbol,
-                "volume": pos.volume,
-                "type": mt5.ORDER_TYPE_SELL if pos.type == 0 else mt5.ORDER_TYPE_BUY,
-                "position": pos.ticket,
-                "price": close_price,
-                "deviation": 10,
-                "magic": 999111,
-                "comment": "Scalp Timeout Close",
-                "type_time": mt5.ORDER_TIME_GTC,
-                "type_filling": mt5.ORDER_FILLING_IOC,
-            }
+            close_req = build_close_request(
+                mt5,
+                symbol=self.symbol,
+                volume=pos.volume,
+                close_type=mt5.ORDER_TYPE_SELL if pos.type == 0 else mt5.ORDER_TYPE_BUY,
+                position_ticket=pos.ticket,
+                price=close_price,
+                deviation=10,
+                magic=999111,
+                comment="Scalp Timeout Close",
+            )
             try:
                 ensure_trading_allowed("REAL", account_trade_mode=account_trade_mode_from_mt5())
             except SafetyViolation as exc:

@@ -8,6 +8,7 @@ from typing import List, Dict, Any, Optional
 from app.core.config import settings, ExecutionMode
 from app.core.safety import ensure_trading_allowed, account_trade_mode_from_mt5, SafetyViolation
 from app.data.mt5_real import RealMT5Adapter
+from app.scalper.mt5_orders import build_close_request, build_market_order, pip_scale_for
 
 class UltraTickScalperEngine:
     """Ultra-Aggressive High-Frequency Tick Scalper Engine (Instant Tick Execution & Continuous Re-entry)."""
@@ -34,7 +35,7 @@ class UltraTickScalperEngine:
             print("[ERROR] Could not fetch account info.")
             return
 
-        pip_scale = 0.10 if "XAU" in self.symbol or "USTEC" in self.symbol else 0.0001
+        pip_scale = pip_scale_for(self.symbol)
 
         print("\n==================================================")
         print(" ULTRA-AGGRESSIVE TICK SCALPER ENGINE STARTED")
@@ -68,20 +69,18 @@ class UltraTickScalperEngine:
                 sl = round(price - (self.sl_pips * pip_scale), 5 if "EUR" in self.symbol else 3) if is_buy else round(price + (self.sl_pips * pip_scale), 5 if "EUR" in self.symbol else 3)
                 tp = round(price + (self.tp_pips * pip_scale), 5 if "EUR" in self.symbol else 3) if is_buy else round(price - (self.tp_pips * pip_scale), 5 if "EUR" in self.symbol else 3)
 
-                req = {
-                    "action": mt5.TRADE_ACTION_DEAL,
-                    "symbol": self.symbol,
-                    "volume": self.volume,
-                    "type": mt5.ORDER_TYPE_BUY if is_buy else mt5.ORDER_TYPE_SELL,
-                    "price": price,
-                    "sl": sl,
-                    "tp": tp,
-                    "deviation": 10,
-                    "magic": self.magic_number,
-                    "comment": f"UltraScalp #{completed_scalps+1}",
-                    "type_time": mt5.ORDER_TIME_GTC,
-                    "type_filling": mt5.ORDER_FILLING_IOC,
-                }
+                req = build_market_order(
+                    mt5,
+                    symbol=self.symbol,
+                    order_type=mt5.ORDER_TYPE_BUY if is_buy else mt5.ORDER_TYPE_SELL,
+                    volume=self.volume,
+                    price=price,
+                    sl=sl,
+                    tp=tp,
+                    deviation=10,
+                    magic=self.magic_number,
+                    comment=f"UltraScalp #{completed_scalps+1}",
+                )
 
                 print(f"[{datetime.now(timezone.utc).strftime('%H:%M:%S')}] Triggering Instant Scalp #{completed_scalps+1} ({direction})...")
                 try:
@@ -113,19 +112,17 @@ class UltraTickScalperEngine:
                     if pos_list and len(pos_list) > 0:
                         pos = pos_list[0]
                         c_price = mt5.symbol_info_tick(self.symbol).bid if pos.type == 0 else mt5.symbol_info_tick(self.symbol).ask
-                        close_req = {
-                            "action": mt5.TRADE_ACTION_DEAL,
-                            "symbol": self.symbol,
-                            "volume": pos.volume,
-                            "type": mt5.ORDER_TYPE_SELL if pos.type == 0 else mt5.ORDER_TYPE_BUY,
-                            "position": pos.ticket,
-                            "price": c_price,
-                            "deviation": 10,
-                            "magic": self.magic_number,
-                            "comment": "UltraScalp 15s Close",
-                            "type_time": mt5.ORDER_TIME_GTC,
-                            "type_filling": mt5.ORDER_FILLING_IOC,
-                        }
+                        close_req = build_close_request(
+                            mt5,
+                            symbol=self.symbol,
+                            volume=pos.volume,
+                            close_type=mt5.ORDER_TYPE_SELL if pos.type == 0 else mt5.ORDER_TYPE_BUY,
+                            position_ticket=pos.ticket,
+                            price=c_price,
+                            deviation=10,
+                            magic=self.magic_number,
+                            comment="UltraScalp 15s Close",
+                        )
                         try:
                             ensure_trading_allowed("REAL", account_trade_mode=account_trade_mode_from_mt5())
                         except SafetyViolation as exc:

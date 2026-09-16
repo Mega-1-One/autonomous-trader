@@ -8,6 +8,7 @@ from typing import List, Dict, Any, Optional
 from app.core.config import settings, ExecutionMode
 from app.core.safety import ensure_trading_allowed, account_trade_mode_from_mt5, SafetyViolation
 from app.data.mt5_real import RealMT5Adapter
+from app.scalper.mt5_orders import build_close_request, build_market_order, pip_scale_for
 
 class MT5GridMartingaleScalper:
     """Dynamic Grid & Martingale Scalper Engine for MT5 (Basket Take Profit & Equity Guard)."""
@@ -51,7 +52,7 @@ class MT5GridMartingaleScalper:
             return {"status": "ERROR"}
 
         start_balance = acc.balance
-        pip_scale = 0.10 if "XAU" in self.symbol or "USTEC" in self.symbol else 0.0001
+        pip_scale = pip_scale_for(self.symbol)
         is_buy = (direction == "BUY")
 
         print("\n==================================================")
@@ -77,18 +78,16 @@ class MT5GridMartingaleScalper:
             return {"status": "ERROR"}
 
         price = tick.ask if is_buy else tick.bid
-        req_1 = {
-            "action": mt5.TRADE_ACTION_DEAL,
-            "symbol": self.symbol,
-            "volume": self.base_volume,
-            "type": mt5.ORDER_TYPE_BUY if is_buy else mt5.ORDER_TYPE_SELL,
-            "price": price,
-            "deviation": 10,
-            "magic": self.magic_number,
-            "comment": "Grid Base #1",
-            "type_time": mt5.ORDER_TIME_GTC,
-            "type_filling": mt5.ORDER_FILLING_IOC,
-        }
+        req_1 = build_market_order(
+            mt5,
+            symbol=self.symbol,
+            order_type=mt5.ORDER_TYPE_BUY if is_buy else mt5.ORDER_TYPE_SELL,
+            volume=self.base_volume,
+            price=price,
+            deviation=10,
+            magic=self.magic_number,
+            comment="Grid Base #1",
+        )
 
         try:
             ensure_trading_allowed("REAL", account_trade_mode=account_trade_mode_from_mt5())
@@ -156,18 +155,16 @@ class MT5GridMartingaleScalper:
                 if is_adverse and dist_pips >= self.grid_step_pips:
                     next_vol = round(self.base_volume * (self.lot_multiplier ** len(active_grid)), 2)
                     print(f"\n[GRID STEP {len(active_grid)+1} TRIGGERED ({dist_pips:.1f} pips adverse)] Opening Martingale Order Vol: {next_vol} lot...")
-                    avg_req = {
-                        "action": mt5.TRADE_ACTION_DEAL,
-                        "symbol": self.symbol,
-                        "volume": next_vol,
-                        "type": mt5.ORDER_TYPE_BUY if is_buy else mt5.ORDER_TYPE_SELL,
-                        "price": curr_price,
-                        "deviation": 10,
-                        "magic": self.magic_number,
-                        "comment": f"Grid Step #{len(active_grid)+1}",
-                        "type_time": mt5.ORDER_TIME_GTC,
-                        "type_filling": mt5.ORDER_FILLING_IOC,
-                    }
+                    avg_req = build_market_order(
+                        mt5,
+                        symbol=self.symbol,
+                        order_type=mt5.ORDER_TYPE_BUY if is_buy else mt5.ORDER_TYPE_SELL,
+                        volume=next_vol,
+                        price=curr_price,
+                        deviation=10,
+                        magic=self.magic_number,
+                        comment=f"Grid Step #{len(active_grid)+1}",
+                    )
                     try:
                         ensure_trading_allowed("REAL", account_trade_mode=account_trade_mode_from_mt5())
                     except SafetyViolation as exc:
@@ -202,19 +199,17 @@ class MT5GridMartingaleScalper:
         for pos in open_positions:
             if pos.magic == self.magic_number:
                 close_price = mt5.symbol_info_tick(self.symbol).bid if pos.type == 0 else mt5.symbol_info_tick(self.symbol).ask
-                req = {
-                    "action": mt5.TRADE_ACTION_DEAL,
-                    "symbol": self.symbol,
-                    "volume": pos.volume,
-                    "type": mt5.ORDER_TYPE_SELL if pos.type == 0 else mt5.ORDER_TYPE_BUY,
-                    "position": pos.ticket,
-                    "price": close_price,
-                    "deviation": 10,
-                    "magic": self.magic_number,
-                    "comment": "Grid Basket Close",
-                    "type_time": mt5.ORDER_TIME_GTC,
-                    "type_filling": mt5.ORDER_FILLING_IOC,
-                }
+                req = build_close_request(
+                    mt5,
+                    symbol=self.symbol,
+                    volume=pos.volume,
+                    close_type=mt5.ORDER_TYPE_SELL if pos.type == 0 else mt5.ORDER_TYPE_BUY,
+                    position_ticket=pos.ticket,
+                    price=close_price,
+                    deviation=10,
+                    magic=self.magic_number,
+                    comment="Grid Basket Close",
+                )
                 try:
                     ensure_trading_allowed("REAL", account_trade_mode=account_trade_mode_from_mt5())
                 except SafetyViolation as exc:

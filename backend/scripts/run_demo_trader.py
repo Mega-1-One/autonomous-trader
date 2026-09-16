@@ -11,6 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from app.core.config import settings, ExecutionMode
 from app.core.safety import ensure_trading_allowed, account_trade_mode_from_mt5, SafetyViolation
 from app.data.mt5_real import RealMT5Adapter
+from app.scalper.mt5_orders import build_market_order
 
 def run_demo_trader():
     print("\n==================================================")
@@ -64,20 +65,18 @@ def run_demo_trader():
             sl = round(ask - 0.0030, 5)  # 30 pips SL
             tp = round(ask + 0.0060, 5)  # 60 pips TP
 
-            request = {
-                "action": mt5.TRADE_ACTION_DEAL,
-                "symbol": symbol,
-                "volume": lot,
-                "type": mt5.ORDER_TYPE_BUY,
-                "price": ask,
-                "sl": sl,
-                "tp": tp,
-                "deviation": 20,
-                "magic": 100001,
-                "comment": "AutoTrader Demo Test Order",
-                "type_time": mt5.ORDER_TIME_GTC,
-                "type_filling": mt5.ORDER_FILLING_IOC,
-            }
+            request = build_market_order(
+                mt5,
+                symbol=symbol,
+                order_type=mt5.ORDER_TYPE_BUY,
+                volume=lot,
+                price=ask,
+                sl=sl,
+                tp=tp,
+                deviation=20,
+                magic=100001,
+                comment="AutoTrader Demo Test Order",
+            )
 
             result = mt5.order_send(request)
             if result is None:

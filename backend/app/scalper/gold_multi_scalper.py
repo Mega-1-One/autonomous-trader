@@ -11,6 +11,12 @@ from app.core.config import settings, ExecutionMode
 from app.core.pricing import pnl as spec_pnl
 from app.core.safety import ensure_trading_allowed, account_trade_mode_from_mt5, SafetyViolation
 from app.data.mt5_real import RealMT5Adapter
+from app.scalper.mt5_orders import (
+    broker_reject_hint,
+    build_close_request,
+    build_market_order,
+    pip_scale_for,
+)
 
 class GoldMultiPositionProfitScalper:
     """Gold (XAUUSDm) Reversal Scalper Engine (Explicit TP + protective SL, profit-target close).
@@ -234,7 +240,7 @@ class GoldMultiPositionProfitScalper:
             print("[ERROR] Could not fetch account info.")
             return
 
-        pip_scale = 0.10 if ("XAU" in self.symbol or "GOLD" in self.symbol) else 0.0001
+        pip_scale = pip_scale_for(self.symbol)
 
         print("\n==================================================")
         print(" GOLD REVERSAL SCALPER (MANUAL STOP ONLY MODE)   ")
@@ -317,19 +323,17 @@ class GoldMultiPositionProfitScalper:
                         continue
 
                     close_price = tick.bid if pos.type == 0 else tick.ask
-                    req_close = {
-                        "action": mt5.TRADE_ACTION_DEAL,
-                        "symbol": self.symbol,
-                        "volume": pos.volume,
-                        "type": mt5.ORDER_TYPE_SELL if pos.type == 0 else mt5.ORDER_TYPE_BUY,
-                        "position": pos.ticket,
-                        "price": close_price,
-                        "deviation": 10,
-                        "magic": self.magic_number,
-                        "comment": comment,
-                        "type_time": mt5.ORDER_TIME_GTC,
-                        "type_filling": mt5.ORDER_FILLING_IOC,
-                    }
+                    req_close = build_close_request(
+                        mt5,
+                        symbol=self.symbol,
+                        volume=pos.volume,
+                        close_type=mt5.ORDER_TYPE_SELL if pos.type == 0 else mt5.ORDER_TYPE_BUY,
+                        position_ticket=pos.ticket,
+                        price=close_price,
+                        deviation=10,
+                        magic=self.magic_number,
+                        comment=comment,
+                    )
                     try:
                         ensure_trading_allowed("REAL", account_trade_mode=account_trade_mode_from_mt5())
                     except SafetyViolation as exc:
@@ -429,20 +433,18 @@ class GoldMultiPositionProfitScalper:
                         # Deduplication Protection: minimum 0.2s between orders (bypassed for TEST_ENTRY)
                         if is_test_mode or (now - self.last_order_time >= 0.2):
                             t_order_start = time.perf_counter()
-                            req_open = {
-                                "action": mt5.TRADE_ACTION_DEAL,
-                                "symbol": self.symbol,
-                                "volume": self.volume,
-                                "type": mt5.ORDER_TYPE_BUY if is_buy else mt5.ORDER_TYPE_SELL,
-                                "price": entry_price,
-                                "sl": sl,
-                                "tp": tp,
-                                "deviation": 10,
-                                "magic": self.magic_number,
-                                "comment": f"Gold Scalp {'TEST' if is_test_mode else '#' + str(self.todays_trades+len(active)+1)}",
-                                "type_time": mt5.ORDER_TIME_GTC,
-                                "type_filling": mt5.ORDER_FILLING_IOC,
-                            }
+                            req_open = build_market_order(
+                                mt5,
+                                symbol=self.symbol,
+                                order_type=mt5.ORDER_TYPE_BUY if is_buy else mt5.ORDER_TYPE_SELL,
+                                volume=self.volume,
+                                price=entry_price,
+                                sl=sl,
+                                tp=tp,
+                                deviation=10,
+                                magic=self.magic_number,
+                                comment=f"Gold Scalp {'TEST' if is_test_mode else '#' + str(self.todays_trades+len(active)+1)}",
+                            )
 
                             try:
                                 ensure_trading_allowed("REAL", account_trade_mode=account_trade_mode_from_mt5())
@@ -463,15 +465,7 @@ class GoldMultiPositionProfitScalper:
                                     self.test_entry = False
                                 print("[TEST ENTRY COMPLETE] Test trade execution finished. Reset TEST_ENTRY=OFF.\n")
 
-                            retcode_desc = {
-                                10009: "TRADE_RETCODE_DONE (Order executed cleanly)",
-                                10013: "TRADE_RETCODE_INVALID (Invalid order parameters)",
-                                10014: "TRADE_RETCODE_INVALID_VOLUME (Invalid lot size)",
-                                10015: "TRADE_RETCODE_INVALID_PRICE (Invalid entry price)",
-                                10016: "TRADE_RETCODE_INVALID_STOPS (Invalid SL or TP distance)",
-                                10019: "TRADE_RETCODE_NO_MONEY (Insufficient margin on MT5 account)",
-                                10027: "TRADE_RETCODE_AUTOTRADER_DISABLED (Algo Trading disabled in MT5 toolbar)"
-                            }.get(res_open.retcode if res_open else -1, f"Retcode {res_open.retcode if res_open else 'None'}")
+                            retcode_desc = broker_reject_hint(res_open.retcode if res_open else None)
 
                             if res_open and res_open.retcode == mt5.TRADE_RETCODE_DONE:
                                 self.last_order_time = now

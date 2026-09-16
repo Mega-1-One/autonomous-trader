@@ -9,6 +9,7 @@ import numpy as np
 from app.core.config import settings, ExecutionMode
 from app.core.safety import ensure_trading_allowed, account_trade_mode_from_mt5, SafetyViolation
 from app.data.mt5_real import RealMT5Adapter
+from app.scalper.mt5_orders import build_close_request, build_market_order, pip_scale_for
 
 class AutonomousScalperDaemon:
     """Fully Autonomous High-Speed Micro-Scalper & Risk Manager for MT5 Demo Account."""
@@ -68,7 +69,7 @@ class AutonomousScalperDaemon:
             return
 
         start_balance = acc.balance
-        pip_scale = 0.10 if "XAU" in self.symbol or "USTEC" in self.symbol else 0.0001
+        pip_scale = pip_scale_for(self.symbol)
 
         print("\n==================================================")
         print(" AUTONOMOUS HIGH-SPEED SCALPER DAEMON STARTED")
@@ -115,19 +116,17 @@ class AutonomousScalperDaemon:
                     # Autoclose if max horizon reached
                     if hold_time >= self.max_holding_seconds:
                         close_price = mt5.symbol_info_tick(self.symbol).bid if pos.type == 0 else mt5.symbol_info_tick(self.symbol).ask
-                        req_close = {
-                            "action": mt5.TRADE_ACTION_DEAL,
-                            "symbol": self.symbol,
-                            "volume": pos.volume,
-                            "type": mt5.ORDER_TYPE_SELL if pos.type == 0 else mt5.ORDER_TYPE_BUY,
-                            "position": pos.ticket,
-                            "price": close_price,
-                            "deviation": 10,
-                            "magic": self.magic_number,
-                            "comment": "AutoScalp Timeout Close",
-                            "type_time": mt5.ORDER_TIME_GTC,
-                            "type_filling": mt5.ORDER_FILLING_IOC,
-                        }
+                        req_close = build_close_request(
+                            mt5,
+                            symbol=self.symbol,
+                            volume=pos.volume,
+                            close_type=mt5.ORDER_TYPE_SELL if pos.type == 0 else mt5.ORDER_TYPE_BUY,
+                            position_ticket=pos.ticket,
+                            price=close_price,
+                            deviation=10,
+                            magic=self.magic_number,
+                            comment="AutoScalp Timeout Close",
+                        )
                         try:
                             ensure_trading_allowed("REAL", account_trade_mode=account_trade_mode_from_mt5())
                         except SafetyViolation as exc:
@@ -153,20 +152,18 @@ class AutonomousScalperDaemon:
                                 sl = round(price - (5.0 * pip_scale), 5) if is_buy else round(price + (5.0 * pip_scale), 5)
                                 tp = round(price + (10.0 * pip_scale), 5) if is_buy else round(price - (10.0 * pip_scale), 5)
 
-                                req_open = {
-                                    "action": mt5.TRADE_ACTION_DEAL,
-                                    "symbol": self.symbol,
-                                    "volume": 0.01,
-                                    "type": mt5.ORDER_TYPE_BUY if is_buy else mt5.ORDER_TYPE_SELL,
-                                    "price": price,
-                                    "sl": sl,
-                                    "tp": tp,
-                                    "deviation": 10,
-                                    "magic": self.magic_number,
-                                    "comment": "Autonomous Scalp",
-                                    "type_time": mt5.ORDER_TIME_GTC,
-                                    "type_filling": mt5.ORDER_FILLING_IOC,
-                                }
+                                req_open = build_market_order(
+                                    mt5,
+                                    symbol=self.symbol,
+                                    order_type=mt5.ORDER_TYPE_BUY if is_buy else mt5.ORDER_TYPE_SELL,
+                                    volume=0.01,
+                                    price=price,
+                                    sl=sl,
+                                    tp=tp,
+                                    deviation=10,
+                                    magic=self.magic_number,
+                                    comment="Autonomous Scalp",
+                                )
 
                                 print(f"\n[SIGNAL DETECTED: {sig}] Submitting Autonomous Scalp Order to MT5...")
                                 try:
