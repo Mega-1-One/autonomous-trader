@@ -1,4 +1,3 @@
-from typing import Optional
 from fastapi import APIRouter, Depends, Query, HTTPException, status
 from app.api.deps import get_market_service
 from app.services.market_data import MarketDataService

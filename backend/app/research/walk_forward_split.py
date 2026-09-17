@@ -1,5 +1,5 @@
-from dataclasses import dataclass, asdict
-from typing import List, Dict, Any, Tuple
+from dataclasses import dataclass
+from typing import List, Dict, Any
 
 from app.research.common.splits import chronological_split_indices
 from app.research.dataset import SignalResearchObservation

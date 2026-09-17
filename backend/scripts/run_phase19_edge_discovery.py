@@ -2,13 +2,11 @@ import sys
 import json
 import logging
 from pathlib import Path
-from datetime import datetime, timezone
 import numpy as np
 
 logging.getLogger("autotrader").setLevel(logging.ERROR)
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from app.data.mt5_real import RealMT5Adapter
 from app.scalper.instrument import InstrumentSpecification
 from app.scalper.tick_engine import TickEngine
 from app.scalper.features import FeatureEngine
@@ -22,8 +20,6 @@ from app.scalper.adaptive_exit import AdaptiveExitEngine
 
 from app.research.dataset import SignalResearchObservation
 from app.research.labeler import OutcomeLabeler
-from app.research.calibration import ProbabilityCalibrator
-from app.research.walk_forward_split import WalkForwardCalibrator
 from app.research.edge_discovery import EdgeDiscoveryEngine
 
 from app.research.common.mt5_ticks import fetch_real_ticks  # C-04 shared helper

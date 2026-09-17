@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
-from app.core.config import settings
 from app.core.logging import logger
 from app.data.mt5_interface import AbstractMT5Adapter
 from app.data.mt5_mock import MockMT5Adapter

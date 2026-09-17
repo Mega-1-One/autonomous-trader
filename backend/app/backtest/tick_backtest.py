@@ -1,6 +1,5 @@
 import time
 from typing import Any, Dict, List, Optional
-import numpy as np
 
 from app.scalper.tick_engine import TickEngine
 from app.scalper.features import FeatureEngine

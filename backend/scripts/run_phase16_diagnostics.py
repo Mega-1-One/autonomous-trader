@@ -13,7 +13,6 @@ from app.scalper.instrument import InstrumentSpecification
 from app.scalper.tick_engine import TickEngine
 from app.scalper.features import FeatureEngine
 from app.backtest.tick_backtest import TickBacktestEngine
-from app.backtest.walk_forward import WalkForwardValidator, TickMonteCarloSimulator
 
 def fetch_100_pct_raw_exness_ticks(symbol_map: dict) -> dict:
     adapter = RealMT5Adapter()

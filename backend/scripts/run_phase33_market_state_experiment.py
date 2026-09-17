@@ -4,15 +4,13 @@ import csv
 import logging
 from pathlib import Path
 from datetime import datetime, timezone, timedelta
-import numpy as np
 
 logging.getLogger("autotrader").setLevel(logging.ERROR)
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from app.data.mt5_real import RealMT5Adapter
-from app.scalper.instrument import InstrumentSpecification
 from app.research.data_pipeline.historical_loader import PaginatedHistoricalLoader
-from app.research.market_state.market_state_engine import MarketStateEngine, MarketStateMetrics
+from app.research.market_state.market_state_engine import MarketStateEngine
 
 def run_phase33_experiment():
     engine = MarketStateEngine()

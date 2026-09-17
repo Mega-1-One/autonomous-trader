@@ -1,8 +1,8 @@
 import json
 import hashlib
 from pathlib import Path
-from dataclasses import dataclass, asdict
-from typing import Dict, Any, List
+from dataclasses import dataclass
+from typing import Dict, Any
 
 from app.research.data_pipeline.data_validator import ValidationMetrics
 from app.research.data_pipeline.dataset_splitter import DatasetSplitManifest

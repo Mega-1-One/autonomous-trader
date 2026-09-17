@@ -5,7 +5,6 @@ import time
 import logging
 from pathlib import Path
 from datetime import datetime, timezone
-import numpy as np
 
 # Suppress verbose logger during bulk tick backtest
 logging.getLogger("autotrader").setLevel(logging.ERROR)
@@ -14,7 +13,6 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from app.data.mt5_real import RealMT5Adapter
 from app.backtest.tick_backtest import TickBacktestEngine
-from app.backtest.tick_metrics import TickMetricsCalculator
 from app.backtest.walk_forward import WalkForwardValidator, TickMonteCarloSimulator
 
 def fetch_real_exness_ticks(symbol_map: dict, max_ticks_per_sym: int = 15000) -> dict:

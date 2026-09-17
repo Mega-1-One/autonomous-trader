@@ -1,5 +1,5 @@
 from dataclasses import dataclass, asdict
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 
 from app.intelligence.analyzer import AnalysisResult
 from app.intelligence.cost_analyzer import CostFilterResult

@@ -1,6 +1,5 @@
 from enum import Enum
 from dataclasses import dataclass
-from typing import Dict, Any, Optional
 
 from app.scalper.features import ScalperFeatures
 

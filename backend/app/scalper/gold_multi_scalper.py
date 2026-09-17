@@ -1,13 +1,10 @@
 import sys
 import time
-import json
 import logging
 import threading
-from pathlib import Path
 from datetime import datetime, timezone
 from typing import List, Dict, Any, Optional, Tuple
 
-from app.core.config import settings, ExecutionMode
 from app.core.pricing import pnl as spec_pnl
 from app.core.safety import ensure_trading_allowed, account_trade_mode_from_mt5, SafetyViolation
 from app.data.mt5_real import RealMT5Adapter

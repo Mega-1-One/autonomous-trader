@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Body
 from pydantic import BaseModel
-from typing import Dict, Any, Optional
+from typing import Optional
 
 from app.api.deps import get_market_service, get_execution_engine, require_api_token
 from app.execution.engine import ExecutionEngine
@@ -31,7 +31,7 @@ async def get_positions(
         if price is not None:
             current_prices[s] = price
 
-    updated = execution_engine.update_positions(current_prices)
+    execution_engine.update_positions(current_prices)
     all_positions = [p.to_dict() for p in execution_engine.positions.values()]
 
     return {

@@ -1,11 +1,7 @@
 import time
-import json
-import logging
-from pathlib import Path
-from datetime import datetime, timezone
-from typing import List, Dict, Any, Optional
+from datetime import datetime
+from typing import List, Dict, Any
 
-from app.core.config import settings, ExecutionMode
 from app.core.safety import ensure_trading_allowed, account_trade_mode_from_mt5, SafetyViolation
 from app.data.mt5_real import RealMT5Adapter
 from app.scalper.mt5_orders import build_close_request, build_market_order, pip_scale_for

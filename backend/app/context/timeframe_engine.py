@@ -1,6 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, List, Any, Optional
-import numpy as np
+from typing import Dict, List, Optional
 
 @dataclass
 class Candle:

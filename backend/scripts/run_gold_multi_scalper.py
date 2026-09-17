@@ -1,5 +1,4 @@
 import sys
-import os
 from pathlib import Path
 
 # Automatically add venv site-packages to sys.path so scripts run standalone

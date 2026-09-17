@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
-from typing import Optional
 
 from app.api.deps import get_market_service
 from app.services.market_data import MarketDataService

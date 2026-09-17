@@ -1,5 +1,4 @@
-from typing import List, Dict, Any, Optional
-import numpy as np
+from typing import List, Dict, Any
 
 from app.research.dataset import SignalResearchObservation
 from app.scalper.instrument import InstrumentSpecification

@@ -1,8 +1,6 @@
-import json
-import hashlib
 from pathlib import Path
 from dataclasses import dataclass, asdict
-from typing import List, Dict, Any, Tuple, Optional
+from typing import List, Dict, Any
 import numpy as np
 
 from app.context.timeframe_engine import Candle

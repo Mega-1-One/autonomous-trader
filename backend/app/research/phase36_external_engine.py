@@ -1,10 +1,6 @@
-import json
-import csv
-import hashlib
 from pathlib import Path
 from dataclasses import dataclass, asdict
-from typing import List, Dict, Any, Tuple
-import numpy as np
+from typing import Dict, Any
 
 @dataclass
 class ReadinessScoreResult:

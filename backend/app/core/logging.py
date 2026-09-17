@@ -1,6 +1,5 @@
 import logging
 import sys
-from typing import Any
 
 def setup_logging(log_level: str = "INFO") -> logging.Logger:
     """Configures structured logging for the application."""

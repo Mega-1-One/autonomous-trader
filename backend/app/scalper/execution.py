@@ -3,7 +3,6 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
-from app.core.config import settings, ExecutionMode
 from app.core.logging import logger
 from app.scalper.signal import ScalpSignal
 from app.scalper.position_manager import ScalpPosition, ScalpPositionManager

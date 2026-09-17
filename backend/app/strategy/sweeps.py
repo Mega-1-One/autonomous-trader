@@ -1,5 +1,5 @@
 from dataclasses import dataclass, asdict
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 from app.strategy.liquidity import LiquidityLevel, LiquiditySide
 
 @dataclass

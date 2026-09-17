@@ -1,0 +1,12 @@
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+# Correctness-rule subset (D-04): pyflakes only. E501 etc. are not enforced
+# (the codebase has long lines throughout; formatting is not in scope).
+select = ["F"]
+
+[tool.ruff.lint.per-file-ignores]
+# Package re-export shims: imported names are the public API.
+"__init__.py" = ["F401"]

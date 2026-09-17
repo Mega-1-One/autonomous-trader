@@ -1,6 +1,5 @@
 from dataclasses import dataclass, asdict
-from typing import List, Dict, Any, Optional
-import numpy as np
+from typing import Dict, Any, Optional
 
 from app.context.bias_engine import TopDownBiasResult
 from app.context.price_location import PriceLocationResult

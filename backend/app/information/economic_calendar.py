@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from dataclasses import dataclass, asdict, field
+from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
 

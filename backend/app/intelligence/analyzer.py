@@ -1,5 +1,5 @@
 from dataclasses import dataclass, asdict
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any
 
 @dataclass
 class AnalysisResult:

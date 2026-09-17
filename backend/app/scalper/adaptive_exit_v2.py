@@ -1,5 +1,5 @@
 from dataclasses import dataclass, asdict
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 
 from app.scalper.features import ScalperFeatures
 from app.scalper.instrument import InstrumentSpecification

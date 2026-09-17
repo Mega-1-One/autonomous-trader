@@ -1,5 +1,5 @@
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from dataclasses import dataclass
+from datetime import datetime
 from collections import deque
 from typing import Dict, List, Optional
 import time

@@ -10,9 +10,8 @@ logging.getLogger("autotrader").setLevel(logging.ERROR)
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from app.data.mt5_real import RealMT5Adapter
-from app.scalper.instrument import InstrumentSpecification
 from app.research.data_pipeline.historical_loader import PaginatedHistoricalLoader
-from app.research.macro_futures.macro_futures_engine import Phase37MacroFuturesEngine, MacroEventEngine, FuturesVolumeEngine, MacroFuturesMetrics
+from app.research.macro_futures.macro_futures_engine import Phase37MacroFuturesEngine, MacroEventEngine, FuturesVolumeEngine
 from app.research.feature_discovery.return_labeler import ReturnLabeler
 from app.research.feature_discovery.statistical_testing import FeatureStatisticalScorer
 

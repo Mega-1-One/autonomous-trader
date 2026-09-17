@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from enum import Enum
 from dataclasses import dataclass, asdict, field
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 
 class DataAvailabilityState(str, Enum):

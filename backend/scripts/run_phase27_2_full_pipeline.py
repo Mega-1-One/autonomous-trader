@@ -2,7 +2,7 @@ import sys
 import json
 import logging
 from pathlib import Path
-from datetime import datetime, timezone, timedelta
+from datetime import datetime
 
 logging.getLogger("autotrader").setLevel(logging.ERROR)
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))

@@ -1,6 +1,6 @@
 from dataclasses import dataclass, asdict
 from enum import Enum
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 
 class AssetClass(str, Enum):
     FOREX = "FOREX"

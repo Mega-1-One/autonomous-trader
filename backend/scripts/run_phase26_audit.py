@@ -2,13 +2,10 @@ import sys
 import json
 import logging
 from pathlib import Path
-from datetime import datetime, timezone
 
 logging.getLogger("autotrader").setLevel(logging.ERROR)
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from app.data.mt5_real import RealMT5Adapter
-from app.scalper.instrument import InstrumentSpecification
 from app.research.audit_engine import ResearchAuditEngine
 
 from app.research.common.mt5_ticks import fetch_real_ticks  # C-04 shared helper
