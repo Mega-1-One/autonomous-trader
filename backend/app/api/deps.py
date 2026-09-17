@@ -51,7 +51,19 @@ async def require_api_token(
 
 
 def build_adapter() -> AbstractMT5Adapter:
-    """Tries the real MT5 terminal first; falls back to the mock adapter."""
+    """Builds the API-process broker adapter honoring EXECUTION_MODE (H-2).
+
+    PAPER/BACKTEST always use the mock adapter — the dashboard paper workflow
+    must never depend on (or touch) a real terminal, regardless of host.
+    DEMO/LIVE try the real terminal first and fall back to mock.
+    """
+    from app.core.config import ExecutionMode
+
+    mode = _config.settings.EXECUTION_MODE
+    if mode in (ExecutionMode.PAPER, ExecutionMode.BACKTEST):
+        mock = MockMT5Adapter()
+        mock.connect()
+        return mock
     real_mt5 = RealMT5Adapter()
     if real_mt5.connect():
         return real_mt5
