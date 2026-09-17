@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Body
 from pydantic import BaseModel, field_validator
-from typing import Literal, Optional
+from typing import Dict, Literal, Optional
 
 from app.api.deps import get_market_service, get_execution_engine, require_api_token
 from app.execution.engine import ExecutionEngine
@@ -31,11 +31,19 @@ async def get_positions(
     execution_engine: ExecutionEngine = Depends(get_execution_engine),
 ):
     """Returns active and historical simulated positions with real-time floating P&L and metrics."""
-    # Update active positions with live prices (no hard-coded fallback, P-17/C-01)
+    # Update active positions with live prices (no hard-coded fallback, P-17/C-01).
+    # N2-M8: mark each symbol on the side its open positions share (LONG->bid,
+    # SHORT->ask); mixed-side symbols fall back to bid and note it.
     symbols = market_service.get_supported_symbols()
+    open_sides: Dict[str, set] = {}
+    for p in execution_engine.positions.values():
+        if p.status == "OPEN":
+            open_sides.setdefault(p.symbol, set()).add(p.direction)
     current_prices = {}
     for s in symbols:
-        price = market_service.get_latest_price(s)
+        sides = open_sides.get(s, set())
+        side = next(iter(sides)) if len(sides) == 1 else "LONG"
+        price = market_service.get_latest_price(s, side=side)
         if price is not None:
             current_prices[s] = price
 

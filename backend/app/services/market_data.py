@@ -39,21 +39,27 @@ class MarketDataService:
         self.ensure_connected()
         return self.adapter.get_symbol_info(symbol)
 
-    def get_latest_price(self, symbol: str) -> Optional[float]:
-        """Latest tradable price for a symbol (P-17/N-06 fix).
+    def get_latest_price(self, symbol: str, side: str = "LONG") -> Optional[float]:
+        """Latest tradable price for a symbol (P-17/N-06 fix, N2-M8 side-aware).
 
-        Prefers the adapter's live bid/ask, then falls back to the last
-        cached candle close, then to one freshly fetched candle. Never
-        returns a hard-coded constant.
+        LONG positions mark at the bid, SHORT positions at the ask; candle-
+        close fallbacks are side-agnostic by nature. Never returns a
+        hard-coded constant.
         """
         self.ensure_connected()
         info = self.adapter.get_symbol_info(symbol) or {}
         bid = info.get("bid")
-        if bid is not None:
-            return float(bid)
         ask = info.get("ask")
-        if ask is not None:
-            return float(ask)
+        if side.strip().upper() == "SHORT":
+            if ask is not None:
+                return float(ask)
+            if bid is not None:
+                return float(bid)
+        else:
+            if bid is not None:
+                return float(bid)
+            if ask is not None:
+                return float(ask)
         cached = self._candle_cache.get(symbol, {})
         for timeframe in ("M1", "M5", "M15", "M30", "H1", "H4"):
             series = cached.get(timeframe)

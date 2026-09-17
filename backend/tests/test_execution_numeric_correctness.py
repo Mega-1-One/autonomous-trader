@@ -39,8 +39,8 @@ def test_xauusd_pnl_regression_unchanged():
     assert updated[0]["floating_pnl"] == pytest.approx(1.0 * 100.0 * pos.volume)
 
 
-def test_nas100_realized_pnl_contract_one():
-    # Mock NAS100 spec contract is 20; broker info takes precedence.
+def test_nas100_realized_pnl_broker_contract():
+    # L-7: the mock broker info contract (20.0) wins over the static spec (1.0).
     engine = _engine()
     pos = _open_position(engine, "NAS100", 19500.0, 19400.0, 19700.0, volume=0.1)
     engine._close_position(pos, 19510.0, "MANUAL_CLOSE")
@@ -59,6 +59,38 @@ def test_position_manager_forex_pnl():
     pm.add_position(pos)
     pm.update_and_check_exits(current_bid=1.08600, current_ask=1.08600, now=now + 1)
     assert pos.floating_pnl == pytest.approx(0.001 * 100000.0 * 0.1)
+
+
+def test_position_manager_nas100_broker_precedence():
+    """N2-M4/L-7: NAS100 uses broker contract when provided, else spec.
+
+    Intended decision: broker symbol_info wins (mock: 20.0); the static spec
+    canonical value is 1.0 (ADR-4). Both paths asserted here.
+    """
+    import time
+    now = time.time()
+
+    def _nas_pos(pid):
+        return ScalpPosition(
+            position_id=pid, symbol="NAS100", direction="BUY", volume=0.1,
+            entry_price=19500.0, current_price=19500.0,
+            stop_loss=19400.0, take_profit=19700.0, entry_time=now, status="OPEN",
+        )
+
+    pm_broker = ScalpPositionManager(max_holding_seconds=1000.0)
+    pos_b = _nas_pos("NB")
+    pm_broker.add_position(pos_b)
+    pm_broker.update_and_check_exits(
+        current_bid=19510.0, current_ask=19510.0, now=now + 1,
+        symbol_info={"NAS100": {"contract_size": 20.0}},
+    )
+    assert pos_b.floating_pnl == pytest.approx(10.0 * 20.0 * 0.1)
+
+    pm_spec = ScalpPositionManager(max_holding_seconds=1000.0)
+    pos_s = _nas_pos("NS")
+    pm_spec.add_position(pos_s)
+    pm_spec.update_and_check_exits(current_bid=19510.0, current_ask=19510.0, now=now + 1)
+    assert pos_s.floating_pnl == pytest.approx(10.0 * 1.0 * 0.1)
 
 
 @pytest.mark.asyncio

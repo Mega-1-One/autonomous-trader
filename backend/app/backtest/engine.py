@@ -11,7 +11,17 @@ from app.backtest.metrics import (
 )
 
 class BacktestEngine:
-    """Deterministic, Zero-Lookahead Backtesting Engine sharing exact live strategy and risk logic."""
+    """Deterministic, Zero-Lookahead Backtesting Engine sharing exact live strategy and risk logic.
+
+    Fill-cost methodology (N2-M2, documented explicitly):
+    - Entries fill at the exact signal price (no spread cost modeled).
+    - STOP_LOSS exits slip adversely by ``slippage_pips`` (stop orders slip);
+      TAKE_PROFIT exits fill at the exact TP (limit orders do not slip).
+    - ``spread_pips`` is a risk-gating input only (passed to the risk check);
+      it does not alter fills. Commission is deducted per closed trade.
+    Changing any of the above alters backtest numbers and must update the
+    characterization tests in the same commit.
+    """
 
     def __init__(
         self,
