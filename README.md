@@ -6,6 +6,8 @@ A production-grade, deterministic algorithmic trading system connecting to MetaT
 > Live trading is disabled by default (`EXECUTION_MODE=PAPER`). Live execution requires explicit safety configuration (`ENABLE_LIVE_TRADING=true` AND `LIVE_TRADING_CONFIRMATION=true`).
 >
 > Mutating API endpoints (order submission, close-all/close-position, emergency-stop) require a bearer token **only** when `APP_ENV=production` **and** `AUTOMATION_API_TOKEN` is set (`Authorization: Bearer <token>`; the dashboard sends it via `NEXT_PUBLIC_API_TOKEN`). Production deployments without the token configured must front the API with a reverse proxy or accept the exposure in writing.
+>
+> Optional risk guard (D-05, off by default): `risk_rules.reject_when_clamped_over_risk_multiple` (default `0` = disabled, current behavior). When set > 0, position sizing that would clamp *up* to the broker minimum lot is rejected if it risks more than that multiple of the per-trade risk. Enabling changes live sizing on small accounts — requires explicit owner sign-off.
 
 ## Architecture
 

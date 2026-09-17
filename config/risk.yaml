@@ -14,6 +14,12 @@ risk_rules:
   minimum_rr: 1.5
   maximum_position_size_lots: 10.0
   minimum_position_size_lots: 0.01
+  # Optional min-lot over-risk guard (D-05; default 0 = disabled, current behavior).
+  # When > 0, sizing that would clamp UP to the broker min_volume is rejected
+  # (returns 0 volume) if the clamped volume risks more than this multiple of
+  # the per-trade risk. Enable only with explicit owner sign-off: it changes
+  # live sizing behavior on small accounts.
+  reject_when_clamped_over_risk_multiple: 0
 
 # Scalp stops and targets (pips). Phase 1 exit-math fix: 5.0 TP / 3.0 SL
 # (RR ~1.67) so winners pay for losers. Old 2.0/5.0 (0.4R) needed >71% win rate.

@@ -33,6 +33,11 @@ class RiskEngine:
         self.minimum_rr = config.get("minimum_rr", 0)
         self.maximum_position_size_lots = config.get("maximum_position_size_lots", 10.0)
         self.minimum_position_size_lots = config.get("minimum_position_size_lots", 0.01)
+        # D-05 (default 0 = disabled): reject sizing clamped up to min_volume
+        # when it would risk more than this multiple of the per-trade risk.
+        self.reject_when_clamped_over_risk_multiple = config.get(
+            "reject_when_clamped_over_risk_multiple", 0
+        )
 
         self.emergency_stop_active = False
         self.daily_lock_active = False
@@ -76,6 +81,20 @@ class RiskEngine:
 
         # Clamp volume to broker min/max boundaries
         clamped_volume = max(min_vol, min(max_vol, snapped_volume))
+
+        # D-05 optional guard: never silently over-risk a small account by
+        # clamping up to min_volume. Disabled by default (multiple = 0).
+        multiple = self.reject_when_clamped_over_risk_multiple or 0
+        if multiple > 0 and clamped_volume > snapped_volume:
+            risk_at_clamped = clamped_volume * risk_per_contract
+            if risk_at_clamped > monetary_risk * multiple:
+                logger.warning(
+                    f"MIN-LOT OVER-RISK GUARD: clamped volume {clamped_volume} risks "
+                    f"${risk_at_clamped:.2f} (> {multiple}x per-trade risk "
+                    f"${monetary_risk:.2f}); rejecting (0 volume)."
+                )
+                return 0.0
+
         return float(clamped_volume)
 
     def evaluate_trade_risk(
