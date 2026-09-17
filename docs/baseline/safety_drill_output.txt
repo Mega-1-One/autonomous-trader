@@ -1,12 +1,12 @@
 ﻿PASS 1a emergency-stop triggers
 PASS 1b sentinel file written
 PASS 1c API order rejected while stopped
-PASS 2a fresh ExecutionEngine refuses (sentinel)
-PASS 2b gate refuses on sentinel
+PASS 2a fresh ExecutionEngine refuses entries (sentinel)
+PASS 2b gate refuses entries on sentinel
+PASS 2c gate allows closes on sentinel
 PASS 3a reset ok
 PASS 3b sentinel cleared
 PASS 3c order path re-enabled
-[2026-09-17 03:12:11] [INFO] [autotrader] POSITION CLOSED: POS_EB872F1F exited @ 2400.0 (EMERGENCY_CLOSE_ALL). Realized PnL: $0.0
 PASS 4a close-all ok
 PASS 6a LIVE-without-flags raises
 PASS 6b PAPER+REAL refused
@@ -18,7 +18,11 @@ PASS 5 gate in app/scalper/ultra_tick_scalper.py
 PASS 5 gate in app/scalper/gold_multi_scalper.py
 PASS 5 gate in app/scalper/grid_martingale_bot.py
 PASS 5 gate in scripts/run_demo_trader.py
+PASS 5b close intent in app/scalper/autonomous_scalper_daemon.py
+PASS 5b close intent in app/scalper/demo_scalper_engine.py
+PASS 5b close intent in app/scalper/ultra_tick_scalper.py
+PASS 5b close intent in app/scalper/gold_multi_scalper.py
+PASS 5b close intent in app/scalper/grid_martingale_bot.py
 7 LIMITATION (ADR-8): the sentinel blocks NEW gated entries cross-process;
-  it does NOT close already-open positions in bot processes and does NOT
-  terminate bot loops (their sends fail fast with a clear reason).
+  sentinel itself never closes positions and does not stop bot loops.
 E-04 DRILL COMPLETE: all checks passed.
