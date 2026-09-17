@@ -30,6 +30,20 @@ async def test_api_emergency_stop_blocks_order_submission(async_client):
 
 
 @pytest.mark.asyncio
+async def test_trigger_failure_surfaces_warning(async_client, monkeypatch):
+    """L-2: a failed sentinel write is surfaced in the API message (same keys)."""
+    import app.core.stop_state as stop_state_module
+    monkeypatch.setattr(stop_state_module, "trigger", lambda reason: False)
+    res = await async_client.post("/api/system/emergency-stop", json={"reason": "L-2 test"})
+    assert res.status_code == 200
+    data = res.json()
+    assert data["emergency_stop_active"] is True
+    assert "WARNING" in data["message"]
+    assert set(data.keys()) == {"status", "emergency_stop_active", "message"}
+    await async_client.post("/api/system/reset-emergency-stop")
+
+
+@pytest.mark.asyncio
 async def test_stop_blocks_risk_evaluation_path(async_client):
     """The stop also surfaces on the risk-evaluate path (same shared engine)."""
     await async_client.post("/api/system/emergency-stop", json={"reason": "propagation test 2"})

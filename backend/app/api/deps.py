@@ -6,6 +6,7 @@ For test environments that do not run lifespan events (httpx ASGITransport),
 the accessors lazily build and cache the same state on ``app.state`` so the
 test suite keeps working without per-test wiring.
 """
+import hmac
 from typing import Any, Optional
 
 from fastapi import Depends, HTTPException, Request, status
@@ -41,9 +42,9 @@ async def require_api_token(
     """
     if not token_enforcement_active():
         return
-    expected = _config.settings.AUTOMATION_API_TOKEN
-    provided = credentials.credentials if credentials else None
-    if not provided or provided != expected:
+    expected = _config.settings.AUTOMATION_API_TOKEN or ""
+    provided = credentials.credentials if credentials else ""
+    if not provided or not hmac.compare_digest(provided, expected):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or missing API token",

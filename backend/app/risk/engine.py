@@ -227,18 +227,21 @@ class RiskEngine:
             effective_rr=effective_rr
         )
 
-    def trigger_emergency_stop(self, reason: str = "User Initiated Emergency Stop") -> None:
+    def trigger_emergency_stop(self, reason: str = "User Initiated Emergency Stop") -> bool:
         """Triggers global emergency stop blocking all future entries.
 
         Also writes the cross-process sentinel file (ADR-8) so every process's
-        order paths observe the stop.
+        order paths observe the stop. Returns whether the sentinel persisted;
+        False means cross-process propagation is degraded (L-2).
         """
         self.emergency_stop_active = True
-        stop_state.trigger(reason)
+        persisted = stop_state.trigger(reason)
         logger.critical(f"GLOBAL EMERGENCY STOP ACTIVATED: {reason}")
+        return persisted
 
-    def reset_emergency_stop(self) -> None:
+    def reset_emergency_stop(self) -> bool:
         """Resets global emergency stop (in-process flag and cross-process sentinel)."""
         self.emergency_stop_active = False
-        stop_state.reset()
+        persisted = stop_state.reset()
         logger.info("Global Emergency Stop has been reset.")
+        return persisted

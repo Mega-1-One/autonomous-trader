@@ -78,11 +78,16 @@ async def trigger_emergency_stop(
     _: None = Depends(require_api_token),
 ):
     """Triggers global emergency stop, blocking all new trade entries immediately."""
-    risk_engine.trigger_emergency_stop(reason or "User API emergency stop trigger")
+    persisted = risk_engine.trigger_emergency_stop(reason or "User API emergency stop trigger")
+    message = "Global emergency stop activated. All new entries are strictly prohibited."
+    if not persisted:
+        # L-2: cross-process propagation degraded; say so in the message
+        # (no new response keys, so the contract is unchanged).
+        message += " WARNING: cross-process sentinel was NOT persisted; other processes may keep trading."
     return {
         "status": "EMERGENCY_STOP_ACTIVATED",
         "emergency_stop_active": True,
-        "message": "Global emergency stop activated. All new entries are strictly prohibited."
+        "message": message
     }
 
 @router.post("/api/system/reset-emergency-stop", status_code=status.HTTP_200_OK)
@@ -91,9 +96,12 @@ async def reset_emergency_stop_endpoint(
     _: None = Depends(require_api_token),
 ):
     """Resets global emergency stop."""
-    risk_engine.reset_emergency_stop()
+    persisted = risk_engine.reset_emergency_stop()
+    message = "Global emergency stop reset successfully."
+    if not persisted:
+        message += " WARNING: cross-process sentinel was NOT removed; other processes may stay stopped."
     return {
         "status": "EMERGENCY_STOP_RESET",
         "emergency_stop_active": False,
-        "message": "Global emergency stop reset successfully."
+        "message": message
     }

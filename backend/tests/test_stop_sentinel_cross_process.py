@@ -30,9 +30,40 @@ def test_trigger_writes_sentinel(state_dir):
     s = _fresh_settings()
     assert s.STATE_DIR == state_dir
     assert stop_state.is_active() is None
-    stop_state.trigger("test stop")
+    assert stop_state.trigger("test stop") is True
     assert stop_state.is_active() == "test stop"
     assert (state_dir / "EMERGENCY_STOP.json").exists()
+
+
+def test_empty_sentinel_is_active(state_dir):
+    """N2-M6: an empty (malformed) sentinel fails closed, not open."""
+    _fresh_settings()
+    state_dir.mkdir(parents=True, exist_ok=True)
+    (state_dir / "EMERGENCY_STOP.json").write_text("", encoding="utf-8")
+    assert stop_state.is_active() == "Emergency stop sentinel present (unreadable)"
+
+
+def test_inaccessible_sentinel_is_active(state_dir, monkeypatch):
+    """N2-M6: stat failure (not absence) fails closed via explicit os.stat."""
+    _fresh_settings()
+    real_stat = os.stat
+
+    def _denied(path):
+        raise PermissionError("denied")
+
+    monkeypatch.setattr(os, "stat", _denied)
+    try:
+        assert stop_state.is_active() == "Emergency stop sentinel present (inaccessible)"
+    finally:
+        monkeypatch.setattr(os, "stat", real_stat)
+
+
+def test_trigger_returns_false_when_unwritable(state_dir, monkeypatch):
+    """L-2: persistence failures are reported, not silently swallowed."""
+    _fresh_settings()
+    monkeypatch.setattr(os, "makedirs", lambda *a, **k: (_ for _ in ()).throw(OSError("disk full")))
+    assert stop_state.trigger("x") is False
+    assert stop_state.reset() is True
 
 
 def test_reset_removes_sentinel(state_dir):

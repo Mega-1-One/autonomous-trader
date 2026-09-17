@@ -24,8 +24,13 @@ def _sentinel_path():
     return config.settings.STATE_DIR / SENTINEL_FILENAME
 
 
-def trigger(reason: str) -> None:
-    """Write the stop sentinel so every process can see the stop."""
+def trigger(reason: str) -> bool:
+    """Write the stop sentinel so every process can see the stop.
+
+    Returns True when the sentinel was persisted. A False return means the
+    cross-process guarantee is degraded (the caller's in-memory flag is still
+    set); callers must surface the failure (L-2).
+    """
     path = _sentinel_path()
     payload = {
         "reason": reason,
@@ -47,39 +52,43 @@ def trigger(reason: str) -> None:
             raise
     except Exception as exc:
         logger.error(f"Failed to write emergency-stop sentinel at {path}: {exc}")
+        return False
+    return True
 
 
-def reset() -> None:
-    """Remove the stop sentinel (cross-process reset)."""
+def reset() -> bool:
+    """Remove the stop sentinel (cross-process reset). Returns persistence status."""
     path = _sentinel_path()
     try:
         if path.exists():
             os.unlink(path)
     except Exception as exc:
         logger.error(f"Failed to remove emergency-stop sentinel at {path}: {exc}")
+        return False
+    return True
 
 
 def is_active() -> Optional[str]:
     """Return the stop reason if the sentinel file exists, else None.
 
-    Missing, malformed, or unreadable sentinel content is handled safely: a
-    missing file means no stop; a malformed file is treated as active (fail
-    safe) unless it is empty.
+    Failure semantics (fail-closed): a missing file means no stop; a present
+    but malformed, empty, unreadable, or otherwise inaccessible file is
+    treated as ACTIVE. Absence and inaccessibility are distinguished with an
+    explicit stat call (N2-M6/L-1).
     """
     path = _sentinel_path()
     try:
-        if not path.is_file():
-            return None
-        try:
-            with open(path, "r", encoding="utf-8") as f:
-                data = json.load(f)
-            reason = data.get("reason")
-            return reason if reason else "Emergency stop sentinel present"
-        except (ValueError, OSError):
-            # File exists but is malformed/unreadable — treat as active.
-            return "Emergency stop sentinel present (unreadable)"
+        os.stat(path)
+    except FileNotFoundError:
+        return None
     except OSError as exc:
-        logger.error(f"Failed to stat emergency-stop sentinel at {path}: {exc}")
-        # If we cannot even stat the file, fail safe (treat as active) only if
-        # the error is not a simple absence, which is handled above.
+        logger.error(f"Cannot stat emergency-stop sentinel at {path}: {exc}")
         return "Emergency stop sentinel present (inaccessible)"
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        reason = data.get("reason")
+        return reason if reason else "Emergency stop sentinel present"
+    except (ValueError, OSError):
+        # File exists but is malformed (including empty) or unreadable.
+        return "Emergency stop sentinel present (unreadable)"
