@@ -31,3 +31,10 @@ pytest tests/ -v
 # 3. Run FastAPI development server
 uvicorn app.main:app --reload --port 8000
 ```
+
+## Database
+
+Tables are created automatically at startup via `Base.metadata.create_all`
+(SQLite by default, Postgres via `DATABASE_URL`). Alembic (`database/`) is
+optional scaffolding for future schema changes: it reads the database URL
+from the `DATABASE_URL` environment variable and stores no credentials.
