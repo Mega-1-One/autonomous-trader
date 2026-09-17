@@ -138,7 +138,14 @@ def test_missing_malformed_and_unreadable_sentinel(state_dir):
 
 
 def test_trigger_creates_missing_state_dir(tmp_path, monkeypatch):
+    import app.core.config as config_module
+    original = config_module.settings
     monkeypatch.setenv("AUTOTRADER_STATE_DIR", str(tmp_path / "deep" / "state"))
     _fresh_settings()
-    stop_state.trigger("dir creation")
-    assert (tmp_path / "deep" / "state" / "EMERGENCY_STOP.json").exists()
+    try:
+        stop_state.trigger("dir creation")
+        assert (tmp_path / "deep" / "state" / "EMERGENCY_STOP.json").exists()
+    finally:
+        # Restore the canonical settings object so this test's STATE_DIR (and
+        # its sentinel) cannot leak into later tests.
+        config_module.settings = original
