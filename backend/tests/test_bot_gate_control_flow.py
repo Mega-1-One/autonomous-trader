@@ -166,6 +166,23 @@ def test_grid_orders_carry_protective_sl(fake_mt5, demo_mode):
     assert entries[0]["sl"] < entries[0]["price"]  # BUY disaster stop below entry
 
 
+def test_grid_protective_sl_digits_from_spec():
+    """R2-N1: stop rounding follows the instrument spec, not the EUR heuristic."""
+    from app.scalper.grid_martingale_bot import MT5GridMartingaleScalper
+    gbp = MT5GridMartingaleScalper(symbol="GBPUSDm")
+    assert gbp._protective_sl(1.28456, True, 0.0001) == 1.27456
+    nas = MT5GridMartingaleScalper(symbol="NAS100")
+    sl = nas._protective_sl(19500.555, True, 1.0)
+    assert abs(sl - 19400.555) < 0.01
+    assert len(str(sl).split(".")[1]) <= 2
+    assert MT5GridMartingaleScalper(symbol="EURUSDm")._protective_sl(
+        1.08500, True, 0.0001) == 1.075
+    assert MT5GridMartingaleScalper()._protective_sl(
+        1.08500, True, 0.0001, ) is not None
+    assert MT5GridMartingaleScalper(protective_sl_pips=0)._protective_sl(
+        1.08500, True, 0.0001) is None
+
+
 # ---------------------------------------------------------------------------
 # Ultra tick scalper
 # ---------------------------------------------------------------------------

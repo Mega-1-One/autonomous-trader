@@ -65,8 +65,15 @@ def ensure_trading_allowed(
 
     mode = _config.settings.EXECUTION_MODE
 
-    # Mock/paper execution is allowed in every mode.
+    # Mock/paper execution is allowed in every mode EXCEPT LIVE: a simulated
+    # fill must never be returned as EXECUTED in a real-money mode (NEW-01).
     if destination == DEST_MOCK:
+        if mode == ExecutionMode.LIVE:
+            raise SafetyViolation(
+                "EXECUTION_MODE=LIVE requires the real broker adapter; the active "
+                "adapter is simulated. Refusing simulated fill in a real-money mode. "
+                "Connect the MT5 terminal or switch EXECUTION_MODE."
+            )
         return
 
     # REAL broker destination:

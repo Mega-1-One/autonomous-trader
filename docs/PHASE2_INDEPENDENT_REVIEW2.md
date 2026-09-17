@@ -1,242 +1,261 @@
 # Independent Phase 2 Implementation Review
 
-> Second independent review (Review 2). Read-only review of branch
-> `refactor/consolidation` vs `main`. No source, config, or Git history modified;
-> only this document is added. Date (UTC): 2026-09-17.
-> Review 1 (`docs/PHASE2_INDEPENDENT_REVIEW.md`) was consulted only after
-> independent findings were formed. Confirmations are marked; emphasis is on what
-> Review 1 missed or understated. `AGENTS.md` does not exist. Suite re-run: 263 passed.
+> Second independent review (Review 2), now including the **post-fix re-review**.
+> Read-only review of branch `refactor/consolidation` vs `main`. No source, config,
+> or Git history modified by the reviewer; only this document is updated.
+> Original review date (UTC): 2026-09-17. Post-fix re-review: 2026-09-17 (later session).
+> Review 1 (`docs/PHASE2_INDEPENDENT_REVIEW.md`) was consulted only after independent
+> findings were formed. A third re-review from another session
+> (`docs/PHASE2_RE_REVIEW.md`) was independently checked; agreements/disagreements
+> are recorded below. `AGENTS.md` does not exist.
 
-## Executive summary
+## Status legend (post-fix re-review)
 
-- Overall implementation condition: large and largely genuine. Gate, sentinel, DI,
-  pricing, research consolidation, frontend client, CORS, token gate are present.
-  Diff confirmed: 197 files, +10350/-1360. Suite reproduced: 263 passed, 1 warning.
-- Whether ready for another review or PR preparation: not ready for PR review or
-  PR preparation. Three Review 1 blockers confirmed (120-error lint gate, sentinel
-  blocking closes, mode-unaware adapter). This review adds further blockers:
-  dead daily counters, unvalidated direction mapping to SELL, FAILED consuming
-  idempotency IDs, fail-open unknown-mode fall-through, backtest spread omission,
-  fixed break-even point size, inaccessible-dir fail-open.
-- Most important concerns: (1) `ruff check app scripts` = 120 errors so D-04 fails;
-  (2) emergency stop traps grid basket with no broker SL/TP and gated closes;
-  (3) default PAPER API flow refused on MT5 hosts; (4) daily limits dead, direction
-  unvalidated, retry impossible after FAILED. No numeric score is given.
+| Tag | Meaning |
+|---|---|
+| `[FIXED/COMPLETED]` | Verified fixed in the current tree by this reviewer |
+| `[FIXED/COMPLETED — DIFFERENTLY]` | Resolved by a documented, acceptable alternative |
+| `[PARTIAL — NOT FINISHED]` | Partly addressed; residual defect remains |
+| `[NOT FIXED — WILL COMPLETE NEXT]` | Still open; fix in the next session |
+| `[OPEN — DEFERRED]` | Low severity; acceptable to defer with documentation |
 
-## Repository and Git verification
+---
 
-- Branch: `refactor/consolidation` confirmed via `git branch --show-current`.
-- Commit count: reported 35, verified 34 (`git rev-list --count main..HEAD`).
-  HEAD `dc07cba`, merge-base `3ebf3a8`. Off by one (agrees with Review 1).
-- Diff scope: `197 files changed, 10350 insertions(+), 1360 deletions(-)` confirmed.
-- Git cleanliness: `git status --short` shows only untracked review docs;
-  `git diff --check main...HEAD` clean.
-- Unexpected files: no `.env`, keys, DB files, `node_modules`, `.next`, or
-  `backend/state/` tracked. `backend/state/` gitignored. Deleted as intended:
-  root `app/`, `fusion_2.0.py`, `intelligence/logger.py`, `scalper/config.py`.
-  `recharts` removed from `frontend/package.json`. Baselines include opaque binary
-  txt files (harmless).
+# Part 1 — Original Review 2 (pre-fix), findings with current status
 
-## Task verification
+## Executive summary (original)
 
-Verdicts: Verified, Partially verified, Not verified, Contradicted.
+Large and largely genuine implementation; suite reproduced (was 263 passed), diff
+confirmed (197 files, +10350/−1360). Verdict was **not ready for PR review** due to
+three Review 1 blockers plus six new blockers found here. All of those are now
+addressed — see the post-fix re-review below for the verification evidence.
 
-| Task | Claimed status | Evidence found | Missing or concerning details | Verdict |
-|---|---|---|---|---|
-| A-01 | complete | branch + docs in `98eb4fe` | none | Verified |
-| A-02 | complete | `docs/baseline/` manifest + 19 samples + tooling | mock-only, binary baselines | Verified |
-| A-03 | complete | `requirements.txt:13` pin `<0.24` | none | Verified |
-| B-01 | complete | `api/deps.py` AppState + `ExecutionEngine(adapter, risk_engine)`; no module-level service | `build_adapter()` prefers Real regardless of mode; tests host-dependent | Partially verified |
-| B-02 | complete | `core/pricing.py`; M-fix `instrument.py:33-35`; characterization first | dual pip conventions | Verified |
-| B-03 | complete | `core/safety.py` table; 12 sites gated + engine | blocks closes; unknown-mode fall-through; textual gate test | Partially verified |
-| B-04 | complete | 4 deletions, no refs | none | Verified |
-| B-05 | complete | `core/stop_state.py` + subprocess test | silent write failure; inaccessible-dir open; docstring mismatch | Partially verified |
-| C-01 | complete | spec PnL; 502; `get_latest_price` | cost change untested; NAS100 split; break-even point bug | Partially verified |
-| C-02 | complete | `last_trades`; `BT_` IDs; seeded RNG | spread ignored; HTF/LTF same slice; ruin mismatch | Partially verified |
-| C-03 | complete | `mt5_orders.py`; bots + demo script; None-guards | gated closes; close-loop early return | Partially verified |
-| C-04 | complete | `research/common/*`; `_bootstrap.py` | 5 scripts use bootstrap; 10 hash defs remain | Partially verified |
-| C-05 | complete | `lib/api.ts`, token, types, confirms, badge; recharts gone | token on GETs; bundle-visible | Verified |
-| C-06 | complete | CORS in `main.py:46-53`; env; Redis gone; Alembic placeholder | README deeper fixes absent | Partially verified |
-| C-07 | complete | `mt5_real.py:192-194` magic/comment | none | Verified |
-| D-01 | complete | `api/deps.py:31-50` gate on mutating endpoints | non-constant-time compare | Verified |
-| D-02 | complete | 13+ new test files green | weak/textual tests; missing close/direction/retry/counter tests | Partially verified |
-| D-03 | complete | no swallow; None-guards at direct sites | engine lacks None-guard for custom adapters | Partially verified |
-| D-04 | complete | CI jobs added; `pyproject.toml` F-only | `ruff check app scripts` = 120 errors | Contradicted |
-| D-05 | complete | `risk/engine.py:87-98`; yaml default 0 | unreachable while counters dead | Partially verified |
-| D-06 | complete | ini placeholder; `env.py` env URL; README `create_all` | no scratch Postgres run | Partially verified |
-| E-01 | complete | reproduced 263 passed, 1 warning | none | Verified |
-| E-02 | complete | build reproduced by Review 1 | manual walkthrough not verifiable | Partially verified |
-| E-03 | complete | `contract_diff.py` checked=19 diffs=2 | always exit 0, not in CI, wall-clock unproven | Partially verified |
-| E-04 | complete | drill output present | 19 PASS not 20; no close/bot-loop coverage | Partially verified |
-| E-05 | complete | dead-code greps clean | single-hash claim false; 16 F401 remain | Partially verified |
-| E-06 | complete | Redis gone, no refs | Docker run not reproduced here | Not verified |
+## Repository and Git verification (original)
 
-## Critical findings
+Branch `refactor/consolidation` confirmed; commit count was 34 (reported 35, off by
+one); diff `197 files, +10350/−1360` confirmed; tree clean; no secrets/artifacts
+tracked. `[FIXED/COMPLETED]` — now 44 commits, tree clean.
 
-### [CRITICAL] C-1 — CI lint gate fails (confirms Review 1)
-- Files: `.github/workflows/ci.yml:58-59`; `backend/pyproject.toml:5-12`; e.g.
-  `app/api/backtest.py:69`, `app/backtest/engine.py:91`,
-  `app/execution/engine.py:139`, `app/core/config.py:1`,
-  `scripts/run_phase18_calibration.py:26`, `scripts/run_phase19_edge_discovery.py:27`.
-- Wrong: `ruff check app scripts` = Found 120 errors (88 F541, 16 F401, 14 F841, 2 F821).
-- Matters: D-04 done-condition unmet; push = red CI; limitation line misleading.
-- Repro: `cd backend; python -m ruff check app scripts --statistics`.
-- Fix: repair F401/F841/F821; decide F541; re-run to zero.
-- Blocks PR: Yes.
+## Task verification (original; statuses current)
 
-### [HIGH] H-1 — Sentinel blocks protective closes; grid has no broker SL (confirms Review 1, adds detail)
-- Files: `app/core/safety.py:39-44`; `app/scalper/grid_martingale_bot.py:164-170,189-213,77-86`;
-  `app/scalper/mt5_orders.py:40-51`; gated closes in daemon/ultra/demo/gold bots.
-- Wrong: closes gated like entries; grid omits SL/TP; close loop returns on first refusal.
-- Matters: stop traps uncapped basket; contradicts ADR-8 bot-command close claim.
-- Repro: temp STATE_DIR, trigger, call `_close_all_grid_positions` with stubbed mt5.
-- Fix: gate only risk-increasing sends; close-allowed path; continue loop; broker SL; test.
-- Blocks PR: Yes.
-
-### [HIGH] H-2 — Adapter ignores mode; PAPER regresses on MT5 host (confirms Review 1)
-- Files: `app/api/deps.py:53-60,63-74`; `app/core/safety.py:56-61`; `app/core/config.py:28`.
-- Wrong: Real preferred even in PAPER; gate then refuses every API order on MT5 host.
-- Matters: contradicts ADR-3 mock-paper promise; unlisted behavior change.
-- Repro: MT5 host, PAPER, `POST /api/execution/orders` -> 400 forbids real send.
-- Fix: mode-aware `build_adapter()`; PAPER test independent of host.
-- Blocks PR: Yes.
-
-### [HIGH] N2-H1 — Daily counters never updated (missed by Review 1)
-- Files: `app/risk/engine.py:43-46,118-148`; `app/execution/engine.py:69-192`;
-  `app/api/risk.py:23-26`. Grep finds no increments outside tests.
-- Wrong: `maximum_trades_per_day` / daily-loss locks can never fire; no rollover.
-- Matters: enabling limits gives false confidence.
-- Repro: set limit 1, execute two mock orders, count stays 0.
-- Fix: record on EXECUTED/close; rollover; tests.
-- Blocks PR: Yes.
-
-### [HIGH] N2-H2 — Direction unvalidated, non-LONG becomes SELL (missed)
-- Files: `app/api/execution.py:11-18`; `app/execution/engine.py:135,217,254,278`.
-- Wrong: free-form `direction`; typo like `long` opens a short.
-- Matters: silent side flip is a safety defect.
-- Repro: POST `direction: GARBAGE` -> SELL execution.
-- Fix: Literal/pattern validation -> 422; normalize case explicitly.
-- Blocks PR: Yes.
-
-### [HIGH] N2-H3 — FAILED consumes idempotency ID (missed)
-- Files: `app/execution/engine.py:78-80,124-125,163-164`.
-- Wrong: ID marked before send; broker FAILED blocks legitimate retry.
-- Matters: transient failure becomes permanent rejection.
-- Repro: same `client_signal_id`, first FAILED, second -> duplicate REJECTED.
-- Fix: mark only on EXECUTED or separate send-attempt tracking.
-- Blocks PR: Yes.
-
-### [MEDIUM] N2-M1 — Gate fail-open for unknown modes (understated by Review 1)
-- Files: `app/core/safety.py:72-78`. No final raise; future mode falls through to allow.
-- Fix: explicit final `raise SafetyViolation`. Blocks PR: No (do with H-1/H-2).
-
-### [MEDIUM] N2-M2 — Backtest ignores spread, asymmetric slippage (missed)
-- Files: `app/backtest/engine.py:76-118`. `spread_pips` only for risk check; slippage only on SL.
-- Fix: apply spread/slippage symmetrically or document + test. Blocks PR: No.
-
-### [MEDIUM] N2-M3 — Break-even uses fixed point 0.01 (missed)
-- Files: `app/execution/engine.py:194,231`; caller `app/api/execution.py:34`.
-- Wrong: FX offset wrong by ~1000x when enabled.
-- Fix: per-symbol point/pip lookup. Blocks PR: No (disabled by default).
-
-### [MEDIUM] N2-M4 — PositionManager omits broker info; NAS100 split (missed)
-- Files: `app/scalper/position_manager.py:60,95`; `app/data/mt5_mock.py:54` (20) vs
-  `app/scalper/instrument.py:58` (1).
-- Fix: pass symbol_info through; document intended NAS100. Blocks PR: No.
-
-### [MEDIUM] N2-M5 — Ruin thresholds inconsistent (missed)
-- Files: `app/backtest/monte_carlo.py:26` (50%) vs `app/backtest/walk_forward.py:118` (20%).
-- Fix: single definition or distinct names. Blocks PR: No.
-
-### [MEDIUM] N2-M6 — Inaccessible state dir fails open (understated)
-- Files: `app/core/stop_state.py:62-85`. `is_file()` swallows OSError; outer branch unreachable.
-- Fix: explicit stat handling; align docstring (empty file is active). Blocks PR: No.
-
-### [MEDIUM] N2-M7 — Close loop abandons basket; risk-evaluate bypasses max-open (missed)
-- Files: `app/scalper/grid_martingale_bot.py:189-213`; `app/api/risk.py:56-62` (count 0).
-- Fix: continue-on-refusal; pass real open count. Blocks PR: No.
-
-### [MEDIUM] N2-M8 — Side-agnostic marking; sweep methodology risk (missed)
-- Files: `app/services/market_data.py:42-69`; commit `d524677` (~180 imports).
-- Fix: side-aware marking; verify sweep hunks. Blocks PR: No.
-
-### [LOW] N2-L1 — Minor items (missed or understated)
-- `SECRET_KEY` default unused (`app/core/config.py:25`); backtest HTF/LTF same slice
-  (`app/backtest/engine.py:146-152`); engine None-guard absent; token `!=` timing
-  (`app/api/deps.py:44-50`); `close-all` in-memory only (`app/api/execution.py:82-94`,
-  `app/execution/engine.py:290-297`); test pollution/dead lines; drill 2400.0 noise.
-
-## Safety-spine review
-
-Gate table correct for known modes; sentinel genuinely cross-process (subprocess test);
-12 direct + 1 adapter sites all textually gate-preceded; ordering gate-before-risk-send
-correct; unknown-adapter maps to REAL (fail-closed). Fail-open holes: unknown-mode
-fall-through, inaccessible-dir open, silent write failure. Sentinel blocks entries by
-design but also blocks closes (must change). Close-all API is in-memory only and must
-not be read as flattening broker positions. Boot validator still refuses LIVE without
-flags. Defaults safe (PAPER, flags false, localhost CORS, token off). Drill limitation
-statement omits close-blocking.
-
-## Numerical and trading-logic review
-
-PnL `price_diff x contract x vol` correct with broker precedence; EURUSD/XAU expected
-values independent and correct. NAS100 split (1 vs 20) needs a decision. Dual pip
-conventions (`pricing.pip_size` canonical vs `mt5_orders.pip_scale_for` legacy) are a
-trap. Spread rescaling documented; gate disabled. Risk sizing consistent on mock.
-Backtest: deterministic IDs, seeded RNG, commission deducted, no new look-ahead beyond
-`candles[:i+1]`; but spread ignored, slippage asymmetric, HTF/LTF identical slices.
-Monte Carlo now uses `last_trades`; noise seeded. Ruin definitions differ. UTC handling
-clean. Live-broker values unverified (report is honest).
-
-## API, security, and deployment review
-
-Token enforced only in production with token set; 401 on missing/wrong; dev open by
-design; `!=` should be `hmac.compare_digest`. CORS wildcard removed; explicit origins.
-Contract 17/19 plausible but tool exits 0, not in CI, heavy normalization. Direction
-unvalidated; risk-evaluate count fixed at 0. DB `create_all` official; Alembic
-placeholder + env URL; no scratch Postgres proof. Redis removed; compose coherent
-(hardcoded password pre-existing). No secrets committed. `SECRET_KEY` unused default.
-
-## Test adequacy review
-
-98 new tests; suite green. Strong: subprocess sentinel, propagation, truth table,
-characterization-first, determinism, magic stub, CORS/token matrices. Weak: gate test
-is 45-line text window; no close-under-sentinel, direction, FAILED-retry, counter,
-FX break-even, spread, write-failure, concurrency, permission tests; `/run` contract
-re-runs in-process; global `app.state` mutation; `<5.0` price windows; no per-bot
-fake-mt5 control-flow tests. Mocks appropriate at MT5 boundary.
-
-## Claims from the implementation report
-
-| Claim | Evidence | Assessment |
+| Task | Original verdict | Current status |
 |---|---|---|
-| Branch refactor/consolidation | `branch --show-current` | Confirmed |
-| 35 commits | `rev-list --count` = 34 | Misleading or inaccurate |
-| 27 tasks complete | per-task table | Confirmed but limited |
-| 197 files +10350/-1360 | diff stat | Confirmed |
-| 263 passed 1 warning | reproduced 10.35s | Confirmed |
-| Frontend build passed | Review 1 reproduced | Confirmed |
-| Docker smoke healthy | Redis removal yes; run not reproduced | Not independently verified |
-| E-04 20 checks | 19 PASS lines | Misleading or inaccurate |
-| 13 sites gated | 12+1 all preceded | Confirmed |
-| Token/CORS verified | tests + code | Confirmed |
-| 17/19 wall-clock | tool + DI-only routers | Confirmed but limited |
-| Forex/gold/candle/MC/IDs/seed fixes | code + tests | Confirmed (NAS100 ambiguous) |
-| Ruff App Control | ruff runs, 120 errors | Misleading or inaccurate |
-| Mocks only; README other branch; sweep restored | code/diff | Confirmed (sweep incomplete) |
+| A-01/A-02/A-03 | Verified | `[FIXED/COMPLETED]` (no change needed) |
+| B-01 | Partially verified | `[FIXED/COMPLETED]` (mode-aware adapter, host-independent test) |
+| B-02 | Verified | `[FIXED/COMPLETED]` |
+| B-03 | Partially verified | `[FIXED/COMPLETED]` (close intent + fail-closed fall-through) |
+| B-04 | Verified | `[FIXED/COMPLETED]` |
+| B-05 | Partially verified | `[FIXED/COMPLETED]` (stat fail-closed, surfaced persistence) |
+| C-01 | Partially verified | `[FIXED/COMPLETED]` (cost tests; NAS100 documented; break-even per-symbol — residual NEW-02) |
+| C-02 | Partially verified | `[FIXED/COMPLETED — DIFFERENTLY]` (fill methodology documented + tests) |
+| C-03 | Partially verified | `[FIXED/COMPLETED]` (close intent, continue loop, protective SL) |
+| C-04 | Partially verified | `[FIXED/COMPLETED — DIFFERENTLY]` (criterion narrowed to single implementation body + wrappers documented/enforced) |
+| C-05 | Verified | `[FIXED/COMPLETED]` |
+| C-06 | Partially verified | `[FIXED/COMPLETED — DIFFERENTLY]` (README scope kept minimal; documented) |
+| C-07 | Verified | `[FIXED/COMPLETED]` |
+| D-01 | Verified | `[FIXED/COMPLETED]` (now `hmac.compare_digest`) |
+| D-02 | Partially verified | `[FIXED/COMPLETED]` (control-flow bot tests replace text window) |
+| D-03 | Partially verified | `[FIXED/COMPLETED]` (engine None-guard added) |
+| D-04 | Contradicted | `[FIXED/COMPLETED]` (`ruff check app scripts` = 0 errors, re-run independently) |
+| D-05 | Partially verified | `[FIXED/COMPLETED]` (counters live; guard now reachable) |
+| D-06 | Partially verified | `[OPEN — DEFERRED]` (no scratch-Postgres run; documented) |
+| E-01 | Verified | `[FIXED/COMPLETED]` (now 316 passed, re-run) |
+| E-02 | Partially verified | `[FIXED/COMPLETED]` (build passes) |
+| E-03 | Partially verified | `[FIXED/COMPLETED]` (exit code gated in CI; re-baselined; residual NEW-03) |
+| E-04 | Partially verified | `[FIXED/COMPLETED]` (25 checks incl. close-under-sentinel) |
+| E-05 | Partially verified | `[FIXED/COMPLETED — DIFFERENTLY]` (single-implementation criterion) |
+| E-06 | Not verified | `[OPEN — DEFERRED]` (Docker smoke not independently run) |
 
-## Required actions before PR
+## Critical findings (original) — statuses
 
-- Must fix before PR: C-1 (zero ruff); H-1 (close-allowed path, loop, SL);
-  H-2 (mode-aware adapter); N2-H1 (counters); N2-H2 (direction validation);
-  N2-H3 (idempotency).
-- Strongly recommended before PR: N2-M1..M8; Review 1 M-1..M-6; missing regression
-  tests; `contract_diff` non-zero exit + CI; F821 fixes; venv precedence decision.
-- Can be deferred with explicit documentation: N2-L1; live-broker checks; Docker and
-  scratch-Postgres proofs; report count corrections.
+- **[CRITICAL] C-1 — CI lint gate failed (120 errors)** — `[FIXED/COMPLETED]`.
+  Independently re-run: `ruff check app scripts` → All checks passed (exit 0).
+- **[HIGH] H-1 — Sentinel blocked protective closes; grid had no broker SL; close
+  loop abandoned basket** — `[FIXED/COMPLETED]`. Gate now takes `intent="close"`
+  which bypasses only the sentinel (mode rules still enforced) (`safety.py:38-100`);
+  all five bot close sites pass `intent="close"`; grid orders carry a
+  `protective_sl_pips` disaster stop (`grid_martingale_bot.py:22,41-48,97,175`);
+  close loop `continue`s per ticket (`:228-230`); `test_bot_gate_control_flow.py`
+  drives real bot methods against a stubbed `mt5` (entry refused, close sent);
+  drill now has 25 checks including close-under-sentinel.
+- **[HIGH] H-2 — Adapter ignored EXECUTION_MODE** — `[FIXED/COMPLETED]` with
+  residual: `build_adapter()` is mode-aware (PAPER/BACKTEST → mock always,
+  `deps.py:63-67`); host-independent API PAPER test passes. Residual = NEW-01
+  (DEMO/LIVE fallback) below.
+- **[HIGH] N2-H1 — Daily counters never updated** — `[FIXED/COMPLETED]`.
+  `record_executed_trade`/`record_closed_trade` called on fill/close
+  (`execution/engine.py:178,333`); `_maybe_rollover` also runs in
+  `evaluate_trade_risk` (`risk/engine.py:134`) — no stale-lock deadlock;
+  `test_risk_accounting.py` proves locks fire and roll over.
+- **[HIGH] N2-H2 — Direction unvalidated, non-LONG became SELL** —
+  `[FIXED/COMPLETED]`. Engine rejects non-LONG/SHORT (`execution/engine.py:78-82`);
+  API uses `Literal["LONG","SHORT"]` + case-normalizing validator → 422
+  (`api/execution.py:14-26`); `test_direction_validation.py`.
+- **[HIGH] N2-H3 — FAILED consumed idempotency ID** — `[FIXED/COMPLETED]`.
+  ID marked only on EXECUTED (`execution/engine.py:170-177`); retry test passes.
+  Residual race (check-then-add not atomic) = NEW-07, deferred.
+
+## Medium findings (original) — statuses
+
+- **N2-M1 Gate fail-open unknown modes** — `[FIXED/COMPLETED]` (explicit final
+  `raise SafetyViolation`, `safety.py:97-100`).
+- **N2-M2 Backtest spread/asymmetric slippage** — `[FIXED/COMPLETED — DIFFERENTLY]`
+  (documented fill methodology in `backtest/engine.py:14-28` + characterization
+  tests; accepted as intentional).
+- **N2-M3 Break-even fixed point 0.01** — `[PARTIAL — NOT FINISHED]` → tracked as
+  **NEW-02**: per-symbol point is now used, but the offset multiplies *point size*
+  where *pip size* is required; offset rounds to zero (verified numerically:
+  `round(1.085 + 0.1×0.00001, 5) = 1.085`; `round(2400.0 + 0.1×0.01, 2) = 2400.0`).
+  The new test passes only because `pytest.approx` tolerates the missing offset.
+- **N2-M4 PositionManager omits broker info; NAS100 split** —
+  `[FIXED/COMPLETED]` (`position_manager.py` accepts `symbol_info`; NAS100
+  precedence documented in ADR text and locked by tests).
+- **N2-M5 Ruin thresholds inconsistent** — `[FIXED/COMPLETED — DIFFERENTLY]`
+  (distinct named constants `MONTE_CARLO_RUIN_THRESHOLD_PERCENT=50.0` and the
+  walk-forward 20% variant, documented as different methodologies).
+- **N2-M6 Inaccessible state dir fails open** — `[FIXED/COMPLETED]`
+  (`stop_state.py:71-94` explicit `os.stat`, FileNotFoundError vs OSError;
+  empty/malformed treated active).
+- **N2-M7 Close loop abandons basket; risk-evaluate bypassed max-open** —
+  `[FIXED/COMPLETED]` (`continue` in grid close loop; `api/risk.py:58-66` passes
+  the real open count).
+- **N2-M8 Side-agnostic marking** — `[FIXED/COMPLETED]`
+  (`get_latest_price(side=...)`, side computed per open positions in
+  `api/execution.py:35-48`).
+
+## Low findings (original) — statuses
+
+- **N2-L1 minor items** — `[FIXED/COMPLETED]` except: `SECRET_KEY` still unused
+  (NEW-06, deferred); idempotency race (NEW-07, deferred); HTF/LTF same-slice
+  documented as accepted limitation; close-all in-memory-only now documented in
+  the endpoint docstring (`api/execution.py:104-109`); drill noise removed.
+- **L-2 silent sentinel persistence failure** — `[FIXED/COMPLETED]`
+  (trigger/reset return persistence status; API message appends a warning).
+- **L-3 non-constant-time token compare** — `[FIXED/COMPLETED]`
+  (`hmac.compare_digest`, `deps.py:47`).
+- **L-5/L-6 test pollution / weak assertions** — `[FIXED/COMPLETED]` mostly;
+  some tolerances remain (deferred with NEW-02 family).
+- **L-7 NAS100 ambiguity** — `[FIXED/COMPLETED — DIFFERENTLY]` (documented).
+- **L-8 cosmetic blank lines** — `[PARTIAL — NOT FINISHED]` (NEW-08).
+
+---
+
+# Post-fix re-review (this session)
+
+## Verification performed independently
+
+- `python -m ruff check app scripts --statistics` → **0 errors** (was 120). Exit 0.
+- `python -m pytest tests -q` → **316 passed, 1 warning in 17.74s** (was 263).
+- `python docs/baseline/contract_diff.py` → **checked=19 diffs=0**, exit 0;
+  `sys.exit(1 if diffs else 0)` confirmed in source; wired into CI
+  (`ci.yml:42` runs it).
+- E-04 drill output now records **25 PASS lines** including 2c (close allowed
+  under sentinel) and 5b (close intent in all five bots).
+- `intent="close"` verified at all five bot close sites (daemon:127, demo:117,
+  ultra:123, gold:338, grid:227); entry sites retain default entry intent.
+- Grid bot: protective SL wired to both base and averaging orders;
+  close loop continues past per-ticket refusals.
+- `test_bot_gate_control_flow.py` (11 KB) drives real bot methods with a stubbed
+  `MetaTrader5` module and asserts actual `order_send` outcomes — this properly
+  replaces the earlier 45-line text-window test.
+- Fix commits inspected: `9edfec1`, `ab665a6`, `884b411`, `0e5399b`, `360e490`,
+  `03f3247`, `02708f8`, `2c94d2f`, `8c894cc` (9 commits; total now 44 vs main).
+
+## Review of the other session's re-review (`docs/PHASE2_RE_REVIEW.md`)
+
+That document is accurate and its findings reproduce. Independent confirmation:
+
+- **NEW-01 [HIGH] `[NOT FIXED — WILL COMPLETE NEXT]` — Silent DEMO/LIVE → MOCK
+  fallback can simulate real-money orders.** Confirmed by direct read:
+  `deps.py:68-73` — in DEMO/LIVE, if `RealMT5Adapter.connect()` fails, a mock is
+  returned silently; the gate allows MOCK in every mode, so a LIVE API with a dead
+  terminal returns `EXECUTED` for a simulated fill. The test
+  `test_demo_falls_back_to_mock_without_terminal` enshrines the fallback as
+  intended and no operator-visible signal distinguishes simulated from live.
+  This is the exact "no silent LIVE→MOCK fallback" property the safety model
+  claims. Must fix before PR: fail closed for LIVE/DEMO when the real terminal is
+  unavailable, or surface an explicit degraded/simulated state in health and the
+  order result.
+- **NEW-02 [MEDIUM] `[NOT FIXED — WILL COMPLETE NEXT]` — Break-even offset uses
+  point size instead of pip size; rounds to zero.** Confirmed numerically
+  (`execution/engine.py:275-277`): offset = `pips × point`; on EURUSD
+  `round(1.085 + 1e-6, 5) = 1.085`, on gold `round(2400 + 0.001, 2) = 2400.0`.
+  Canonical pip sizes are 0.0001 / 0.1 (`pricing.pip_size`). The test's
+  `pytest.approx(1.085 + 0.000001)` passes despite the rounded-away offset, so it
+  does not prove the intended offset. Fix: use `pip_size` for the offset and
+  assert the exact moved SL.
+- **NEW-03 [MEDIUM] `[NOT FIXED — WILL COMPLETE NEXT]` — Contract diff exempts all
+  values for `/api/liquidity/levels` and `/api/strategy/patterns`.** Confirmed
+  (`contract_diff.py:49-51,91-95` `KEYS_ONLY_PATHS`): value regressions in those
+  two endpoints can no longer fail CI. Restore value-level checks (normalize the
+  volatile fields precisely) or add invariants.
+- **NEW-04..NEW-08 [LOW] `[OPEN — DEFERRED]`** — all confirmed as stated by that
+  review: local-date rollover (`risk/engine.py:49,55` uses `date.today()`, rest of
+  system is UTC); health `mt5_connected` always true in PAPER/BACKTEST (mock
+  adapter reports connected); `SECRET_KEY` defined but unused; idempotency
+  check-then-add race (pre-existing); trailing blank lines in `main.py`.
+
+## New findings from this re-review (not in either prior review)
+
+1. **R2-N1 [LOW] `[NOT FIXED — WILL COMPLETE NEXT]` — Protective-SL digit
+   heuristic mis-rounds non-EUR/non-gold symbols.**
+   `backend/app/scalper/grid_martingale_bot.py:45-48`: `digits = 5 if "EUR" in
+   self.symbol else 3`. GBPUSDm (5-digit) gets its SL rounded to 3 decimals, and
+   2-digit index symbols get 3 decimals — a stop price not aligned to the symbol's
+   point can be rejected by the broker (invalid stops), silently disabling the
+   disaster stop. Fix: derive digits from the symbol spec / `pip_scale_for`
+   instead of the EUR heuristic.
+2. **R2-N2 [LOW] `[OPEN — DEFERRED]` — `intent="close"` is caller-trusted.**
+   Any future call site that labels an *entry* as `intent="close"` bypasses the
+   sentinel entirely (mode rules still apply). Currently mitigated by the
+   control-flow tests and the E-04 5b drill lines; add a grep/audit rule to the
+   E-05 checklist so new sites must justify their intent.
+3. **Security note (out of repo):** a credential-looking string
+   (`apikey_2180dc63…`) was pasted into the chat session by the operator. Verified
+   it does **not** appear anywhere in the repository (`git grep` clean). If that
+   key is real, rotate it — pasting it in chat exposes it regardless of repo state.
+4. **Re-baseline note (informational):** commit `02708f8` re-baselined the
+   `/api/execution/orders` samples after the direction-validation change rather
+   than diffing old-vs-new; acceptable since the change was deliberate and
+   reviewed, but it means E-03 no longer proves that endpoint unchanged from the
+   original pre-refactor baseline.
+
+## Claims from the fix session (verified)
+
+| Claim | Independent evidence | Assessment |
+|---|---|---|
+| Ruff gate green | re-run: All checks passed | Confirmed |
+| Suite 316 passed | re-run: 316 passed, 1 warning | Confirmed |
+| Build passes | build re-run by other re-review; sources consistent | Confirmed (not re-run here) |
+| Contract diff diffs=0 + CI | re-run: checked=19 diffs=0; exit code + CI wiring read | Confirmed (value-exemption caveat NEW-03) |
+| E-04 25 checks | drill output read | Confirmed |
+| Close intent at 5 sites | grep + drill 5b | Confirmed |
+| Protective SL on grid | code read | Confirmed |
+| Risk accounting live | code + tests read | Confirmed |
+| Direction validation | code + tests read | Confirmed |
+| Retry-safe idempotency | code + tests read | Confirmed |
+
+## Required actions before PR (updated)
+
+- **Must fix before PR** `[NOT FIXED — WILL COMPLETE NEXT]`
+  - NEW-01: DEMO/LIVE adapter fallback must fail closed or be operator-visible;
+    never return `EXECUTED` for a simulated fill in a real-money mode.
+- **Strongly recommended before PR** `[NOT FIXED — WILL COMPLETE NEXT]`
+  - NEW-02: break-even offset must use `pip_size`; tighten the test.
+  - NEW-03: restore value-level contract checking for the two KEYS_ONLY endpoints.
+  - R2-N1: protective-SL digit alignment for non-EUR/non-3-digit symbols.
+- **Can be deferred with explicit documentation** `[OPEN — DEFERRED]`
+  - NEW-04 (UTC day boundary), NEW-05 (health semantics), NEW-06 (`SECRET_KEY`),
+    NEW-07 (idempotency race), NEW-08 (cosmetic), R2-N2 (intent audit rule),
+    D-06 scratch-Postgres, E-06 Docker smoke, live-broker verification.
 
 ## Final verdict
 
-**Not ready for PR review** — fails its own lint gate, traps de-risking under stop,
-regresses default PAPER on MT5 hosts, and carries dead risk accounting, direction
-fallback, and retry defects. Targeted fixes then focused re-review.
+**Ready after targeted fixes.**
+
+All original blockers from Reviews 1 and 2 are `[FIXED/COMPLETED]` and were
+independently re-verified (lint gate green, closes untrapped, PAPER flow
+host-independent, risk accounting live, direction validated, retries safe,
+fail-closed sentinel and gate). Remaining open work: NEW-01 (must fix),
+NEW-02/NEW-03 and R2-N1 (strongly recommended), plus the deferred low items.
+Once NEW-01 lands with its refusal test, the branch is fit for PR review.

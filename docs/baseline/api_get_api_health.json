@@ -10,8 +10,9 @@
       "live_trading_confirmation": false,
       "mt5_adapter": "MockMT5Adapter",
       "mt5_connected": true,
+      "simulated_execution": false,
       "status": "healthy",
-      "timestamp": "2026-09-16T21:42:24.743801+00:00"
+      "timestamp": "2026-09-17T13:07:21.376640+00:00"
     },
     "status": 200
   }

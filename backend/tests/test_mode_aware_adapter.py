@@ -78,6 +78,47 @@ def test_demo_falls_back_to_mock_without_terminal(mode_env):
 
 
 @pytest.mark.asyncio
+async def test_live_without_terminal_refuses_orders_not_simulates(async_client, mode_env):
+    """NEW-01: LIVE + dead terminal must refuse, never simulate EXECUTED."""
+    from app.main import app
+    mode_env(ExecutionMode.LIVE, live=True, confirm=True)
+    saved = dict(app.state.__dict__)
+    for attr in ("adapter", "market_service", "risk_engine",
+                 "execution_engine", "strategy_engine"):
+        if hasattr(app.state, attr):
+            delattr(app.state, attr)
+    try:
+        # No terminal here -> lazy state rebuild falls back to mock, and the
+        # gate must refuse the simulated fill instead of EXECUTED.
+        res = await async_client.post("/api/execution/orders", json={
+            "client_signal_id": "SIG_LIVE_NOSIM",
+            "symbol": "XAUUSD", "direction": "LONG",
+            "entry_price": 2400.0, "stop_loss": 2390.0, "take_profit": 2420.0,
+        })
+        assert res.status_code == 400, res.text
+        assert "simulated" in res.json()["detail"].lower()
+    finally:
+        for attr in ("adapter", "market_service", "risk_engine",
+                     "execution_engine", "strategy_engine"):
+            if hasattr(app.state, attr):
+                delattr(app.state, attr)
+        for attr, value in saved.items():
+            setattr(app.state, attr, value)
+
+
+@pytest.mark.asyncio
+async def test_health_reports_simulated_execution(async_client, mode_env):
+    """NEW-01/NEW-05: degraded real-money mode is operator-visible in health."""
+    mode_env(ExecutionMode.LIVE, live=True, confirm=True)
+    res = await async_client.get("/api/health")
+    assert res.status_code == 200
+    data = res.json()
+    assert data["execution_mode"] == "LIVE"
+    assert data["mt5_adapter"] == "MockMT5Adapter"
+    assert data["simulated_execution"] is True
+
+
+@pytest.mark.asyncio
 async def test_api_paper_order_host_independent(async_client, mode_env, monkeypatch):
     """POST /api/execution/orders succeeds in PAPER with an MT5-present host."""
     import app.api.deps as deps

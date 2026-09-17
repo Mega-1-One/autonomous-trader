@@ -41,17 +41,21 @@ def mode_env():
 # Truth table — MOCK destination (paper sim / mock adapter)
 # ---------------------------------------------------------------------------
 
-@pytest.mark.parametrize("mode", [ExecutionMode.BACKTEST, ExecutionMode.PAPER, ExecutionMode.DEMO, ExecutionMode.LIVE])
-def test_mock_destination_allowed_in_all_modes(mode, mode_env):
-    mode_env(mode, live=True, confirm=True)  # LIVE requires flags even for mock
+@pytest.mark.parametrize("mode", [ExecutionMode.BACKTEST, ExecutionMode.PAPER, ExecutionMode.DEMO])
+def test_mock_destination_allowed_in_non_live_modes(mode, mode_env):
+    mode_env(mode, live=True, confirm=True)
     assert ensure_trading_allowed("MOCK") is None
 
 
-def test_live_mock_requires_flags(mode_env):
-    # LIVE without flags: mock is still allowed per ADR-3 (the boot validator
-    # already refuses to *start* in LIVE without flags).
+def test_live_mock_refused_even_with_flags(mode_env):
+    # NEW-01: a simulated fill must never be returned as EXECUTED in LIVE,
+    # with or without the live flags.
+    mode_env(ExecutionMode.LIVE, live=True, confirm=True)
+    with pytest.raises(SafetyViolation, match="simulated"):
+        ensure_trading_allowed("MOCK")
     mode_env(ExecutionMode.LIVE, live=False, confirm=False)
-    assert ensure_trading_allowed("MOCK") is None
+    with pytest.raises(SafetyViolation, match="simulated"):
+        ensure_trading_allowed("MOCK")
 
 
 # ---------------------------------------------------------------------------

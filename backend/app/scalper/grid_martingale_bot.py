@@ -3,6 +3,7 @@ from typing import List, Dict, Any
 
 from app.core.safety import ensure_trading_allowed, account_trade_mode_from_mt5, SafetyViolation
 from app.data.mt5_real import RealMT5Adapter
+from app.scalper.instrument import InstrumentSpecification
 from app.scalper.mt5_orders import build_close_request, build_market_order, pip_scale_for
 
 class MT5GridMartingaleScalper:
@@ -42,7 +43,10 @@ class MT5GridMartingaleScalper:
         """Broker-side disaster-stop price, or None when disabled (0)."""
         if not self.protective_sl_pips or self.protective_sl_pips <= 0:
             return None
-        digits = 5 if "EUR" in self.symbol else 3
+        # R2-N1: digits come from the instrument spec so the stop aligns to
+        # the symbol's quotation (GBPUSDm -> 5dp, NAS100 -> 2dp); a
+        # misaligned stop could be rejected by the broker as invalid.
+        digits = InstrumentSpecification.get_default_spec(self.symbol).digits
         dist = self.protective_sl_pips * pip_scale
         sl = entry_price - dist if is_buy else entry_price + dist
         return round(sl, digits)

@@ -6,10 +6,10 @@ Permitted real diffs: monte-carlo simulation content (C-02), failure-path
 status codes (C-01), CORS/security headers (C-06/D-01), position price
 values (C-01/N-06).
 
-M-5: exits non-zero on any unexpected diff and runs in CI. The two
-wall-clock-derived endpoints (liquidity levels, strategy patterns: PDH/PDL
-day labels and session windows shift with UTC midnight in mock data) are
-compared on response keys only — explicitly permitted with this reasoning.
+M-5: exits non-zero on any unexpected diff and runs in CI.
+NEW-03: instead of exempting whole endpoints, the mock wall clock is frozen
+(see FROZEN_NOW), so liquidity/patterns values compare fully. Only execution
+timestamps/IDs/latency are normalized away.
 """
 import copy
 import json
@@ -46,15 +46,43 @@ def normalize(obj):
     return obj
 
 
-# Endpoints whose content derives from wall-clock mock data (UTC-day
-# rollover in PDH/PDL/session levels): keys compared, values exempt.
-KEYS_ONLY_PATHS = frozenset({"/api/liquidity/levels", "/api/strategy/patterns"})
+# NEW-03: frozen instant for the mock wall clock. Mock candle/tick
+# timestamps (day/session buckets in liquidity/patterns/signals) derive from
+# `datetime.now(timezone.utc)` in app.data.mt5_mock and app.strategy.sessions;
+# freezing both makes those endpoints fully deterministic, so values (not
+# just keys) are compared. Chosen near the A-02 capture time so the frozen
+# samples below reproduce the original session/day context.
+FROZEN_NOW_ISO = "2026-09-16T21:42:25+00:00"
+
+
+def _freeze_mock_clock():
+    """Patch module-level `datetime` to a fixed instant wherever mock
+    wall-clock time feeds endpoint values: candle/tick generation
+    (app.data.mt5_mock), session windows (app.strategy.sessions), and the
+    staleness check (app.services.market_data)."""
+    from datetime import datetime, timezone
+    import app.data.mt5_mock as mock_module
+    import app.strategy.sessions as sessions_module
+    import app.services.market_data as market_data_module
+
+    frozen = datetime.fromisoformat(FROZEN_NOW_ISO)
+
+    class _FrozenDateTime(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return frozen if tz is None else frozen.astimezone(tz)
+
+    mock_module.datetime = _FrozenDateTime
+    sessions_module.datetime = _FrozenDateTime
+    market_data_module.datetime = _FrozenDateTime
 
 
 def main():
     import asyncio
     from httpx import ASGITransport, AsyncClient
     from app.main import app
+
+    _freeze_mock_clock()
 
     async def run():
         transport = ASGITransport(app=app)
@@ -87,11 +115,6 @@ def main():
                 if "monte-carlo" in path:
                     if set((cur_norm.get("json") or {}).keys()) != set((base_norm.get("json") or {}).keys()):
                         diffs.append((entry, "simulation keys differ"))
-                    continue
-                # Wall-clock-derived endpoints: keys only (M-5 permitted).
-                if path in KEYS_ONLY_PATHS:
-                    if set((cur_norm.get("json") or {}).keys()) != set((base_norm.get("json") or {}).keys()):
-                        diffs.append((entry, "response keys differ"))
                     continue
                 if base_norm != cur_norm:
                     diffs.append((entry, json.dumps({"baseline": base_norm, "current": cur_norm})[:800]))

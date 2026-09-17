@@ -63,13 +63,6 @@ app.include_router(backtest_router)
 app.include_router(execution_router)
 
 
-
-
-
-
-
-
-
 @app.get("/")
 async def root():
     return {

@@ -65,6 +65,7 @@ export interface HealthResponse {
   database_connected: boolean;
   mt5_connected: boolean;
   mt5_adapter?: string;
+  simulated_execution?: boolean;
   timestamp: string;
 }
 

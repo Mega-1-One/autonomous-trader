@@ -62,14 +62,19 @@ def test_none_adapter_response_is_failed_not_crash():
     assert res["status"] == "FAILED"
 
 
-def test_break_even_uses_symbol_point_size():
-    """N2-M3: FX break-even offset uses the symbol point size, not 0.01."""
+def _break_even_engine():
     adapter = MockMT5Adapter()
     adapter.connect()
     engine = ExecutionEngine(adapter=adapter)
     engine.break_even_enabled = True
     engine.break_even_trigger_r = 0.5
     engine.break_even_offset_pips = 0.1
+    return engine
+
+
+def test_break_even_uses_pip_size_fx():
+    """NEW-02: FX offset = 0.1 pips x pip 0.0001 = 0.00001 (exact SL)."""
+    engine = _break_even_engine()
     res = engine.execute_signal({
         "client_signal_id": "SIG_BE_FX",
         "symbol": "EURUSD", "direction": "LONG",
@@ -81,6 +86,21 @@ def test_break_even_uses_symbol_point_size():
     engine.update_positions({"EURUSD": 1.08550})
     pos = engine.positions[pos_id]
     assert pos.break_even_activated is True
-    # Offset = 0.1 pips * point 0.00001 = 0.000001 (not 0.1 * 0.01 = 0.001).
-    assert pos.stop_loss == pytest.approx(1.085 + 0.000001)
-    assert pos.stop_loss != pytest.approx(1.085 + 0.001)
+    assert pos.stop_loss == 1.08501
+
+
+def test_break_even_uses_pip_size_gold():
+    """NEW-02: gold offset = 0.1 pips x pip 0.1 = 0.01 (exact SL)."""
+    engine = _break_even_engine()
+    res = engine.execute_signal({
+        "client_signal_id": "SIG_BE_XAU",
+        "symbol": "XAUUSD", "direction": "LONG",
+        "entry_price": 2400.0, "stop_loss": 2399.0, "take_profit": 2402.0,
+    })
+    assert res["status"] == "EXECUTED"
+    pos_id = res["position"]["position_id"]
+    # R = (2400.5-2400.0)/(2400.0-2399.0) = 0.5 >= trigger.
+    engine.update_positions({"XAUUSD": 2400.5})
+    pos = engine.positions[pos_id]
+    assert pos.break_even_activated is True
+    assert pos.stop_loss == 2400.01

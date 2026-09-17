@@ -5,7 +5,7 @@ import uuid
 
 from app.core.config import settings
 from app.core.logging import logger
-from app.core.pricing import pnl as spec_pnl, contract_size as spec_contract_size
+from app.core.pricing import pnl as spec_pnl, contract_size as spec_contract_size, pip_size as spec_pip_size
 from app.core.safety import (
     ensure_trading_allowed,
     destination_for_adapter,
@@ -209,39 +209,28 @@ class ExecutionEngine:
         updated: List[Dict[str, Any]] = []
 
         # Broker symbol-info per symbol (ADR-4 precedence) for contract-aware
-        # PnL and per-symbol point sizes (N2-M3: break-even must not assume
-        # point 0.01 for every symbol).
+        # PnL; per-symbol price digits so break-even rounding matches the
+        # symbol's quotation (N2-M3).
         contract_sizes: Dict[str, float] = {}
-        point_sizes: Dict[str, float] = {}
         price_digits: Dict[str, int] = {}
 
-        def _symbol_precision(symbol: str) -> tuple:
-            if symbol in point_sizes:
-                return point_sizes[symbol], price_digits[symbol]
-            resolved_point = point_size
+        def _symbol_digits(symbol: str) -> int:
+            if symbol in price_digits:
+                return price_digits[symbol]
             resolved_digits = 2
             try:
                 info = self.adapter.get_symbol_info(symbol)
             except Exception as exc:
                 logger.debug(f"symbol_info lookup failed for {symbol}: {exc}")
                 info = None
-            if info and info.get("point_size"):
-                resolved_point = float(info["point_size"])
             if info and info.get("digits") is not None:
                 resolved_digits = int(info["digits"])
-            if not info or not info.get("point_size"):
+            else:
                 spec = InstrumentSpecification.get_default_spec(symbol)
                 if spec is not None:
-                    if not info or not info.get("point_size"):
-                        resolved_point = spec.point_size
-                    if not info or info.get("digits") is None:
-                        resolved_digits = spec.digits
-            point_sizes[symbol] = resolved_point
+                    resolved_digits = spec.digits
             price_digits[symbol] = resolved_digits
-            return resolved_point, resolved_digits
-
-        def _point_size_for(symbol: str) -> float:
-            return _symbol_precision(symbol)[0]
+            return resolved_digits
 
         for pos_id, pos in list(self.positions.items()):
             if pos.status != "OPEN":
@@ -272,8 +261,10 @@ class ExecutionEngine:
             # Break-Even Adjustment Check
             if self.break_even_enabled and not pos.break_even_activated:
                 if pos.r_multiple >= self.break_even_trigger_r:
-                    sym_point, sym_digits = _symbol_precision(pos.symbol)
-                    offset = self.break_even_offset_pips * sym_point
+                    # NEW-02: the offset is denominated in pips, so it must
+                    # scale by the canonical pip size (not point size).
+                    sym_digits = _symbol_digits(pos.symbol)
+                    offset = self.break_even_offset_pips * spec_pip_size(pos.symbol)
                     new_sl = round(entry + offset if direction == "LONG" else entry - offset, sym_digits)
                     pos.stop_loss = new_sl
                     pos.break_even_activated = True
