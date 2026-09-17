@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Body
-from pydantic import BaseModel
-from typing import Optional
+from pydantic import BaseModel, field_validator
+from typing import Literal, Optional
 
 from app.api.deps import get_market_service, get_execution_engine, require_api_token
 from app.execution.engine import ExecutionEngine
@@ -11,11 +11,19 @@ router = APIRouter(prefix="/api/execution", tags=["Execution & Position Manageme
 class OrderSubmitRequest(BaseModel):
     client_signal_id: Optional[str] = None
     symbol: str = "XAUUSD"
-    direction: str = "LONG"
+    direction: Literal["LONG", "SHORT"] = "LONG"
     entry_price: float
     stop_loss: float
     take_profit: float
     spread_pips: float = 1.0
+
+    @field_validator("direction", mode="before")
+    @classmethod
+    def _normalize_direction(cls, value: object) -> object:
+        # N2-H2: normalize case explicitly; anything else fails Literal -> 422.
+        if isinstance(value, str):
+            return value.strip().upper()
+        return value
 
 @router.get("/positions", status_code=status.HTTP_200_OK)
 async def get_positions(
@@ -85,7 +93,12 @@ async def close_all_positions(
     execution_engine: ExecutionEngine = Depends(get_execution_engine),
     _: None = Depends(require_api_token),
 ):
-    """Emergency closes all active positions immediately."""
+    """Emergency closes all active positions immediately.
+
+    L-4: this settles the API engine's in-memory simulated positions only; it
+    never sends broker closes. Flatten real broker baskets from the MT5
+    terminal or the bot-command close paths.
+    """
     closed = execution_engine.close_all_positions(reason or "EMERGENCY_CLOSE_ALL")
     return {
         "status": "ALL_POSITIONS_CLOSED",

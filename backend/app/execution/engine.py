@@ -15,6 +15,7 @@ from app.core.safety import (
 from app.data.mt5_interface import AbstractMT5Adapter
 from app.data.mt5_mock import MockMT5Adapter
 from app.risk.engine import RiskEngine
+from app.scalper.instrument import InstrumentSpecification
 
 @dataclass
 class PositionRecord:
@@ -74,6 +75,12 @@ class ExecutionEngine:
         symbol = signal_dict.get("symbol", "XAUUSD")
         client_order_id = signal_dict.get("client_signal_id") or f"ORD_{uuid.uuid4().hex[:8].upper()}"
 
+        # 0. Direction validation (N2-H2): never silently map garbage to SELL.
+        direction = str(signal_dict.get("direction", "")).strip().upper()
+        if direction not in ("LONG", "SHORT"):
+            logger.warning(f"DIRECTION REJECT: invalid direction {signal_dict.get('direction')!r}.")
+            return {"status": "REJECTED", "reason": f"Invalid direction {signal_dict.get('direction')!r}: must be LONG or SHORT"}
+
         # 1. Idempotency Check: Prevent duplicate order execution
         if client_order_id in self.executed_order_ids:
             logger.warning(f"IDEMPOTENCY BLOCK: Order {client_order_id} has already been processed.")
@@ -121,9 +128,6 @@ class ExecutionEngine:
             logger.info(f"RISK REJECTION: {decision.rejection_reason}")
             return {"status": "REJECTED", "reason": decision.rejection_reason}
 
-        # Mark order ID as processed to enforce idempotency
-        self.executed_order_ids.add(client_order_id)
-
         # 5. Submit Order to Broker / Mock Adapter
         magic_number = signal_dict.get("magic", 888888)
         order_req = {
@@ -132,18 +136,22 @@ class ExecutionEngine:
             "price": signal_dict["entry_price"],
             "stop_loss": signal_dict["stop_loss"],
             "take_profit": signal_dict["take_profit"],
-            "type": "BUY" if signal_dict["direction"] == "LONG" else "SELL",
+            "type": "BUY" if direction == "LONG" else "SELL",
             "magic": magic_number
         }
 
         broker_resp = self.adapter.send_order(order_req)
+        if broker_resp is None:
+            # N2-L1: a misbehaving adapter must yield FAILED, not AttributeError.
+            logger.warning(f"BROKER RESPONSE: send_order returned None for {client_order_id}.")
+            return {"status": "FAILED", "reason": "Broker order send returned no response"}
         latency_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
 
         # Structured JSON Order Audit Logging
         audit_log = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "symbol": symbol,
-            "direction": signal_dict["direction"],
+            "direction": direction,
             "requested_volume": decision.calculated_volume,
             "requested_price": signal_dict["entry_price"],
             "stop_loss": signal_dict["stop_loss"],
@@ -160,8 +168,14 @@ class ExecutionEngine:
         logger.info(f"[ORDER_AUDIT] {audit_log}")
 
         if broker_resp.get("retcode") not in [10009, 0]:
+            # N2-H3: FAILED must not poison idempotency — the ID is marked
+            # only on EXECUTED so a legitimate retry can proceed.
             return {"status": "FAILED", "reason": broker_resp.get("comment", "Broker order send failed"), "audit": audit_log}
 
+        # Mark order ID as processed (only fills consume ids) and record
+        # the fill against today's risk counters (N2-H1).
+        self.executed_order_ids.add(client_order_id)
+        self.risk_engine.record_executed_trade()
 
         # 5. Record Open Position
         pos_id = f"POS_{uuid.uuid4().hex[:8].upper()}"
@@ -170,7 +184,7 @@ class ExecutionEngine:
             client_order_id=client_order_id,
             broker_ticket=broker_resp.get("order"),
             symbol=symbol,
-            direction=signal_dict["direction"],
+            direction=direction,
             volume=decision.calculated_volume,
             entry_price=signal_dict["entry_price"],
             current_price=signal_dict["entry_price"],
@@ -187,15 +201,47 @@ class ExecutionEngine:
         )
         self.positions[pos_id] = pos
 
-        logger.info(f"ORDER EXECUTED: Position {pos_id} opened for {symbol} {signal_dict['direction']} @ {signal_dict['entry_price']}")
+        logger.info(f"ORDER EXECUTED: Position {pos_id} opened for {symbol} {direction} @ {signal_dict['entry_price']}")
         return {"status": "EXECUTED", "position": pos.to_dict()}
 
     def update_positions(self, current_prices: Dict[str, float], point_size: float = 0.01) -> List[Dict[str, Any]]:
         """Updates active positions with live prices, checks SL/TP hits, and applies Break-Even rules."""
         updated: List[Dict[str, Any]] = []
 
-        # Broker symbol-info per symbol (ADR-4 precedence) for contract-aware PnL.
+        # Broker symbol-info per symbol (ADR-4 precedence) for contract-aware
+        # PnL and per-symbol point sizes (N2-M3: break-even must not assume
+        # point 0.01 for every symbol).
         contract_sizes: Dict[str, float] = {}
+        point_sizes: Dict[str, float] = {}
+        price_digits: Dict[str, int] = {}
+
+        def _symbol_precision(symbol: str) -> tuple:
+            if symbol in point_sizes:
+                return point_sizes[symbol], price_digits[symbol]
+            resolved_point = point_size
+            resolved_digits = 2
+            try:
+                info = self.adapter.get_symbol_info(symbol)
+            except Exception as exc:
+                logger.debug(f"symbol_info lookup failed for {symbol}: {exc}")
+                info = None
+            if info and info.get("point_size"):
+                resolved_point = float(info["point_size"])
+            if info and info.get("digits") is not None:
+                resolved_digits = int(info["digits"])
+            if not info or not info.get("point_size"):
+                spec = InstrumentSpecification.get_default_spec(symbol)
+                if spec is not None:
+                    if not info or not info.get("point_size"):
+                        resolved_point = spec.point_size
+                    if not info or info.get("digits") is None:
+                        resolved_digits = spec.digits
+            point_sizes[symbol] = resolved_point
+            price_digits[symbol] = resolved_digits
+            return resolved_point, resolved_digits
+
+        def _point_size_for(symbol: str) -> float:
+            return _symbol_precision(symbol)[0]
 
         for pos_id, pos in list(self.positions.items()):
             if pos.status != "OPEN":
@@ -226,8 +272,9 @@ class ExecutionEngine:
             # Break-Even Adjustment Check
             if self.break_even_enabled and not pos.break_even_activated:
                 if pos.r_multiple >= self.break_even_trigger_r:
-                    offset = self.break_even_offset_pips * point_size
-                    new_sl = round(entry + offset if direction == "LONG" else entry - offset, 2)
+                    sym_point, sym_digits = _symbol_precision(pos.symbol)
+                    offset = self.break_even_offset_pips * sym_point
+                    new_sl = round(entry + offset if direction == "LONG" else entry - offset, sym_digits)
                     pos.stop_loss = new_sl
                     pos.break_even_activated = True
                     logger.info(f"BREAK EVEN ACTIVATED: Position {pos_id} SL moved to {new_sl}")
@@ -283,6 +330,7 @@ class ExecutionEngine:
             info = None
         pos.realized_pnl = round(spec_pnl(price_diff, pos.volume, pos.symbol, symbol_info=info), 2)
         pos.floating_pnl = 0.0
+        self.risk_engine.record_closed_trade(pos.realized_pnl)
         logger.info(f"POSITION CLOSED: {pos.position_id} exited @ {exit_price} ({reason}). Realized PnL: ${pos.realized_pnl}")
 
     def close_all_positions(self, reason: str = "EMERGENCY_CLOSE_ALL") -> List[Dict[str, Any]]:

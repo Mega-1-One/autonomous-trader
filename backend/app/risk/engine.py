@@ -1,5 +1,6 @@
 import math
 from dataclasses import dataclass, asdict
+from datetime import date
 from typing import Any, Dict, Optional
 from app.core.config import settings
 from app.core.logging import logger
@@ -42,8 +43,32 @@ class RiskEngine:
         self.emergency_stop_active = False
         self.daily_lock_active = False
         self.daily_lock_reason: Optional[str] = None
+        # N2-H1: daily accounting. Updated by record_executed_trade /
+        # record_closed_trade (called by ExecutionEngine on fills/closes);
+        # rolled over automatically on date change.
+        self.today_date = date.today().isoformat()
         self.today_trade_count = 0
         self.today_realized_pnl = 0.0
+
+    def _maybe_rollover(self, today: Optional[str] = None) -> None:
+        """Resets daily counters/locks when the calendar day has changed."""
+        today = today or date.today().isoformat()
+        if today != self.today_date:
+            self.today_date = today
+            self.today_trade_count = 0
+            self.today_realized_pnl = 0.0
+            self.daily_lock_active = False
+            self.daily_lock_reason = None
+
+    def record_executed_trade(self) -> None:
+        """Records a filled entry against today's trade count (N2-H1)."""
+        self._maybe_rollover()
+        self.today_trade_count += 1
+
+    def record_closed_trade(self, realized_pnl: float) -> None:
+        """Records a close against today's realized PnL (N2-H1)."""
+        self._maybe_rollover()
+        self.today_realized_pnl += realized_pnl
 
     def calculate_position_size(
         self,
@@ -106,6 +131,7 @@ class RiskEngine:
         current_spread_pips: float = 1.0
     ) -> RiskDecision:
         """Evaluates trade setup against all active risk limits."""
+        self._maybe_rollover()
         # 1. Global Emergency Stop Check (in-memory flag + cross-process sentinel)
         if self.emergency_stop_active or stop_state.is_active() is not None:
             return RiskDecision(

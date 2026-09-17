@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends, status, Body
 from pydantic import BaseModel
 from typing import Optional
 
-from app.api.deps import get_market_service, get_risk_engine, require_api_token
+from app.api.deps import get_execution_engine, get_market_service, get_risk_engine, require_api_token
+from app.execution.engine import ExecutionEngine
 from app.risk.engine import RiskEngine
 from app.services.market_data import MarketDataService
 
@@ -39,6 +40,7 @@ async def evaluate_trade_risk_endpoint(
     req: RiskEvaluateRequest,
     risk_engine: RiskEngine = Depends(get_risk_engine),
     market_service: MarketDataService = Depends(get_market_service),
+    execution_engine: ExecutionEngine = Depends(get_execution_engine),
 ):
     """Evaluates risk and calculates lot size for a proposed trade."""
     info = market_service.get_symbol_info(req.symbol) or {
@@ -53,11 +55,14 @@ async def evaluate_trade_risk_endpoint(
         "take_profit": req.take_profit
     }
 
+    # N2-M7: evaluate against the real open-position count so the
+    # maximum-open-positions limit cannot be bypassed.
+    open_count = len([p for p in execution_engine.positions.values() if p.status == "OPEN"])
     decision = risk_engine.evaluate_trade_risk(
         signal=signal_dict,
         account_info=acc,
         symbol_info=info,
-        current_open_positions_count=0,
+        current_open_positions_count=open_count,
         current_spread_pips=req.spread_pips
     )
 
