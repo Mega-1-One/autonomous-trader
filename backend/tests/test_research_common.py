@@ -1,7 +1,7 @@
 """C-04 tests: research/common shared helpers and their semantics."""
 import json
-
-import pytest
+import sys
+from pathlib import Path
 
 from app.research.common.dataset_hash import verify_dataset_hash
 from app.research.common.statistical_tests import compute_fdr_correction
@@ -79,9 +79,40 @@ def test_tick_window_defaults_preserved():
     assert params[0] == "symbol_map"
 
 
+def test_bootstrap_venv_precedence_in_subprocess():
+    """M-3: a fresh interpreter importing _bootstrap gets [backend, ...] first."""
+    import subprocess
+    scripts_dir = str(Path(__file__).resolve().parent.parent / "scripts")
+    code = (
+        "import sys; sys.path.insert(0, r'" + scripts_dir + "');"
+        "import _bootstrap;"
+        "print(_bootstrap.ensure_backend_on_path());"
+        "print(sys.path[0]);"
+    )
+    proc = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, timeout=60)
+    assert proc.returncode == 0, proc.stderr
+    lines = proc.stdout.strip().splitlines()
+    backend_dir = str(Path(__file__).resolve().parent.parent)
+    assert lines[0] == backend_dir
+    assert lines[1] == backend_dir
+
+
+def test_insertion_plan_unit():
+    scripts_dir = Path(__file__).resolve().parent.parent / "scripts"
+    # Load only the pure helper: exec the single function definition in isolation.
+    src = (scripts_dir / "_bootstrap.py").read_text(encoding="utf-8")
+    start = src.index("def _insertion_plan")
+    end = src.index("def ensure_backend_on_path")
+    ns = {}
+    exec(src[start:end], ns)
+    plan = ns["_insertion_plan"]
+    assert plan(["/x"], "/backend", ["/v1", "/v2"]) == ["/backend", "/v1", "/v2"]
+    # Existing entries are left in place (not duplicated, order kept).
+    assert plan(["/v1", "/x"], "/backend", ["/v1", "/v2"]) == ["/backend", "/v2"]
+
+
 def test_scripts_use_bootstrap_and_shared_tick_import():
-    import pathlib
-    scripts = pathlib.Path(__file__).resolve().parent.parent / "scripts"
+    scripts = Path(__file__).resolve().parent.parent / "scripts"
     for name in ("run_autonomous_scalper.py", "run_ultra_scalper.py",
                  "run_paper_simulation.py", "run_grid_martingale_bot.py",
                  "run_gold_multi_scalper.py"):

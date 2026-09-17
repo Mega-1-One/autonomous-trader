@@ -49,7 +49,9 @@ POST_BODIES = {
     },
     "/api/execution/orders": {
         "symbol": "XAUUSD",
-        "direction": "BUY",
+        # N2-H2: "BUY" was never a valid API direction (old code silently
+        # sold while recording "BUY"); valid values are LONG/SHORT.
+        "direction": "LONG",
         "volume": 0.01,
         "entry_price": 2400.0,
         "stop_loss": 2399.7,

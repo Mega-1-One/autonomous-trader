@@ -37,6 +37,10 @@ jobs:
       - name: Run test suite
         run: pytest tests/ -v
 
+      # M-5: API contract diff vs docs/baseline (non-zero exit on drift).
+      - name: API contract diff
+        run: python ../docs/baseline/contract_diff.py
+
   backend-lint:
     name: Backend lint (ruff)
     runs-on: ubuntu-latest

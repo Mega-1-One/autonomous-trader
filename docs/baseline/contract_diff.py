@@ -5,6 +5,11 @@ position IDs, broker tickets, latency, equity-curve timestamps.
 Permitted real diffs: monte-carlo simulation content (C-02), failure-path
 status codes (C-01), CORS/security headers (C-06/D-01), position price
 values (C-01/N-06).
+
+M-5: exits non-zero on any unexpected diff and runs in CI. The two
+wall-clock-derived endpoints (liquidity levels, strategy patterns: PDH/PDL
+day labels and session windows shift with UTC midnight in mock data) are
+compared on response keys only — explicitly permitted with this reasoning.
 """
 import copy
 import json
@@ -41,6 +46,11 @@ def normalize(obj):
     return obj
 
 
+# Endpoints whose content derives from wall-clock mock data (UTC-day
+# rollover in PDH/PDL/session levels): keys compared, values exempt.
+KEYS_ONLY_PATHS = frozenset({"/api/liquidity/levels", "/api/strategy/patterns"})
+
+
 def main():
     import asyncio
     from httpx import ASGITransport, AsyncClient
@@ -73,10 +83,15 @@ def main():
                 checked += 1
                 base_norm = normalize(copy.deepcopy(baseline))
                 cur_norm = normalize(copy.deepcopy(current))
-                # Monte Carlo content is a permitted diff (C-02)
+                # Monte Carlo content is a permitted diff (C-02): keys only.
                 if "monte-carlo" in path:
                     if set((cur_norm.get("json") or {}).keys()) != set((base_norm.get("json") or {}).keys()):
                         diffs.append((entry, "simulation keys differ"))
+                    continue
+                # Wall-clock-derived endpoints: keys only (M-5 permitted).
+                if path in KEYS_ONLY_PATHS:
+                    if set((cur_norm.get("json") or {}).keys()) != set((base_norm.get("json") or {}).keys()):
+                        diffs.append((entry, "response keys differ"))
                     continue
                 if base_norm != cur_norm:
                     diffs.append((entry, json.dumps({"baseline": base_norm, "current": cur_norm})[:800]))
@@ -87,7 +102,7 @@ def main():
         return diffs
 
     diffs = asyncio.run(run())
-    sys.exit(0)
+    sys.exit(1 if diffs else 0)
 
 
 if __name__ == "__main__":
