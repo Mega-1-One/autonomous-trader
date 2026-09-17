@@ -235,12 +235,13 @@ Every change below is a *documented intent*, not an accident:
 | 17 | Broker `FAILED` no longer consumes the idempotency ID; only `EXECUTED` marks it, so retries proceed | Phase 2 reviews N2-H3 | fix |
 | 18 | Executed fills increment `today_trade_count`, closes accumulate `today_realized_pnl` (with date rollover), so daily limits and locks can actually fire | Phase 2 reviews N2-H1 | fix |
 | 19 | Break-even offset and rounding use per-symbol point size/digits instead of fixed 0.01/2dp | Phase 2 reviews N2-M3 | fix |
-| 20 | API adapter selection is mode-aware: PAPER/BACKTEST always use the mock adapter; DEMO/LIVE try real first | Phase 2 reviews H-2 | fix |
+| 20 | Adapter selection is mode-aware in **one shared factory** (`app/data/adapter_factory.build_adapter`) used by both the API (`api/deps.py`) and the runner (`app/runner.py`): PAPER/BACKTEST always use the mock adapter; DEMO/LIVE try real first | Phase 2 reviews H-2; deep-review I-3 | fix |
 | 21 | `/api/risk/evaluate` counts real open positions (no max-open bypass); unknown execution modes fail closed | Phase 2 reviews N2-M7/N2-M1 | fix |
 | 22 | Position marking is side-aware (LONG→bid, SHORT→ask; mixed symbols default bid) | Phase 2 reviews N2-M8 | fix |
 | 23 | LIVE + mock adapter refuses (fail-closed) instead of simulating; health exposes `simulated_execution` for DEMO/LIVE-on-mock; dashboard badge shows SIMULATED | Phase 2 re-review NEW-01/NEW-05 | fix |
 | 24 | Break-even offset uses canonical pip size with exact moved stops | Phase 2 re-review NEW-02 | fix |
 | 25 | Contract diff freezes the mock clock; liquidity/patterns values compare fully | Phase 2 re-review NEW-03 | fix |
+| 26 | Open-position count for `maximum_open_positions` no longer double-counts engine + broker records (limit now enforces its configured value) | deep-review I-4 | fix |
 
 ---
 
@@ -306,10 +307,13 @@ Every change below is a *documented intent*, not an accident:
   Close/reduce sends (`intent="close"`) bypass only the sentinel check so
   protective closes and basket stops can always de-risk; mode/destination rules
   still apply to closes (Phase 2 fix H-1).
-- **Adapter selection (Phase 2 fix H-2):** `api/deps.py:build_adapter` is mode-aware —
-  PAPER/BACKTEST always construct the mock adapter (the dashboard paper flow never
-  touches a real terminal regardless of host); DEMO/LIVE try the real terminal
-  first with mock fallback.
+- **Adapter selection (Phase 2 fix H-2; deep-review I-3):** one shared
+  `app/data/adapter_factory.build_adapter` is mode-aware and used by both the API
+  (`api/deps.py`) and the runner (`app/runner.py`) — PAPER/BACKTEST always
+  construct the mock adapter (the paper flow never touches a real terminal
+  regardless of host); DEMO/LIVE try the real terminal first with mock fallback.
+  The runner previously had its own unconditional real-first selection, which
+  made it silently refuse every order in PAPER on an MT5 host.
 - **Coverage (all direct order-send sites, verified by grep):**
   `scalper/autonomous_scalper_daemon.py`, `scalper/demo_scalper_engine.py`,
   `scalper/ultra_tick_scalper.py`, `scalper/gold_multi_scalper.py`,

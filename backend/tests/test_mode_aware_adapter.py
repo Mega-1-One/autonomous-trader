@@ -1,12 +1,14 @@
-"""H-2/M-6 tests: mode-aware adapter selection, host-independent PAPER flow.
+"""H-2/M-6/I-3 tests: mode-aware adapter selection, host-independent PAPER flow.
 
-build_adapter() must return the mock adapter in PAPER/BACKTEST even when a
-real MT5 terminal is present, so POST /api/execution/orders works on any
-host. DEMO/LIVE keep real-first with mock fallback.
+build_adapter() (app.data.adapter_factory, shared by the API and runner) must
+return the mock adapter in PAPER/BACKTEST even when a real MT5 terminal is
+present, so POST /api/execution/orders works on any host. DEMO/LIVE keep
+real-first with mock fallback.
 """
 import pytest
 
 import app.core.config as config_module
+import app.data.adapter_factory as adapter_factory
 from app.core.config import ExecutionMode, Settings
 from app.data.mt5_mock import MockMT5Adapter
 from app.data.mt5_real import RealMT5Adapter
@@ -40,7 +42,6 @@ class _ConnectingReal(RealMT5Adapter):
 
 def test_paper_ignores_real_terminal(mode_env, monkeypatch):
     """PAPER never instantiates the real adapter, even if MT5 is present."""
-    import app.api.deps as deps
     mode_env(ExecutionMode.PAPER)
     created = []
 
@@ -49,32 +50,50 @@ def test_paper_ignores_real_terminal(mode_env, monkeypatch):
             created.append(True)
             super().__init__()
 
-    monkeypatch.setattr(deps, "RealMT5Adapter", _SpyReal)
-    adapter = deps.build_adapter()
+    monkeypatch.setattr(adapter_factory, "RealMT5Adapter", _SpyReal)
+    adapter = adapter_factory.build_adapter()
     assert isinstance(adapter, MockMT5Adapter)
     assert created == []
     assert adapter.is_connected()
 
 
 def test_backtest_ignores_real_terminal(mode_env, monkeypatch):
-    import app.api.deps as deps
     mode_env(ExecutionMode.BACKTEST)
-    monkeypatch.setattr(deps, "RealMT5Adapter", _ConnectingReal)
-    assert isinstance(deps.build_adapter(), MockMT5Adapter)
+    monkeypatch.setattr(adapter_factory, "RealMT5Adapter", _ConnectingReal)
+    assert isinstance(adapter_factory.build_adapter(), MockMT5Adapter)
 
 
 def test_demo_prefers_real_when_available(mode_env, monkeypatch):
-    import app.api.deps as deps
     mode_env(ExecutionMode.DEMO)
-    monkeypatch.setattr(deps, "RealMT5Adapter", _ConnectingReal)
-    assert isinstance(deps.build_adapter(), _ConnectingReal)
+    monkeypatch.setattr(adapter_factory, "RealMT5Adapter", _ConnectingReal)
+    assert isinstance(adapter_factory.build_adapter(), _ConnectingReal)
 
 
 def test_demo_falls_back_to_mock_without_terminal(mode_env):
-    import app.api.deps as deps
     mode_env(ExecutionMode.DEMO)
     # MetaTrader5 is not installed here, so RealMT5Adapter.connect() fails.
-    assert isinstance(deps.build_adapter(), MockMT5Adapter)
+    assert isinstance(adapter_factory.build_adapter(), MockMT5Adapter)
+
+
+def test_deps_reexports_shared_factory(mode_env):
+    """The API accessor module must expose the same single selection point."""
+    import app.api.deps as deps
+    assert deps.build_adapter is adapter_factory.build_adapter
+
+
+def test_runner_selects_mock_in_paper(mode_env, monkeypatch):
+    """I-3: the runner's adapter selection must not touch the real adapter in PAPER."""
+    mode_env(ExecutionMode.PAPER)
+    calls = {"real": 0}
+
+    class _CountingReal(_ConnectingReal):
+        def __init__(self):
+            calls["real"] += 1
+            super().__init__()
+
+    monkeypatch.setattr(adapter_factory, "RealMT5Adapter", _CountingReal)
+    assert isinstance(adapter_factory.build_adapter(), MockMT5Adapter)
+    assert calls["real"] == 0
 
 
 @pytest.mark.asyncio
@@ -121,10 +140,9 @@ async def test_health_reports_simulated_execution(async_client, mode_env):
 @pytest.mark.asyncio
 async def test_api_paper_order_host_independent(async_client, mode_env, monkeypatch):
     """POST /api/execution/orders succeeds in PAPER with an MT5-present host."""
-    import app.api.deps as deps
     from app.main import app
     mode_env(ExecutionMode.PAPER)
-    monkeypatch.setattr(deps, "RealMT5Adapter", _ConnectingReal)
+    monkeypatch.setattr(adapter_factory, "RealMT5Adapter", _ConnectingReal)
     # Force state rebuild through the mode-aware path.
     saved = dict(app.state.__dict__)
     for attr in ("adapter", "market_service", "risk_engine",

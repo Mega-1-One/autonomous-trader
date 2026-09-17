@@ -10,7 +10,7 @@ Truth table (destination = where the order is actually sent):
 | BACKTEST | allowed | refused |
 | PAPER    | allowed | refused |
 | DEMO     | allowed | allowed only if account_trade_mode == 0 (demo account) |
-| LIVE     | allowed | allowed only if both live flags set |
+| LIVE     | refused (a simulated fill must never be EXECUTED in a real-money mode) | allowed only if both live flags set |
 | any, with sentinel present | entries refused, closes allowed | entries refused, closes allowed |
 
 Every order-sending path (ExecutionEngine and the six direct order-path files)

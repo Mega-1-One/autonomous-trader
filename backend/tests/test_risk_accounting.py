@@ -53,6 +53,21 @@ def test_realized_pnl_accumulates_and_daily_lock_fires():
     assert engine.risk_engine.daily_lock_active is True
 
 
+def test_max_open_positions_not_double_counted():
+    """I-4: enabling maximum_open_positions=N must actually allow N positions.
+
+    Regression for engine+broker double-counting that halved the limit.
+    """
+    engine = _engine({"risk_per_trade_percent": 0.1, "maximum_open_positions": 2})
+    statuses = [
+        engine.execute_signal(_signal(f"SIG_MAXOPEN_{i}"))["status"]
+        for i in range(4)
+    ]
+    assert statuses[:2] == ["EXECUTED", "EXECUTED"]
+    assert statuses[2:] == ["REJECTED", "REJECTED"]
+    assert engine.risk_engine.maximum_open_positions == 2
+
+
 def test_rollover_resets_counters_and_locks():
     engine = _engine({"risk_per_trade_percent": 0.1, "maximum_trades_per_day": 1})
     engine.risk_engine.today_date = "2000-01-01"

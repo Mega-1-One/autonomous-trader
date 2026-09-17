@@ -128,7 +128,12 @@ class ExecutionEngine:
         }
         account_info = self.adapter.get_account_info() or {"equity": 10000.0}
 
-        open_pos_count = len([p for p in self.positions.values() if p.status == "OPEN"]) + len(broker_positions)
+        # I-4: engine PositionRecords mirror the broker positions for orders
+        # this engine sent, so summing them double-counts and would make an
+        # enabled `maximum_open_positions` fire at roughly half its value.
+        # Take the larger single source (covers adapters that report none).
+        engine_open = len([p for p in self.positions.values() if p.status == "OPEN"])
+        open_pos_count = max(engine_open, len(broker_positions))
 
         # 4. Risk Engine Approval
         decision = self.risk_engine.evaluate_trade_risk(

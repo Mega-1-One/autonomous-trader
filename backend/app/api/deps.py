@@ -13,9 +13,8 @@ from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.core import config as _config
+from app.data.adapter_factory import build_adapter
 from app.data.mt5_interface import AbstractMT5Adapter
-from app.data.mt5_real import RealMT5Adapter
-from app.data.mt5_mock import MockMT5Adapter
 from app.services.market_data import MarketDataService
 from app.risk.engine import RiskEngine
 from app.execution.engine import ExecutionEngine
@@ -49,28 +48,6 @@ async def require_api_token(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or missing API token",
         )
-
-
-def build_adapter() -> AbstractMT5Adapter:
-    """Builds the API-process broker adapter honoring EXECUTION_MODE (H-2).
-
-    PAPER/BACKTEST always use the mock adapter — the dashboard paper workflow
-    must never depend on (or touch) a real terminal, regardless of host.
-    DEMO/LIVE try the real terminal first and fall back to mock.
-    """
-    from app.core.config import ExecutionMode
-
-    mode = _config.settings.EXECUTION_MODE
-    if mode in (ExecutionMode.PAPER, ExecutionMode.BACKTEST):
-        mock = MockMT5Adapter()
-        mock.connect()
-        return mock
-    real_mt5 = RealMT5Adapter()
-    if real_mt5.connect():
-        return real_mt5
-    mock = MockMT5Adapter()
-    mock.connect()
-    return mock
 
 
 def init_app_state(app: Any) -> None:

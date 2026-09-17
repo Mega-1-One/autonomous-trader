@@ -57,7 +57,8 @@ jobs:
           python-version: "3.12"
 
       - name: Install ruff
-        run: pip install ruff
+        # Pinned: the lint gate must not flip on a new ruff release's rules.
+        run: pip install "ruff==0.16.8"
 
       - name: Ruff check (correctness rules, see pyproject.toml)
         run: ruff check app scripts
