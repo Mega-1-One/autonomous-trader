@@ -21,7 +21,9 @@ class Settings(BaseSettings):
     APP_NAME: str = "Autonomous Trader"
     APP_ENV: str = "development"
     LOG_LEVEL: str = "INFO"
-    SECRET_KEY: str = "default-insecure-secret-key-change-in-prod"
+    # NEW-06: the old SECRET_KEY placeholder was removed — nothing consumed
+    # it (API auth uses AUTOMATION_API_TOKEN). A SECRET_KEY will be
+    # reintroduced if/when session/JWT signing is actually needed.
 
     # Execution & Safety Flags
     EXECUTION_MODE: ExecutionMode = ExecutionMode.PAPER

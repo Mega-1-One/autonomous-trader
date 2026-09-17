@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from dataclasses import dataclass, asdict
 from typing import Any, Dict, List, Optional
+import threading
 import uuid
 
 from app.core.config import settings
@@ -59,6 +60,10 @@ class ExecutionEngine:
 
         self.positions: Dict[str, PositionRecord] = {}
         self.executed_order_ids: set[str] = set()
+        # NEW-07: order IDs reserved while a submission is in flight, so two
+        # concurrent requests with the same ID cannot both pass the check.
+        self._order_lock = threading.Lock()
+        self._pending_order_ids: set[str] = set()
 
         # Configurable Position Management Rules
         pm_config = settings.risk_config.get("position_management", {})
@@ -66,6 +71,11 @@ class ExecutionEngine:
         self.break_even_trigger_r = pm_config.get("break_even_trigger_r", 0.5)
         self.break_even_offset_pips = pm_config.get("break_even_offset_pips", 0.1)
         self.max_holding_time_seconds = pm_config.get("max_holding_time_seconds", 30)
+
+    def _release_id(self, client_order_id: str) -> None:
+        """Releases a reserved order ID after a non-fill outcome (NEW-07)."""
+        with self._order_lock:
+            self._pending_order_ids.discard(client_order_id)
 
     def execute_signal(self, signal_dict: Dict[str, Any], current_spread_pips: float = 1.0) -> Dict[str, Any]:
         """Executes a strategy signal after broker position sync, idempotency check, safety check, and risk approval."""
@@ -81,16 +91,20 @@ class ExecutionEngine:
             logger.warning(f"DIRECTION REJECT: invalid direction {signal_dict.get('direction')!r}.")
             return {"status": "REJECTED", "reason": f"Invalid direction {signal_dict.get('direction')!r}: must be LONG or SHORT"}
 
-        # 1. Idempotency Check: Prevent duplicate order execution
-        if client_order_id in self.executed_order_ids:
-            logger.warning(f"IDEMPOTENCY BLOCK: Order {client_order_id} has already been processed.")
-            return {"status": "REJECTED", "reason": f"Duplicate order ID {client_order_id}"}
+        # 1. Idempotency Check + reservation (NEW-07): the check-and-reserve
+        # is atomic so concurrent same-ID submissions cannot both proceed.
+        with self._order_lock:
+            if client_order_id in self.executed_order_ids or client_order_id in self._pending_order_ids:
+                logger.warning(f"IDEMPOTENCY BLOCK: Order {client_order_id} has already been processed.")
+                return {"status": "REJECTED", "reason": f"Duplicate order ID {client_order_id}"}
+            self._pending_order_ids.add(client_order_id)
 
         # 2. Broker Position Sync (only blocks if a max-open limit is configured)
         broker_positions = self.adapter.get_open_positions(symbol)
         max_open = self.risk_engine.maximum_open_positions
         if max_open > 0 and len(broker_positions) >= max_open:
             logger.warning(f"BROKER POSITION BLOCK: {len(broker_positions)} active position(s) found on MT5 for {symbol}.")
+            self._release_id(client_order_id)
             return {"status": "REJECTED", "reason": f"Active MT5 broker position exists for {symbol}"}
 
 
@@ -105,6 +119,7 @@ class ExecutionEngine:
             )
         except SafetyViolation as exc:
             logger.warning(f"SAFETY GATE REJECT: {exc}")
+            self._release_id(client_order_id)
             return {"status": "REJECTED", "reason": str(exc)}
 
         symbol_info = self.adapter.get_symbol_info(symbol) or {
@@ -126,6 +141,7 @@ class ExecutionEngine:
 
         if not decision.approved:
             logger.info(f"RISK REJECTION: {decision.rejection_reason}")
+            self._release_id(client_order_id)
             return {"status": "REJECTED", "reason": decision.rejection_reason}
 
         # 5. Submit Order to Broker / Mock Adapter
@@ -144,6 +160,7 @@ class ExecutionEngine:
         if broker_resp is None:
             # N2-L1: a misbehaving adapter must yield FAILED, not AttributeError.
             logger.warning(f"BROKER RESPONSE: send_order returned None for {client_order_id}.")
+            self._release_id(client_order_id)
             return {"status": "FAILED", "reason": "Broker order send returned no response"}
         latency_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
 
@@ -170,11 +187,14 @@ class ExecutionEngine:
         if broker_resp.get("retcode") not in [10009, 0]:
             # N2-H3: FAILED must not poison idempotency — the ID is marked
             # only on EXECUTED so a legitimate retry can proceed.
+            self._release_id(client_order_id)
             return {"status": "FAILED", "reason": broker_resp.get("comment", "Broker order send failed"), "audit": audit_log}
 
         # Mark order ID as processed (only fills consume ids) and record
         # the fill against today's risk counters (N2-H1).
-        self.executed_order_ids.add(client_order_id)
+        with self._order_lock:
+            self._pending_order_ids.discard(client_order_id)
+            self.executed_order_ids.add(client_order_id)
         self.risk_engine.record_executed_trade()
 
         # 5. Record Open Position

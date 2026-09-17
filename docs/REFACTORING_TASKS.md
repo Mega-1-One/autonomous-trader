@@ -514,10 +514,12 @@ Compare every endpoint enumerated in A-02 against `docs/baseline/` samples. Perm
 diffs only: Monte Carlo simulation content (C-02), failure-path status codes (C-01),
 security/CORS headers (C-06/D-01), position price values (C-01, N-06). Everything
 else must match — notably `POST /api/backtest/run` must be unchanged.
-`docs/baseline/contract_diff.py` exits non-zero on drift and runs in CI (M-5);
-liquidity/patterns endpoints compare keys only (wall-clock mock data).
+`docs/baseline/contract_diff.py` exits non-zero on drift and runs in CI (M-5).
+Wall-clock mock time is frozen (`FROZEN_NOW`) so liquidity/patterns values
+compare fully (NEW-03); only execution timestamps/IDs/latency normalize away.
 The orders/close-all samples were re-captured with valid `LONG` direction after
-N2-H2 (the A-02 samples used `"BUY"`, which the fixed code rejects).
+N2-H2 (the A-02 samples used `"BUY"`, which the fixed code rejects); the
+liquidity/patterns/health samples were re-captured under the frozen clock.
 
 ### E-04 Safety drill (paper mode; runs against the mock adapter)
 1. `POST /api/system/emergency-stop` → `POST /api/execution/orders` must be rejected
@@ -551,6 +553,12 @@ N2-H2 (the A-02 samples used `"BUY"`, which the fixed code rejects).
 - **Order-path audit:** grep `mt5\.order_send` across `backend/app` and
   `backend/scripts` — every occurrence is inside `data/mt5_real.py` or immediately
   preceded by `ensure_trading_allowed`.
+- **Intent audit (R2-N2):** `intent="close"` is caller-trusted — it bypasses the
+  sentinel. Every `intent="close"` call site must be a genuine close/reduce send;
+  grep `intent=` across `backend/app` and `backend/scripts` on every change and
+  require new close-intent sites to be justified in the commit message. Per-bot
+  control-flow tests (`test_bot_gate_control_flow.py`) and drill step 5b enforce
+  the current five sites.
 
 ### E-06 Infra smoke
 `docker compose up --build` (Redis removed): backend healthy, `GET /api/health` 200,

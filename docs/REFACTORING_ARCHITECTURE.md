@@ -238,6 +238,9 @@ Every change below is a *documented intent*, not an accident:
 | 20 | API adapter selection is mode-aware: PAPER/BACKTEST always use the mock adapter; DEMO/LIVE try real first | Phase 2 reviews H-2 | fix |
 | 21 | `/api/risk/evaluate` counts real open positions (no max-open bypass); unknown execution modes fail closed | Phase 2 reviews N2-M7/N2-M1 | fix |
 | 22 | Position marking is side-aware (LONG→bid, SHORT→ask; mixed symbols default bid) | Phase 2 reviews N2-M8 | fix |
+| 23 | LIVE + mock adapter refuses (fail-closed) instead of simulating; health exposes `simulated_execution` for DEMO/LIVE-on-mock; dashboard badge shows SIMULATED | Phase 2 re-review NEW-01/NEW-05 | fix |
+| 24 | Break-even offset uses canonical pip size with exact moved stops | Phase 2 re-review NEW-02 | fix |
+| 25 | Contract diff freezes the mock clock; liquidity/patterns values compare fully | Phase 2 re-review NEW-03 | fix |
 
 ---
 
@@ -294,7 +297,7 @@ Every change below is a *documented intent*, not an accident:
   | `BACKTEST` | allowed | **refused** |
   | `PAPER` | allowed | **refused** |
   | `DEMO` | allowed | allowed **only if** `account_trade_mode == 0` (demo account) |
-  | `LIVE` | allowed | allowed **only if** both live flags set (also enforced at boot) |
+  | `LIVE` | **refused — a simulated fill must never return `EXECUTED` in a real-money mode (NEW-01)** | allowed **only if** both live flags set (also enforced at boot) |
   | any, with sentinel present | entries refused, **closes allowed** | entries refused, **closes allowed** |
   | unknown mode / destination / intent | **refused (fail-closed)** | **refused (fail-closed)** |
 

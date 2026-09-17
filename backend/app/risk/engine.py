@@ -1,6 +1,6 @@
 import math
 from dataclasses import dataclass, asdict
-from datetime import date
+from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 from app.core.config import settings
 from app.core.logging import logger
@@ -45,14 +45,15 @@ class RiskEngine:
         self.daily_lock_reason: Optional[str] = None
         # N2-H1: daily accounting. Updated by record_executed_trade /
         # record_closed_trade (called by ExecutionEngine on fills/closes);
-        # rolled over automatically on date change.
-        self.today_date = date.today().isoformat()
+        # rolled over automatically on date change. The boundary is the UTC
+        # calendar day (NEW-04), matching the rest of the system.
+        self.today_date = datetime.now(timezone.utc).date().isoformat()
         self.today_trade_count = 0
         self.today_realized_pnl = 0.0
 
     def _maybe_rollover(self, today: Optional[str] = None) -> None:
-        """Resets daily counters/locks when the calendar day has changed."""
-        today = today or date.today().isoformat()
+        """Resets daily counters/locks when the UTC calendar day has changed."""
+        today = today or datetime.now(timezone.utc).date().isoformat()
         if today != self.today_date:
             self.today_date = today
             self.today_trade_count = 0

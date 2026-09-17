@@ -53,6 +53,37 @@ def test_duplicate_after_executed_still_blocked():
     assert "Duplicate order ID" in dup["reason"]
 
 
+def test_concurrent_same_id_single_fill():
+    """NEW-07: concurrent same-ID submissions yield exactly one fill."""
+    import threading
+    import time
+
+    class _SlowAdapter(MockMT5Adapter):
+        def send_order(self, order_dict):
+            time.sleep(0.05)
+            return super().send_order(order_dict)
+
+    adapter = _SlowAdapter()
+    adapter.connect()
+    engine = ExecutionEngine(adapter=adapter)
+    results = []
+
+    def _submit():
+        results.append(engine.execute_signal(_order("SIG_RACE")))
+
+    threads = [threading.Thread(target=_submit) for _ in range(8)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join(timeout=30)
+    assert len(results) == 8
+    executed = [r for r in results if r["status"] == "EXECUTED"]
+    rejected = [r for r in results if r["status"] == "REJECTED"]
+    assert len(executed) == 1
+    assert len(rejected) == 7
+    assert all("Duplicate order ID" in r["reason"] for r in rejected)
+
+
 def test_none_adapter_response_is_failed_not_crash():
     """N2-L1: adapter returning None yields FAILED instead of AttributeError."""
     adapter = _NoneAdapter()
