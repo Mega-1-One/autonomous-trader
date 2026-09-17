@@ -12,6 +12,7 @@ PASS 6a LIVE-without-flags raises
 PASS 6b PAPER+REAL refused
 PASS 6c BACKTEST+REAL refused
 PASS 6d PAPER+MOCK allowed
+PASS 6e LIVE+MOCK refused (no simulated live fills)
 PASS 5 gate in app/scalper/autonomous_scalper_daemon.py
 PASS 5 gate in app/scalper/demo_scalper_engine.py
 PASS 5 gate in app/scalper/ultra_tick_scalper.py
@@ -24,5 +25,6 @@ PASS 5b close intent in app/scalper/ultra_tick_scalper.py
 PASS 5b close intent in app/scalper/gold_multi_scalper.py
 PASS 5b close intent in app/scalper/grid_martingale_bot.py
 7 LIMITATION (ADR-8): the sentinel blocks NEW gated entries cross-process;
+  bot-command/basket/timeout closes stay allowed (intent=close, H-1) but the
   sentinel itself never closes positions and does not stop bot loops.
 E-04 DRILL COMPLETE: all checks passed.
