@@ -1,8 +1,10 @@
 import math
 from dataclasses import dataclass, asdict
-from typing import Any, Dict, List, Optional
+from datetime import datetime, timezone
+from typing import Any, Dict, Optional
 from app.core.config import settings
 from app.core.logging import logger
+from app.core import stop_state
 
 @dataclass
 class RiskDecision:
@@ -32,12 +34,42 @@ class RiskEngine:
         self.minimum_rr = config.get("minimum_rr", 0)
         self.maximum_position_size_lots = config.get("maximum_position_size_lots", 10.0)
         self.minimum_position_size_lots = config.get("minimum_position_size_lots", 0.01)
+        # D-05 (default 0 = disabled): reject sizing clamped up to min_volume
+        # when it would risk more than this multiple of the per-trade risk.
+        self.reject_when_clamped_over_risk_multiple = config.get(
+            "reject_when_clamped_over_risk_multiple", 0
+        )
 
         self.emergency_stop_active = False
         self.daily_lock_active = False
         self.daily_lock_reason: Optional[str] = None
+        # N2-H1: daily accounting. Updated by record_executed_trade /
+        # record_closed_trade (called by ExecutionEngine on fills/closes);
+        # rolled over automatically on date change. The boundary is the UTC
+        # calendar day (NEW-04), matching the rest of the system.
+        self.today_date = datetime.now(timezone.utc).date().isoformat()
         self.today_trade_count = 0
         self.today_realized_pnl = 0.0
+
+    def _maybe_rollover(self, today: Optional[str] = None) -> None:
+        """Resets daily counters/locks when the UTC calendar day has changed."""
+        today = today or datetime.now(timezone.utc).date().isoformat()
+        if today != self.today_date:
+            self.today_date = today
+            self.today_trade_count = 0
+            self.today_realized_pnl = 0.0
+            self.daily_lock_active = False
+            self.daily_lock_reason = None
+
+    def record_executed_trade(self) -> None:
+        """Records a filled entry against today's trade count (N2-H1)."""
+        self._maybe_rollover()
+        self.today_trade_count += 1
+
+    def record_closed_trade(self, realized_pnl: float) -> None:
+        """Records a close against today's realized PnL (N2-H1)."""
+        self._maybe_rollover()
+        self.today_realized_pnl += realized_pnl
 
     def calculate_position_size(
         self,
@@ -75,6 +107,20 @@ class RiskEngine:
 
         # Clamp volume to broker min/max boundaries
         clamped_volume = max(min_vol, min(max_vol, snapped_volume))
+
+        # D-05 optional guard: never silently over-risk a small account by
+        # clamping up to min_volume. Disabled by default (multiple = 0).
+        multiple = self.reject_when_clamped_over_risk_multiple or 0
+        if multiple > 0 and clamped_volume > snapped_volume:
+            risk_at_clamped = clamped_volume * risk_per_contract
+            if risk_at_clamped > monetary_risk * multiple:
+                logger.warning(
+                    f"MIN-LOT OVER-RISK GUARD: clamped volume {clamped_volume} risks "
+                    f"${risk_at_clamped:.2f} (> {multiple}x per-trade risk "
+                    f"${monetary_risk:.2f}); rejecting (0 volume)."
+                )
+                return 0.0
+
         return float(clamped_volume)
 
     def evaluate_trade_risk(
@@ -86,8 +132,9 @@ class RiskEngine:
         current_spread_pips: float = 1.0
     ) -> RiskDecision:
         """Evaluates trade setup against all active risk limits."""
-        # 1. Global Emergency Stop Check
-        if self.emergency_stop_active:
+        self._maybe_rollover()
+        # 1. Global Emergency Stop Check (in-memory flag + cross-process sentinel)
+        if self.emergency_stop_active or stop_state.is_active() is not None:
             return RiskDecision(
                 approved=False,
                 rejection_reason="Emergency Stop is currently ACTIVE. All new entries blocked.",
@@ -181,12 +228,21 @@ class RiskEngine:
             effective_rr=effective_rr
         )
 
-    def trigger_emergency_stop(self, reason: str = "User Initiated Emergency Stop") -> None:
-        """Triggers global emergency stop blocking all future entries."""
-        self.emergency_stop_active = True
-        logger.critical(f"GLOBAL EMERGENCY STOP ACTIVATED: {reason}")
+    def trigger_emergency_stop(self, reason: str = "User Initiated Emergency Stop") -> bool:
+        """Triggers global emergency stop blocking all future entries.
 
-    def reset_emergency_stop(self) -> None:
-        """Resets global emergency stop."""
+        Also writes the cross-process sentinel file (ADR-8) so every process's
+        order paths observe the stop. Returns whether the sentinel persisted;
+        False means cross-process propagation is degraded (L-2).
+        """
+        self.emergency_stop_active = True
+        persisted = stop_state.trigger(reason)
+        logger.critical(f"GLOBAL EMERGENCY STOP ACTIVATED: {reason}")
+        return persisted
+
+    def reset_emergency_stop(self) -> bool:
+        """Resets global emergency stop (in-process flag and cross-process sentinel)."""
         self.emergency_stop_active = False
+        persisted = stop_state.reset()
         logger.info("Global Emergency Stop has been reset.")
+        return persisted

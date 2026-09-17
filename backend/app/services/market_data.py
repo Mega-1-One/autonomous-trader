@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
-from app.core.config import settings
 from app.core.logging import logger
 from app.data.mt5_interface import AbstractMT5Adapter
 from app.data.mt5_mock import MockMT5Adapter
@@ -39,6 +38,41 @@ class MarketDataService:
         """Returns normalized symbol specification."""
         self.ensure_connected()
         return self.adapter.get_symbol_info(symbol)
+
+    def get_latest_price(self, symbol: str, side: str = "LONG") -> Optional[float]:
+        """Latest tradable price for a symbol (P-17/N-06 fix, N2-M8 side-aware).
+
+        LONG positions mark at the bid, SHORT positions at the ask; candle-
+        close fallbacks are side-agnostic by nature. Never returns a
+        hard-coded constant.
+        """
+        self.ensure_connected()
+        info = self.adapter.get_symbol_info(symbol) or {}
+        bid = info.get("bid")
+        ask = info.get("ask")
+        if side.strip().upper() == "SHORT":
+            if ask is not None:
+                return float(ask)
+            if bid is not None:
+                return float(bid)
+        else:
+            if bid is not None:
+                return float(bid)
+            if ask is not None:
+                return float(ask)
+        cached = self._candle_cache.get(symbol, {})
+        for timeframe in ("M1", "M5", "M15", "M30", "H1", "H4"):
+            series = cached.get(timeframe)
+            if series:
+                close = series[-1].get("close")
+                if close is not None:
+                    return float(close)
+        candles = self.fetch_candles(symbol, "M5", count=1)
+        if candles:
+            close = candles[-1].get("close")
+            if close is not None:
+                return float(close)
+        return None
 
     def fetch_candles(
         self, symbol: str, timeframe: str, count: int = 500

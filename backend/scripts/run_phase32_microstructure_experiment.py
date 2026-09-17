@@ -10,7 +10,6 @@ logging.getLogger("autotrader").setLevel(logging.ERROR)
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from app.data.mt5_real import RealMT5Adapter
-from app.scalper.instrument import InstrumentSpecification
 from app.research.data_pipeline.historical_loader import PaginatedHistoricalLoader
 from app.research.microstructure.microstructure_features import MicrostructureFeatureGenerator
 from app.research.microstructure.cross_asset_features import CrossAssetFeatureGenerator
@@ -29,7 +28,7 @@ def run_phase32_experiment():
     expected_hash = "25833aa4b8fd8428bf170e456c27398933bef0a03d0f56f8cbf47fccff1a6728"
     current_hash = manifest_data.get("global_dataset_hash", "")
     if current_hash != expected_hash and manifest_data.get("version") != "2.0.0":
-        print(f"[ERROR] SHA256 Dataset Hash Mismatch! Stopping Phase 32 execution.")
+        print("[ERROR] SHA256 Dataset Hash Mismatch! Stopping Phase 32 execution.")
         return
 
     print("\n==================================================")
@@ -154,9 +153,9 @@ def run_phase32_experiment():
             "final_verdict": verdict
         }, f, indent=2)
 
-    print(f"\n==================================================")
-    print(f" PHASE 32 DISCOVERY SUMMARY")
-    print(f"==================================================")
+    print("\n==================================================")
+    print(" PHASE 32 DISCOVERY SUMMARY")
+    print("==================================================")
     print(f"Total Hypotheses Tested:    {len(raw_results)}")
     print(f"FDR Significant Features:   {sum(1 for r in raw_results if r.is_fdr_significant)}")
     print(f"Surviving OOS Edges:        {len(surviving_features)}")

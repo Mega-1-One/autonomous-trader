@@ -1,61 +1,51 @@
 "use client";
 
 import React, { useState } from "react";
+import { apiPost, ApiError, BacktestReport, MonteCarloSimulation } from "../../lib/api";
 
 export default function BacktestPage() {
   const [symbol, setSymbol] = useState("XAUUSD");
   const [timeframe, setTimeframe] = useState("M5");
   const [candleCount, setCandleCount] = useState(500);
-  const [report, setReport] = useState<any>(null);
-  const [mcResult, setMcResult] = useState<any>(null);
+  const [report, setReport] = useState<BacktestReport | null>(null);
+  const [mcResult, setMcResult] = useState<MonteCarloSimulation | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function runBacktest() {
     setLoading(true);
+    setError(null);
     try {
-      const res = await fetch("http://localhost:8000/api/backtest/run", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          symbol,
-          timeframe,
-          candle_count: candleCount,
-          initial_balance: 10000.0,
-          spread_pips: 1.0,
-          slippage_pips: 0.5,
-          commission_per_lot: 7.0
-        })
+      const json = await apiPost<{ report: BacktestReport }>("/api/backtest/run", {
+        symbol,
+        timeframe,
+        candle_count: candleCount,
+        initial_balance: 10000.0,
+        spread_pips: 1.0,
+        slippage_pips: 0.5,
+        commission_per_lot: 7.0
       });
-      if (res.ok) {
-        const json = await res.json();
-        setReport(json.report);
-      }
+      setReport(json.report);
     } catch (err) {
-      console.error(err);
+      setError(err instanceof ApiError ? err.message : "Backtest request failed");
     } finally {
       setLoading(false);
     }
   }
 
   async function runMonteCarlo() {
+    setError(null);
     try {
-      const res = await fetch("http://localhost:8000/api/backtest/monte-carlo", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          symbol,
-          timeframe,
-          candle_count: candleCount,
-          initial_balance: 10000.0,
-          iterations: 200
-        })
+      const json = await apiPost<{ simulation: MonteCarloSimulation }>("/api/backtest/monte-carlo", {
+        symbol,
+        timeframe,
+        candle_count: candleCount,
+        initial_balance: 10000.0,
+        iterations: 200
       });
-      if (res.ok) {
-        const json = await res.json();
-        setMcResult(json.simulation);
-      }
+      setMcResult(json.simulation);
     } catch (err) {
-      console.error(err);
+      setError(err instanceof ApiError ? err.message : "Monte Carlo request failed");
     }
   }
 
@@ -101,6 +91,12 @@ export default function BacktestPage() {
           </button>
         </div>
       </div>
+
+      {error && (
+        <div className="p-4 bg-danger/10 border border-danger/40 rounded-lg text-danger text-sm font-semibold">
+          {error}
+        </div>
+      )}
 
       {report && (
         <div className="space-y-6">

@@ -1,14 +1,15 @@
-from fastapi import APIRouter, Query, HTTPException, status
+from fastapi import APIRouter, Depends, Query, HTTPException, status
+from app.api.deps import get_market_service, get_strategy_engine
 from app.services.market_data import MarketDataService
 from app.strategy.engine import StrategyEngine
 
 router = APIRouter(prefix="/api/strategy", tags=["Strategy Engine"])
-market_service = MarketDataService()
-strategy_engine = StrategyEngine()
 
 @router.get("/signals", status_code=status.HTTP_200_OK)
 async def evaluate_signals(
-    symbol: str = Query("XAUUSD", description="Symbol name")
+    symbol: str = Query("XAUUSD", description="Symbol name"),
+    market_service: MarketDataService = Depends(get_market_service),
+    strategy_engine: StrategyEngine = Depends(get_strategy_engine),
 ):
     """Evaluates live market state against the ICT/SMC strategy engine."""
     htf_candles = market_service.fetch_candles(symbol, "H1", count=100)

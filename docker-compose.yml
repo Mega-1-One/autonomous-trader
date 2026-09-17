@@ -19,18 +19,6 @@ services:
       timeout: 5s
       retries: 5
 
-  redis:
-    image: redis:7-alpine
-    container_name: autotrader_redis
-    restart: always
-    ports:
-      - "6379:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
   backend:
     build:
       context: ./backend
@@ -42,12 +30,11 @@ services:
       - EXECUTION_MODE=PAPER
       - ENABLE_LIVE_TRADING=false
       - LIVE_TRADING_CONFIRMATION=false
+      - CORS_ORIGINS=http://localhost:3000
     ports:
       - "8000:8000"
     depends_on:
       postgres:
-        condition: service_healthy
-      redis:
         condition: service_healthy
 
 volumes:

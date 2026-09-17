@@ -1,5 +1,5 @@
 from dataclasses import dataclass, asdict
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 from enum import Enum
 
 class FVGType(str, Enum):
@@ -45,7 +45,6 @@ class FVGEngine:
 
         for i in range(2, n):
             c1 = candles[i - 2]
-            c2 = candles[i - 1]
             c3 = candles[i]
 
             # Bullish FVG: Low of candle 3 > High of candle 1

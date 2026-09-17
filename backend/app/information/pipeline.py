@@ -1,8 +1,7 @@
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
-from app.core.config import settings, ExecutionMode
 from app.information.providers import (
     DataAvailabilityState,
     MarketDataProvider,

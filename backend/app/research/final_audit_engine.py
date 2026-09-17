@@ -1,12 +1,8 @@
-import json
-import csv
-import hashlib
 from pathlib import Path
 from dataclasses import dataclass, asdict
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any
 import numpy as np
 
-from app.scalper.instrument import InstrumentSpecification
 
 @dataclass
 class ResearchLedgerEntry:
@@ -39,12 +35,8 @@ class FinalResearchAuditEngine:
     TARGET_DATASET_HASH = "25833aa4b8fd8428bf170e456c27398933bef0a03d0f56f8cbf47fccff1a6728"
 
     def verify_dataset_hash(self, manifest_path: Path) -> bool:
-        if not manifest_path.exists():
-            return False
-        with open(manifest_path, "r") as f:
-            data = json.load(f)
-        current_hash = data.get("global_dataset_hash", "")
-        return current_hash == self.TARGET_DATASET_HASH or data.get("version") == "2.0.0"
+        from app.research.common.dataset_hash import verify_dataset_hash
+        return verify_dataset_hash(manifest_path, self.TARGET_DATASET_HASH)
 
     def compute_statistical_power(self, n: int, effect_size: float = 0.05, alpha: float = 0.05) -> float:
         """Calculates statistical power to detect an effect size delta in R-multiples."""

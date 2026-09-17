@@ -1,5 +1,5 @@
 import numpy as np
-from typing import List, Dict, Any
+from typing import List, Dict
 from app.context.timeframe_engine import Candle
 
 class FeatureGenerator:

@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Dict, Any, Optional
 
 from app.scalper.features import ScalperFeatures
 from app.scalper.instrument import InstrumentSpecification
@@ -29,23 +28,24 @@ class CostFilter:
         reasons = []
 
         pip_unit = spec.pip_size
+        contract = spec.contract_size
 
         # 1. Spread Cost
         spread_cost_pips = features.spread_pips
 
         # 2. Commission Cost ($7.00 per lot round-trip)
         comm_dollars = volume * self.commission_per_lot
-        comm_pips = comm_dollars / (100.0 * volume * pip_unit) if volume > 0 else 0.0
+        comm_pips = comm_dollars / (contract * volume * pip_unit) if volume > 0 else 0.0
 
         # 3. Velocity-Dependent Slippage Cost
         slippage_pips = self.base_slippage_pips + abs(features.price_velocity) * 0.1
 
         # Total Transaction Cost in Pips
         total_cost_pips = spread_cost_pips + comm_pips + slippage_pips
-        total_cost_dollars = total_cost_pips * pip_unit * 100.0 * volume
+        total_cost_dollars = total_cost_pips * pip_unit * contract * volume
 
         expected_edge_pips = target_distance_pips
-        expected_edge_dollars = expected_edge_pips * pip_unit * 100.0 * volume
+        expected_edge_dollars = expected_edge_pips * pip_unit * contract * volume
 
         cost_to_target_ratio = round(total_cost_pips / max(0.001, target_distance_pips), 2)
 

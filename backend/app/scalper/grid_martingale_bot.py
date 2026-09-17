@@ -1,12 +1,10 @@
 import time
-import json
-import logging
-from pathlib import Path
-from datetime import datetime, timezone
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 
-from app.core.config import settings, ExecutionMode
+from app.core.safety import ensure_trading_allowed, account_trade_mode_from_mt5, SafetyViolation
 from app.data.mt5_real import RealMT5Adapter
+from app.scalper.instrument import InstrumentSpecification
+from app.scalper.mt5_orders import build_close_request, build_market_order, pip_scale_for
 
 class MT5GridMartingaleScalper:
     """Dynamic Grid & Martingale Scalper Engine for MT5 (Basket Take Profit & Equity Guard)."""
@@ -21,7 +19,8 @@ class MT5GridMartingaleScalper:
         basket_profit_target_usd: float = 0.50,
         max_basket_loss_usd: float = 0.50,
         commission_per_lot: float = 7.0,
-        max_drawdown_pct: float = 20.0
+        max_drawdown_pct: float = 20.0,
+        protective_sl_pips: float = 100.0,
     ):
         self.symbol = symbol
         self.base_volume = base_volume
@@ -32,8 +31,25 @@ class MT5GridMartingaleScalper:
         self.max_basket_loss_usd = max_basket_loss_usd
         self.commission_per_lot = commission_per_lot
         self.max_drawdown_pct = max_drawdown_pct
+        # H-1 defense-in-depth: every grid order carries a wide broker-side
+        # disaster stop so the basket is never fully uncapped if this loop
+        # dies. It sits far outside normal operation (basket stop-loss and
+        # equity guard always act first); set to 0 to disable explicitly.
+        self.protective_sl_pips = protective_sl_pips
         self.adapter = RealMT5Adapter()
         self.magic_number = 888999
+
+    def _protective_sl(self, entry_price: float, is_buy: bool, pip_scale: float) -> float | None:
+        """Broker-side disaster-stop price, or None when disabled (0)."""
+        if not self.protective_sl_pips or self.protective_sl_pips <= 0:
+            return None
+        # R2-N1: digits come from the instrument spec so the stop aligns to
+        # the symbol's quotation (GBPUSDm -> 5dp, NAS100 -> 2dp); a
+        # misaligned stop could be rejected by the broker as invalid.
+        digits = InstrumentSpecification.get_default_spec(self.symbol).digits
+        dist = self.protective_sl_pips * pip_scale
+        sl = entry_price - dist if is_buy else entry_price + dist
+        return round(sl, digits)
 
     def initialize(self) -> bool:
         if not self.adapter.connect():
@@ -50,7 +66,7 @@ class MT5GridMartingaleScalper:
             return {"status": "ERROR"}
 
         start_balance = acc.balance
-        pip_scale = 0.10 if "XAU" in self.symbol or "USTEC" in self.symbol else 0.0001
+        pip_scale = pip_scale_for(self.symbol)
         is_buy = (direction == "BUY")
 
         print("\n==================================================")
@@ -76,20 +92,27 @@ class MT5GridMartingaleScalper:
             return {"status": "ERROR"}
 
         price = tick.ask if is_buy else tick.bid
-        req_1 = {
-            "action": mt5.TRADE_ACTION_DEAL,
-            "symbol": self.symbol,
-            "volume": self.base_volume,
-            "type": mt5.ORDER_TYPE_BUY if is_buy else mt5.ORDER_TYPE_SELL,
-            "price": price,
-            "deviation": 10,
-            "magic": self.magic_number,
-            "comment": "Grid Base #1",
-            "type_time": mt5.ORDER_TIME_GTC,
-            "type_filling": mt5.ORDER_FILLING_IOC,
-        }
+        req_1 = build_market_order(
+            mt5,
+            symbol=self.symbol,
+            order_type=mt5.ORDER_TYPE_BUY if is_buy else mt5.ORDER_TYPE_SELL,
+            volume=self.base_volume,
+            price=price,
+            sl=self._protective_sl(price, is_buy, pip_scale),
+            deviation=10,
+            magic=self.magic_number,
+            comment="Grid Base #1",
+        )
 
+        try:
+            ensure_trading_allowed("REAL", account_trade_mode=account_trade_mode_from_mt5())
+        except SafetyViolation as exc:
+            print(f"[SAFETY GATE REFUSED] {exc}")
+            return {"status": "REJECTED_BY_SAFETY_GATE", "reason": str(exc)}
         res_1 = mt5.order_send(req_1)
+        if res_1 is None:
+            print("[BROKER RESPONSE] order_send returned None (request failed)")
+            return {"status": "ERROR"}
         if res_1.retcode != mt5.TRADE_RETCODE_DONE:
             print(f"[BROKER RESPONSE] Code: {res_1.retcode} | Comment: {res_1.comment}")
             if res_1.retcode == 10027:
@@ -147,20 +170,28 @@ class MT5GridMartingaleScalper:
                 if is_adverse and dist_pips >= self.grid_step_pips:
                     next_vol = round(self.base_volume * (self.lot_multiplier ** len(active_grid)), 2)
                     print(f"\n[GRID STEP {len(active_grid)+1} TRIGGERED ({dist_pips:.1f} pips adverse)] Opening Martingale Order Vol: {next_vol} lot...")
-                    avg_req = {
-                        "action": mt5.TRADE_ACTION_DEAL,
-                        "symbol": self.symbol,
-                        "volume": next_vol,
-                        "type": mt5.ORDER_TYPE_BUY if is_buy else mt5.ORDER_TYPE_SELL,
-                        "price": curr_price,
-                        "deviation": 10,
-                        "magic": self.magic_number,
-                        "comment": f"Grid Step #{len(active_grid)+1}",
-                        "type_time": mt5.ORDER_TIME_GTC,
-                        "type_filling": mt5.ORDER_FILLING_IOC,
-                    }
+                    avg_req = build_market_order(
+                        mt5,
+                        symbol=self.symbol,
+                        order_type=mt5.ORDER_TYPE_BUY if is_buy else mt5.ORDER_TYPE_SELL,
+                        volume=next_vol,
+                        price=curr_price,
+                        sl=self._protective_sl(curr_price, is_buy, pip_scale),
+                        deviation=10,
+                        magic=self.magic_number,
+                        comment=f"Grid Step #{len(active_grid)+1}",
+                    )
+                    try:
+                        ensure_trading_allowed("REAL", account_trade_mode=account_trade_mode_from_mt5())
+                    except SafetyViolation as exc:
+                        print(f"[SAFETY GATE REFUSED] {exc}")
+                        self._close_all_grid_positions(grid_tickets)
+                        cycle_status = "SAFETY_GATE_STOP"
+                        break
                     avg_res = mt5.order_send(avg_req)
-                    if avg_res.retcode == mt5.TRADE_RETCODE_DONE:
+                    if avg_res is None:
+                        print("[BROKER RESPONSE] order_send returned None (request failed)")
+                    elif avg_res.retcode == mt5.TRADE_RETCODE_DONE:
                         grid_tickets.append(avg_res.order)
                         print(f"[GRID #{len(active_grid)+1} OPENED] Ticket #{avg_res.order} at {avg_res.price}")
 
@@ -184,19 +215,23 @@ class MT5GridMartingaleScalper:
         for pos in open_positions:
             if pos.magic == self.magic_number:
                 close_price = mt5.symbol_info_tick(self.symbol).bid if pos.type == 0 else mt5.symbol_info_tick(self.symbol).ask
-                req = {
-                    "action": mt5.TRADE_ACTION_DEAL,
-                    "symbol": self.symbol,
-                    "volume": pos.volume,
-                    "type": mt5.ORDER_TYPE_SELL if pos.type == 0 else mt5.ORDER_TYPE_BUY,
-                    "position": pos.ticket,
-                    "price": close_price,
-                    "deviation": 10,
-                    "magic": self.magic_number,
-                    "comment": "Grid Basket Close",
-                    "type_time": mt5.ORDER_TIME_GTC,
-                    "type_filling": mt5.ORDER_FILLING_IOC,
-                }
+                req = build_close_request(
+                    mt5,
+                    symbol=self.symbol,
+                    volume=pos.volume,
+                    close_type=mt5.ORDER_TYPE_SELL if pos.type == 0 else mt5.ORDER_TYPE_BUY,
+                    position_ticket=pos.ticket,
+                    price=close_price,
+                    deviation=10,
+                    magic=self.magic_number,
+                    comment="Grid Basket Close",
+                )
+                try:
+                    # Close/reduce intent: de-risking is never trapped by the sentinel.
+                    ensure_trading_allowed("REAL", account_trade_mode=account_trade_mode_from_mt5(), intent="close")
+                except SafetyViolation as exc:
+                    print(f"[SAFETY GATE REFUSED] Ticket #{pos.ticket}: {exc}")
+                    continue
                 res = mt5.order_send(req)
                 if res and res.retcode == mt5.TRADE_RETCODE_DONE:
                     print(f"  Closed Grid Ticket #{pos.ticket} at {res.price}")

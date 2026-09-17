@@ -5,6 +5,10 @@ import numpy as np
 from app.backtest.tick_backtest import TickBacktestEngine
 from app.backtest.tick_metrics import TickBacktestMetrics, TickMetricsCalculator
 
+# N2-M5: walk-forward Monte Carlo treats ruin as a >20% drawdown. Deliberately
+# distinct from MONTE_CARLO_RUIN_THRESHOLD_PERCENT (different methodology).
+WALK_FORWARD_RUIN_THRESHOLD_PERCENT = 20.0
+
 @dataclass
 class WalkForwardReport:
     total_windows: int
@@ -72,7 +76,8 @@ class WalkForwardValidator:
 class TickMonteCarloSimulator:
     """500-Iteration Trade Sequence Randomization & Drawdown Distribution Analysis."""
 
-    def run_monte_carlo(self, trades: List[Dict[str, Any]], iterations: int = 500, initial_balance: float = 10000.0) -> Dict[str, Any]:
+    def run_monte_carlo(self, trades: List[Dict[str, Any]], iterations: int = 500, initial_balance: float = 10000.0, seed: int = 42,
+                          ruin_threshold_percent: float = WALK_FORWARD_RUIN_THRESHOLD_PERCENT) -> Dict[str, Any]:
         if not trades:
             return {
                 "iterations": iterations,
@@ -88,8 +93,10 @@ class TickMonteCarloSimulator:
         losing_streaks = []
         ruin_count = 0
 
+        rng = np.random.default_rng(seed)  # P-09/C-02: seeded reproducibility
+
         for _ in range(iterations):
-            shuffled = np.random.choice(pnls, size=len(pnls), replace=True)
+            shuffled = rng.choice(pnls, size=len(pnls), replace=True)
             equity = initial_balance
             peak = initial_balance
             max_dd = 0.0
@@ -113,7 +120,7 @@ class TickMonteCarloSimulator:
             max_drawdowns.append(max_dd)
             losing_streaks.append(max_streak)
 
-            if max_dd > 20.0:  # Ruin threshold: >20% Drawdown
+            if max_dd > ruin_threshold_percent:
                 ruin_count += 1
 
         return {

@@ -1,5 +1,4 @@
 import hashlib
-import time
 from typing import List, Optional
 
 from app.scalper.features import ScalperFeatures

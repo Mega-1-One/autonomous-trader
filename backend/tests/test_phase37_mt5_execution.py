@@ -103,4 +103,6 @@ def test_phase37_emergency_kill_switch_blocking():
 
     res = engine.execute_signal(signal)
     assert res["status"] == "REJECTED"
-    assert "Emergency Stop" in res["reason"]
+    # Emergency stop now also flows through the ADR-3 gate (sentinel consulted
+    # first, reason string updated accordingly)
+    assert "EMERGENCY STOP" in res["reason"].upper()

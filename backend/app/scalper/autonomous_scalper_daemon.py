@@ -1,13 +1,11 @@
 import time
-import json
-import logging
-from pathlib import Path
 from datetime import datetime, timezone
-from typing import List, Dict, Any, Optional
+from typing import Optional
 import numpy as np
 
-from app.core.config import settings, ExecutionMode
+from app.core.safety import ensure_trading_allowed, account_trade_mode_from_mt5, SafetyViolation
 from app.data.mt5_real import RealMT5Adapter
+from app.scalper.mt5_orders import build_close_request, build_market_order, pip_scale_for
 
 class AutonomousScalperDaemon:
     """Fully Autonomous High-Speed Micro-Scalper & Risk Manager for MT5 Demo Account."""
@@ -67,7 +65,7 @@ class AutonomousScalperDaemon:
             return
 
         start_balance = acc.balance
-        pip_scale = 0.10 if "XAU" in self.symbol or "USTEC" in self.symbol else 0.0001
+        pip_scale = pip_scale_for(self.symbol)
 
         print("\n==================================================")
         print(" AUTONOMOUS HIGH-SPEED SCALPER DAEMON STARTED")
@@ -75,8 +73,8 @@ class AutonomousScalperDaemon:
         print(f"MT5 Account:          {acc.login} ({acc.server})")
         print(f"Current Balance:      ${acc.balance:.2f} USD")
         print(f"Target Symbol:        {self.symbol}")
-        print(f"Micro Volume:         0.01 lot")
-        print(f"Target Risk/Reward:   5.0 pips SL / 10.0 pips TP")
+        print("Micro Volume:         0.01 lot")
+        print("Target Risk/Reward:   5.0 pips SL / 10.0 pips TP")
         print(f"Max Holding Horizon:  {self.max_holding_seconds} seconds")
         print(f"Post-Trade Cooldown:  {self.cooldown_seconds} seconds")
         print(f"Equity Stop Guard:    {self.max_drawdown_pct if self.max_drawdown_pct > 0 else 'Disabled (Continuous Scalp)'}")
@@ -95,7 +93,6 @@ class AutonomousScalperDaemon:
                 now = time.time()
                 acc_curr = mt5.account_info()
                 if acc_curr:
-                    balance = acc_curr.balance
                     equity = acc_curr.equity
                     dd_pct = ((start_balance - equity) / start_balance) * 100.0
                     if self.max_drawdown_pct > 0 and dd_pct >= self.max_drawdown_pct:
@@ -114,19 +111,23 @@ class AutonomousScalperDaemon:
                     # Autoclose if max horizon reached
                     if hold_time >= self.max_holding_seconds:
                         close_price = mt5.symbol_info_tick(self.symbol).bid if pos.type == 0 else mt5.symbol_info_tick(self.symbol).ask
-                        req_close = {
-                            "action": mt5.TRADE_ACTION_DEAL,
-                            "symbol": self.symbol,
-                            "volume": pos.volume,
-                            "type": mt5.ORDER_TYPE_SELL if pos.type == 0 else mt5.ORDER_TYPE_BUY,
-                            "position": pos.ticket,
-                            "price": close_price,
-                            "deviation": 10,
-                            "magic": self.magic_number,
-                            "comment": "AutoScalp Timeout Close",
-                            "type_time": mt5.ORDER_TIME_GTC,
-                            "type_filling": mt5.ORDER_FILLING_IOC,
-                        }
+                        req_close = build_close_request(
+                            mt5,
+                            symbol=self.symbol,
+                            volume=pos.volume,
+                            close_type=mt5.ORDER_TYPE_SELL if pos.type == 0 else mt5.ORDER_TYPE_BUY,
+                            position_ticket=pos.ticket,
+                            price=close_price,
+                            deviation=10,
+                            magic=self.magic_number,
+                            comment="AutoScalp Timeout Close",
+                        )
+                        try:
+                            # Close/reduce intent: de-risking is never trapped by the sentinel.
+                            ensure_trading_allowed("REAL", account_trade_mode=account_trade_mode_from_mt5(), intent="close")
+                        except SafetyViolation as exc:
+                            print(f"[SAFETY GATE REFUSED] {exc}")
+                            break
                         res_close = mt5.order_send(req_close)
                         if res_close and res_close.retcode == mt5.TRADE_RETCODE_DONE:
                             print(f"\n[AUTOCLOSED TICKET #{pos.ticket}] Closed at price {res_close.price} | Profit: ${pos.profit:+.2f} USD")
@@ -147,22 +148,25 @@ class AutonomousScalperDaemon:
                                 sl = round(price - (5.0 * pip_scale), 5) if is_buy else round(price + (5.0 * pip_scale), 5)
                                 tp = round(price + (10.0 * pip_scale), 5) if is_buy else round(price - (10.0 * pip_scale), 5)
 
-                                req_open = {
-                                    "action": mt5.TRADE_ACTION_DEAL,
-                                    "symbol": self.symbol,
-                                    "volume": 0.01,
-                                    "type": mt5.ORDER_TYPE_BUY if is_buy else mt5.ORDER_TYPE_SELL,
-                                    "price": price,
-                                    "sl": sl,
-                                    "tp": tp,
-                                    "deviation": 10,
-                                    "magic": self.magic_number,
-                                    "comment": "Autonomous Scalp",
-                                    "type_time": mt5.ORDER_TIME_GTC,
-                                    "type_filling": mt5.ORDER_FILLING_IOC,
-                                }
+                                req_open = build_market_order(
+                                    mt5,
+                                    symbol=self.symbol,
+                                    order_type=mt5.ORDER_TYPE_BUY if is_buy else mt5.ORDER_TYPE_SELL,
+                                    volume=0.01,
+                                    price=price,
+                                    sl=sl,
+                                    tp=tp,
+                                    deviation=10,
+                                    magic=self.magic_number,
+                                    comment="Autonomous Scalp",
+                                )
 
                                 print(f"\n[SIGNAL DETECTED: {sig}] Submitting Autonomous Scalp Order to MT5...")
+                                try:
+                                    ensure_trading_allowed("REAL", account_trade_mode=account_trade_mode_from_mt5())
+                                except SafetyViolation as exc:
+                                    print(f"[SAFETY GATE REFUSED] {exc}")
+                                    break
                                 res_open = mt5.order_send(req_open)
                                 if res_open and res_open.retcode == mt5.TRADE_RETCODE_DONE:
                                     trades_executed += 1

@@ -4,13 +4,11 @@ import csv
 import logging
 from pathlib import Path
 from datetime import datetime, timezone, timedelta
-import numpy as np
 
 logging.getLogger("autotrader").setLevel(logging.ERROR)
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from app.data.mt5_real import RealMT5Adapter
-from app.scalper.instrument import InstrumentSpecification
 from app.research.data_pipeline.historical_loader import PaginatedHistoricalLoader
 from app.research.phase34_engine import Phase34ConfirmationEngine
 
@@ -22,7 +20,7 @@ def run_phase34_experiment():
         return
 
     if not engine.verify_dataset_hash(manifest_file):
-        print(f"[ERROR] SHA256 Dataset Hash Mismatch! Stopping Phase 34 execution.")
+        print("[ERROR] SHA256 Dataset Hash Mismatch! Stopping Phase 34 execution.")
         return
 
     print("\n==================================================")
@@ -144,14 +142,14 @@ def run_phase34_experiment():
         for cr in cross_results:
             f.write(f"| **{cr['instrument']}** | {cr['sample_size']} | **{cr['net_expectancy_r']} R** | **{cr['profit_factor']}** | {cr['replication_status']} |\n")
 
-        f.write(f"\n## 4. Final Diagnostic Verdict\n")
+        f.write("\n## 4. Final Diagnostic Verdict\n")
         f.write(f"**FINAL CLASSIFICATION**: {classification}\n\n")
         f.write("### Next Recommended Step:\n")
         f.write("STOP RESEARCH PROGRAM. Do NOT create entry rules or build a trading strategy. Report findings for human review.\n")
 
-    print(f"\n==================================================")
-    print(f" PHASE 34 CONFIRMATION SUMMARY")
-    print(f"==================================================")
+    print("\n==================================================")
+    print(" PHASE 34 CONFIRMATION SUMMARY")
+    print("==================================================")
     print(f"Expected False Discoveries: {mt_audit['expected_false_discoveries']}")
     print(f"Walk-Forward CSV Saved:    {wf_csv}")
     print(f"Placebo CSV Saved:        {placebo_csv}")

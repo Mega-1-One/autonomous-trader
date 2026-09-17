@@ -53,6 +53,9 @@ postgres_data/
 data/postgres/
 *.log
 
+# Cross-process runtime state (emergency-stop sentinel, ADR-8)
+backend/state/
+
 # System and IDE
 .DS_Store
 Thumbs.db

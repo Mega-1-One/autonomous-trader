@@ -11,6 +11,7 @@ from app.api.signals import router as signals_router
 from app.api.risk import router as risk_router
 from app.api.backtest import router as backtest_router
 from app.api.execution import router as execution_router
+from app.api.deps import init_app_state
 from app.core.config import settings
 from app.core.database import engine
 from app.core.logging import logger
@@ -21,11 +22,15 @@ async def lifespan(app: FastAPI):
     logger.info("Initializing Autonomous Trading Engine...")
     logger.info(f"Execution Mode: {settings.EXECUTION_MODE.value}")
     logger.info(f"Safety Live Trading Enabled: {settings.ENABLE_LIVE_TRADING}")
-    
+
     # Initialize database tables for dev/testing
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    
+
+    # Build the shared in-process engine set (ADR-2/B-01). MT5 adapter
+    # connection previously attempted at health.py import time.
+    init_app_state(app)
+
     yield
 
     logger.info("Shutting down Autonomous Trading Engine...")
@@ -37,10 +42,11 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Configure CORS for frontend dashboard access
+# CORS restricted to configured origins (C-06/P-05: no wildcard with credentials)
+_cors_origins = [o.strip() for o in settings.CORS_ORIGINS.split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -55,13 +61,6 @@ app.include_router(signals_router)
 app.include_router(risk_router)
 app.include_router(backtest_router)
 app.include_router(execution_router)
-
-
-
-
-
-
-
 
 
 @app.get("/")

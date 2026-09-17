@@ -1,13 +1,13 @@
-from fastapi import APIRouter, HTTPException, status, Body
+from fastapi import APIRouter, Depends, status, Body
 from pydantic import BaseModel
-from typing import Dict, Any, Optional
+from typing import Optional
 
+from app.api.deps import get_execution_engine, get_market_service, get_risk_engine, require_api_token
+from app.execution.engine import ExecutionEngine
 from app.risk.engine import RiskEngine
 from app.services.market_data import MarketDataService
 
 router = APIRouter(tags=["Risk & System Control"])
-risk_engine = RiskEngine()
-market_service = MarketDataService()
 
 class RiskEvaluateRequest(BaseModel):
     symbol: str = "XAUUSD"
@@ -17,7 +17,7 @@ class RiskEvaluateRequest(BaseModel):
     spread_pips: float = 1.0
 
 @router.get("/api/risk/status", status_code=status.HTTP_200_OK)
-async def get_risk_status():
+async def get_risk_status(risk_engine: RiskEngine = Depends(get_risk_engine)):
     """Returns risk engine parameters, daily loss lock status, and emergency stop state."""
     return {
         "emergency_stop_active": risk_engine.emergency_stop_active,
@@ -36,7 +36,12 @@ async def get_risk_status():
     }
 
 @router.post("/api/risk/evaluate", status_code=status.HTTP_200_OK)
-async def evaluate_trade_risk(req: RiskEvaluateRequest):
+async def evaluate_trade_risk_endpoint(
+    req: RiskEvaluateRequest,
+    risk_engine: RiskEngine = Depends(get_risk_engine),
+    market_service: MarketDataService = Depends(get_market_service),
+    execution_engine: ExecutionEngine = Depends(get_execution_engine),
+):
     """Evaluates risk and calculates lot size for a proposed trade."""
     info = market_service.get_symbol_info(req.symbol) or {
         "digits": 2, "point_size": 0.01, "tick_size": 0.01, "tick_value": 1.0,
@@ -50,11 +55,14 @@ async def evaluate_trade_risk(req: RiskEvaluateRequest):
         "take_profit": req.take_profit
     }
 
+    # N2-M7: evaluate against the real open-position count so the
+    # maximum-open-positions limit cannot be bypassed.
+    open_count = len([p for p in execution_engine.positions.values() if p.status == "OPEN"])
     decision = risk_engine.evaluate_trade_risk(
         signal=signal_dict,
         account_info=acc,
         symbol_info=info,
-        current_open_positions_count=0,
+        current_open_positions_count=open_count,
         current_spread_pips=req.spread_pips
     )
 
@@ -64,21 +72,36 @@ async def evaluate_trade_risk(req: RiskEvaluateRequest):
     }
 
 @router.post("/api/system/emergency-stop", status_code=status.HTTP_200_OK)
-async def trigger_emergency_stop(reason: Optional[str] = Body(None, embed=True)):
+async def trigger_emergency_stop(
+    reason: Optional[str] = Body(None, embed=True),
+    risk_engine: RiskEngine = Depends(get_risk_engine),
+    _: None = Depends(require_api_token),
+):
     """Triggers global emergency stop, blocking all new trade entries immediately."""
-    risk_engine.trigger_emergency_stop(reason or "User API emergency stop trigger")
+    persisted = risk_engine.trigger_emergency_stop(reason or "User API emergency stop trigger")
+    message = "Global emergency stop activated. All new entries are strictly prohibited."
+    if not persisted:
+        # L-2: cross-process propagation degraded; say so in the message
+        # (no new response keys, so the contract is unchanged).
+        message += " WARNING: cross-process sentinel was NOT persisted; other processes may keep trading."
     return {
         "status": "EMERGENCY_STOP_ACTIVATED",
         "emergency_stop_active": True,
-        "message": "Global emergency stop activated. All new entries are strictly prohibited."
+        "message": message
     }
 
 @router.post("/api/system/reset-emergency-stop", status_code=status.HTTP_200_OK)
-async def reset_emergency_stop():
+async def reset_emergency_stop_endpoint(
+    risk_engine: RiskEngine = Depends(get_risk_engine),
+    _: None = Depends(require_api_token),
+):
     """Resets global emergency stop."""
-    risk_engine.reset_emergency_stop()
+    persisted = risk_engine.reset_emergency_stop()
+    message = "Global emergency stop reset successfully."
+    if not persisted:
+        message += " WARNING: cross-process sentinel was NOT removed; other processes may stay stopped."
     return {
         "status": "EMERGENCY_STOP_RESET",
         "emergency_stop_active": False,
-        "message": "Global emergency stop reset successfully."
+        "message": message
     }

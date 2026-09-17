@@ -1,13 +1,10 @@
 import time
-import json
 import logging
-from pathlib import Path
 from datetime import datetime, timezone
-from typing import List, Dict, Any, Optional
+from typing import Optional
 
-from app.core.config import settings, ExecutionMode
+from app.core.config import settings
 from app.data.mt5_real import RealMT5Adapter
-from app.scalper.instrument import InstrumentSpecification
 
 logger = logging.getLogger("autotrader.paper")
 

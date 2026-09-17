@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, asdict, field
+from dataclasses import dataclass, asdict
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
@@ -113,7 +113,7 @@ class UnvalidatedResearchStrategy(StrategyPlugin):
 
         reasons = [
             f"Trend alignment: {trend}",
-            f"Fast SMA vs Slow SMA confluence",
+            "Fast SMA vs Slow SMA confluence",
             "Micro-scalp fixed-pip geometry"
         ]
 

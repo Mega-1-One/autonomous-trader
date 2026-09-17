@@ -1,0 +1,760 @@
+{
+  "method": "GET",
+  "path": "/api/liquidity/levels",
+  "result": {
+    "json": {
+      "buyside_liquidity": [
+        {
+          "level_type": "PDH",
+          "price": 2403.5,
+          "side": "BUYSIDE",
+          "source": "Previous Day (2026-09-15) High",
+          "strength": 2.0,
+          "timestamp": "2026-09-15T23:42:25+00:00"
+        },
+        {
+          "level_type": "EQH",
+          "price": 2403.5,
+          "side": "BUYSIDE",
+          "source": "Equal Highs between idx 5 and idx 36",
+          "strength": 3.0,
+          "timestamp": "2026-09-15T23:42:25+00:00"
+        },
+        {
+          "level_type": "EQH",
+          "price": 2403.49,
+          "side": "BUYSIDE",
+          "source": "Equal Highs between idx 5 and idx 67",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T02:17:25+00:00"
+        },
+        {
+          "level_type": "EQH",
+          "price": 2403.5,
+          "side": "BUYSIDE",
+          "source": "Equal Highs between idx 5 and idx 99",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T04:57:25+00:00"
+        },
+        {
+          "level_type": "EQH",
+          "price": 2403.5,
+          "side": "BUYSIDE",
+          "source": "Equal Highs between idx 5 and idx 130",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T07:32:25+00:00"
+        },
+        {
+          "level_type": "EQH",
+          "price": 2403.5,
+          "side": "BUYSIDE",
+          "source": "Equal Highs between idx 5 and idx 162",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T10:12:25+00:00"
+        },
+        {
+          "level_type": "EQH",
+          "price": 2403.5,
+          "side": "BUYSIDE",
+          "source": "Equal Highs between idx 5 and idx 193",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T12:47:25+00:00"
+        },
+        {
+          "level_type": "EQH",
+          "price": 2403.49,
+          "side": "BUYSIDE",
+          "source": "Equal Highs between idx 5 and idx 224",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T15:22:25+00:00"
+        },
+        {
+          "level_type": "EQH",
+          "price": 2403.5,
+          "side": "BUYSIDE",
+          "source": "Equal Highs between idx 5 and idx 256",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T18:02:25+00:00"
+        },
+        {
+          "level_type": "EQH",
+          "price": 2403.49,
+          "side": "BUYSIDE",
+          "source": "Equal Highs between idx 5 and idx 287",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T20:37:25+00:00"
+        },
+        {
+          "level_type": "EQH",
+          "price": 2403.5,
+          "side": "BUYSIDE",
+          "source": "Equal Highs between idx 36 and idx 67",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T02:17:25+00:00"
+        },
+        {
+          "level_type": "EQH",
+          "price": 2403.5,
+          "side": "BUYSIDE",
+          "source": "Equal Highs between idx 36 and idx 99",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T04:57:25+00:00"
+        },
+        {
+          "level_type": "EQH",
+          "price": 2403.5,
+          "side": "BUYSIDE",
+          "source": "Equal Highs between idx 36 and idx 130",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T07:32:25+00:00"
+        },
+        {
+          "level_type": "EQH",
+          "price": 2403.5,
+          "side": "BUYSIDE",
+          "source": "Equal Highs between idx 36 and idx 162",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T10:12:25+00:00"
+        },
+        {
+          "level_type": "EQH",
+          "price": 2403.5,
+          "side": "BUYSIDE",
+          "source": "Equal Highs between idx 36 and idx 193",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T12:47:25+00:00"
+        },
+        {
+          "level_type": "EQH",
+          "price": 2403.5,
+          "side": "BUYSIDE",
+          "source": "Equal Highs between idx 36 and idx 224",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T15:22:25+00:00"
+        },
+        {
+          "level_type": "EQH",
+          "price": 2403.5,
+          "side": "BUYSIDE",
+          "source": "Equal Highs between idx 36 and idx 256",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T18:02:25+00:00"
+        },
+        {
+          "level_type": "EQH",
+          "price": 2403.5,
+          "side": "BUYSIDE",
+          "source": "Equal Highs between idx 36 and idx 287",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T20:37:25+00:00"
+        },
+        {
+          "level_type": "EQH",
+          "price": 2403.5,
+          "side": "BUYSIDE",
+          "source": "Equal Highs between idx 67 and idx 99",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T04:57:25+00:00"
+        },
+        {
+          "level_type": "EQH",
+          "price": 2403.5,
+          "side": "BUYSIDE",
+          "source": "Equal Highs between idx 67 and idx 130",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T07:32:25+00:00"
+        },
+        {
+          "level_type": "EQH",
+          "price": 2403.5,
+          "side": "BUYSIDE",
+          "source": "Equal Highs between idx 67 and idx 162",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T10:12:25+00:00"
+        },
+        {
+          "level_type": "EQH",
+          "price": 2403.5,
+          "side": "BUYSIDE",
+          "source": "Equal Highs between idx 67 and idx 193",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T12:47:25+00:00"
+        },
+        {
+          "level_type": "EQH",
+          "price": 2403.49,
+          "side": "BUYSIDE",
+          "source": "Equal Highs between idx 67 and idx 224",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T15:22:25+00:00"
+        },
+        {
+          "level_type": "EQH",
+          "price": 2403.5,
+          "side": "BUYSIDE",
+          "source": "Equal Highs between idx 67 and idx 256",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T18:02:25+00:00"
+        },
+        {
+          "level_type": "EQH",
+          "price": 2403.49,
+          "side": "BUYSIDE",
+          "source": "Equal Highs between idx 67 and idx 287",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T20:37:25+00:00"
+        },
+        {
+          "level_type": "EQH",
+          "price": 2403.5,
+          "side": "BUYSIDE",
+          "source": "Equal Highs between idx 99 and idx 130",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T07:32:25+00:00"
+        },
+        {
+          "level_type": "EQH",
+          "price": 2403.5,
+          "side": "BUYSIDE",
+          "source": "Equal Highs between idx 99 and idx 162",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T10:12:25+00:00"
+        },
+        {
+          "level_type": "EQH",
+          "price": 2403.5,
+          "side": "BUYSIDE",
+          "source": "Equal Highs between idx 99 and idx 193",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T12:47:25+00:00"
+        },
+        {
+          "level_type": "EQH",
+          "price": 2403.5,
+          "side": "BUYSIDE",
+          "source": "Equal Highs between idx 99 and idx 224",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T15:22:25+00:00"
+        },
+        {
+          "level_type": "EQH",
+          "price": 2403.5,
+          "side": "BUYSIDE",
+          "source": "Equal Highs between idx 99 and idx 256",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T18:02:25+00:00"
+        },
+        {
+          "level_type": "EQH",
+          "price": 2403.5,
+          "side": "BUYSIDE",
+          "source": "Equal Highs between idx 99 and idx 287",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T20:37:25+00:00"
+        },
+        {
+          "level_type": "EQH",
+          "price": 2403.5,
+          "side": "BUYSIDE",
+          "source": "Equal Highs between idx 130 and idx 162",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T10:12:25+00:00"
+        },
+        {
+          "level_type": "EQH",
+          "price": 2403.5,
+          "side": "BUYSIDE",
+          "source": "Equal Highs between idx 130 and idx 193",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T12:47:25+00:00"
+        },
+        {
+          "level_type": "EQH",
+          "price": 2403.5,
+          "side": "BUYSIDE",
+          "source": "Equal Highs between idx 130 and idx 224",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T15:22:25+00:00"
+        },
+        {
+          "level_type": "EQH",
+          "price": 2403.5,
+          "side": "BUYSIDE",
+          "source": "Equal Highs between idx 130 and idx 256",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T18:02:25+00:00"
+        },
+        {
+          "level_type": "EQH",
+          "price": 2403.5,
+          "side": "BUYSIDE",
+          "source": "Equal Highs between idx 130 and idx 287",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T20:37:25+00:00"
+        },
+        {
+          "level_type": "EQH",
+          "price": 2403.5,
+          "side": "BUYSIDE",
+          "source": "Equal Highs between idx 162 and idx 193",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T12:47:25+00:00"
+        },
+        {
+          "level_type": "EQH",
+          "price": 2403.5,
+          "side": "BUYSIDE",
+          "source": "Equal Highs between idx 162 and idx 224",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T15:22:25+00:00"
+        },
+        {
+          "level_type": "EQH",
+          "price": 2403.5,
+          "side": "BUYSIDE",
+          "source": "Equal Highs between idx 162 and idx 256",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T18:02:25+00:00"
+        },
+        {
+          "level_type": "EQH",
+          "price": 2403.5,
+          "side": "BUYSIDE",
+          "source": "Equal Highs between idx 162 and idx 287",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T20:37:25+00:00"
+        },
+        {
+          "level_type": "EQH",
+          "price": 2403.5,
+          "side": "BUYSIDE",
+          "source": "Equal Highs between idx 193 and idx 224",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T15:22:25+00:00"
+        },
+        {
+          "level_type": "EQH",
+          "price": 2403.5,
+          "side": "BUYSIDE",
+          "source": "Equal Highs between idx 193 and idx 256",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T18:02:25+00:00"
+        },
+        {
+          "level_type": "EQH",
+          "price": 2403.5,
+          "side": "BUYSIDE",
+          "source": "Equal Highs between idx 193 and idx 287",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T20:37:25+00:00"
+        },
+        {
+          "level_type": "EQH",
+          "price": 2403.5,
+          "side": "BUYSIDE",
+          "source": "Equal Highs between idx 224 and idx 256",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T18:02:25+00:00"
+        },
+        {
+          "level_type": "EQH",
+          "price": 2403.49,
+          "side": "BUYSIDE",
+          "source": "Equal Highs between idx 224 and idx 287",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T20:37:25+00:00"
+        },
+        {
+          "level_type": "EQH",
+          "price": 2403.5,
+          "side": "BUYSIDE",
+          "source": "Equal Highs between idx 256 and idx 287",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T20:37:25+00:00"
+        },
+        {
+          "level_type": "SESSION_HIGH",
+          "price": 2403.5,
+          "side": "BUYSIDE",
+          "source": "ASIA Session High",
+          "strength": 1.5,
+          "timestamp": "2026-09-16T04:57:25+00:00"
+        },
+        {
+          "level_type": "SESSION_HIGH",
+          "price": 2403.5,
+          "side": "BUYSIDE",
+          "source": "LONDON Session High",
+          "strength": 1.5,
+          "timestamp": "2026-09-16T07:32:25+00:00"
+        },
+        {
+          "level_type": "SESSION_HIGH",
+          "price": 2403.5,
+          "side": "BUYSIDE",
+          "source": "NY Session High",
+          "strength": 1.5,
+          "timestamp": "2026-09-16T18:02:25+00:00"
+        },
+        {
+          "level_type": "SWING_HIGH",
+          "price": 2403.5,
+          "side": "BUYSIDE",
+          "source": "Swing HIGH at idx 256",
+          "strength": 1.0,
+          "timestamp": "2026-09-16T18:02:25+00:00"
+        },
+        {
+          "level_type": "SWING_HIGH",
+          "price": 2403.49,
+          "side": "BUYSIDE",
+          "source": "Swing HIGH at idx 287",
+          "strength": 1.0,
+          "timestamp": "2026-09-16T20:37:25+00:00"
+        }
+      ],
+      "sellside_liquidity": [
+        {
+          "level_type": "PDL",
+          "price": 2396.51,
+          "side": "SELLSIDE",
+          "source": "Previous Day (2026-09-15) Low",
+          "strength": 2.0,
+          "timestamp": "2026-09-15T22:22:25+00:00"
+        },
+        {
+          "level_type": "EQL",
+          "price": 2396.5,
+          "side": "SELLSIDE",
+          "source": "Equal Lows between idx 20 and idx 52",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T01:02:25+00:00"
+        },
+        {
+          "level_type": "EQL",
+          "price": 2396.5,
+          "side": "SELLSIDE",
+          "source": "Equal Lows between idx 20 and idx 83",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T03:37:25+00:00"
+        },
+        {
+          "level_type": "EQL",
+          "price": 2396.51,
+          "side": "SELLSIDE",
+          "source": "Equal Lows between idx 20 and idx 115",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T06:17:25+00:00"
+        },
+        {
+          "level_type": "EQL",
+          "price": 2396.5,
+          "side": "SELLSIDE",
+          "source": "Equal Lows between idx 20 and idx 146",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T08:52:25+00:00"
+        },
+        {
+          "level_type": "EQL",
+          "price": 2396.51,
+          "side": "SELLSIDE",
+          "source": "Equal Lows between idx 20 and idx 177",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T11:27:25+00:00"
+        },
+        {
+          "level_type": "EQL",
+          "price": 2396.5,
+          "side": "SELLSIDE",
+          "source": "Equal Lows between idx 20 and idx 209",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T14:07:25+00:00"
+        },
+        {
+          "level_type": "EQL",
+          "price": 2396.5,
+          "side": "SELLSIDE",
+          "source": "Equal Lows between idx 20 and idx 240",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T16:42:25+00:00"
+        },
+        {
+          "level_type": "EQL",
+          "price": 2396.51,
+          "side": "SELLSIDE",
+          "source": "Equal Lows between idx 20 and idx 272",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T19:22:25+00:00"
+        },
+        {
+          "level_type": "EQL",
+          "price": 2396.5,
+          "side": "SELLSIDE",
+          "source": "Equal Lows between idx 52 and idx 83",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T03:37:25+00:00"
+        },
+        {
+          "level_type": "EQL",
+          "price": 2396.5,
+          "side": "SELLSIDE",
+          "source": "Equal Lows between idx 52 and idx 115",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T06:17:25+00:00"
+        },
+        {
+          "level_type": "EQL",
+          "price": 2396.5,
+          "side": "SELLSIDE",
+          "source": "Equal Lows between idx 52 and idx 146",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T08:52:25+00:00"
+        },
+        {
+          "level_type": "EQL",
+          "price": 2396.5,
+          "side": "SELLSIDE",
+          "source": "Equal Lows between idx 52 and idx 177",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T11:27:25+00:00"
+        },
+        {
+          "level_type": "EQL",
+          "price": 2396.5,
+          "side": "SELLSIDE",
+          "source": "Equal Lows between idx 52 and idx 209",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T14:07:25+00:00"
+        },
+        {
+          "level_type": "EQL",
+          "price": 2396.5,
+          "side": "SELLSIDE",
+          "source": "Equal Lows between idx 52 and idx 240",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T16:42:25+00:00"
+        },
+        {
+          "level_type": "EQL",
+          "price": 2396.5,
+          "side": "SELLSIDE",
+          "source": "Equal Lows between idx 52 and idx 272",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T19:22:25+00:00"
+        },
+        {
+          "level_type": "EQL",
+          "price": 2396.5,
+          "side": "SELLSIDE",
+          "source": "Equal Lows between idx 83 and idx 115",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T06:17:25+00:00"
+        },
+        {
+          "level_type": "EQL",
+          "price": 2396.5,
+          "side": "SELLSIDE",
+          "source": "Equal Lows between idx 83 and idx 146",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T08:52:25+00:00"
+        },
+        {
+          "level_type": "EQL",
+          "price": 2396.5,
+          "side": "SELLSIDE",
+          "source": "Equal Lows between idx 83 and idx 177",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T11:27:25+00:00"
+        },
+        {
+          "level_type": "EQL",
+          "price": 2396.5,
+          "side": "SELLSIDE",
+          "source": "Equal Lows between idx 83 and idx 209",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T14:07:25+00:00"
+        },
+        {
+          "level_type": "EQL",
+          "price": 2396.5,
+          "side": "SELLSIDE",
+          "source": "Equal Lows between idx 83 and idx 240",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T16:42:25+00:00"
+        },
+        {
+          "level_type": "EQL",
+          "price": 2396.5,
+          "side": "SELLSIDE",
+          "source": "Equal Lows between idx 83 and idx 272",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T19:22:25+00:00"
+        },
+        {
+          "level_type": "EQL",
+          "price": 2396.5,
+          "side": "SELLSIDE",
+          "source": "Equal Lows between idx 115 and idx 146",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T08:52:25+00:00"
+        },
+        {
+          "level_type": "EQL",
+          "price": 2396.51,
+          "side": "SELLSIDE",
+          "source": "Equal Lows between idx 115 and idx 177",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T11:27:25+00:00"
+        },
+        {
+          "level_type": "EQL",
+          "price": 2396.5,
+          "side": "SELLSIDE",
+          "source": "Equal Lows between idx 115 and idx 209",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T14:07:25+00:00"
+        },
+        {
+          "level_type": "EQL",
+          "price": 2396.5,
+          "side": "SELLSIDE",
+          "source": "Equal Lows between idx 115 and idx 240",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T16:42:25+00:00"
+        },
+        {
+          "level_type": "EQL",
+          "price": 2396.51,
+          "side": "SELLSIDE",
+          "source": "Equal Lows between idx 115 and idx 272",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T19:22:25+00:00"
+        },
+        {
+          "level_type": "EQL",
+          "price": 2396.5,
+          "side": "SELLSIDE",
+          "source": "Equal Lows between idx 146 and idx 177",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T11:27:25+00:00"
+        },
+        {
+          "level_type": "EQL",
+          "price": 2396.5,
+          "side": "SELLSIDE",
+          "source": "Equal Lows between idx 146 and idx 209",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T14:07:25+00:00"
+        },
+        {
+          "level_type": "EQL",
+          "price": 2396.5,
+          "side": "SELLSIDE",
+          "source": "Equal Lows between idx 146 and idx 240",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T16:42:25+00:00"
+        },
+        {
+          "level_type": "EQL",
+          "price": 2396.5,
+          "side": "SELLSIDE",
+          "source": "Equal Lows between idx 146 and idx 272",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T19:22:25+00:00"
+        },
+        {
+          "level_type": "EQL",
+          "price": 2396.5,
+          "side": "SELLSIDE",
+          "source": "Equal Lows between idx 177 and idx 209",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T14:07:25+00:00"
+        },
+        {
+          "level_type": "EQL",
+          "price": 2396.5,
+          "side": "SELLSIDE",
+          "source": "Equal Lows between idx 177 and idx 240",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T16:42:25+00:00"
+        },
+        {
+          "level_type": "EQL",
+          "price": 2396.51,
+          "side": "SELLSIDE",
+          "source": "Equal Lows between idx 177 and idx 272",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T19:22:25+00:00"
+        },
+        {
+          "level_type": "EQL",
+          "price": 2396.5,
+          "side": "SELLSIDE",
+          "source": "Equal Lows between idx 209 and idx 240",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T16:42:25+00:00"
+        },
+        {
+          "level_type": "EQL",
+          "price": 2396.5,
+          "side": "SELLSIDE",
+          "source": "Equal Lows between idx 209 and idx 272",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T19:22:25+00:00"
+        },
+        {
+          "level_type": "EQL",
+          "price": 2396.5,
+          "side": "SELLSIDE",
+          "source": "Equal Lows between idx 240 and idx 272",
+          "strength": 3.0,
+          "timestamp": "2026-09-16T19:22:25+00:00"
+        },
+        {
+          "level_type": "SESSION_LOW",
+          "price": 2396.5,
+          "side": "SELLSIDE",
+          "source": "ASIA Session Low",
+          "strength": 1.5,
+          "timestamp": "2026-09-16T01:02:25+00:00"
+        },
+        {
+          "level_type": "SESSION_LOW",
+          "price": 2396.5,
+          "side": "SELLSIDE",
+          "source": "LONDON Session Low",
+          "strength": 1.5,
+          "timestamp": "2026-09-16T08:52:25+00:00"
+        },
+        {
+          "level_type": "SESSION_LOW",
+          "price": 2396.5,
+          "side": "SELLSIDE",
+          "source": "NY Session Low",
+          "strength": 1.5,
+          "timestamp": "2026-09-16T14:07:25+00:00"
+        },
+        {
+          "level_type": "SWING_LOW",
+          "price": 2396.5,
+          "side": "SELLSIDE",
+          "source": "Swing LOW at idx 240",
+          "strength": 1.0,
+          "timestamp": "2026-09-16T16:42:25+00:00"
+        },
+        {
+          "level_type": "SWING_LOW",
+          "price": 2396.51,
+          "side": "SELLSIDE",
+          "source": "Swing LOW at idx 272",
+          "strength": 1.0,
+          "timestamp": "2026-09-16T19:22:25+00:00"
+        }
+      ],
+      "symbol": "XAUUSD",
+      "timeframe": "M5",
+      "total_levels": 93
+    },
+    "status": 200
+  }
+}

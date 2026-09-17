@@ -1,4 +1,3 @@
-import time
 
 class CooldownManager:
     """Manages trade cooldowns, consecutive loss counters, and strategy lockouts."""

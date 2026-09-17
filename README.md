@@ -22,6 +22,12 @@ backed by a 27-phase quantitative research program.
 > Enabling real-money execution requires *both* `ENABLE_LIVE_TRADING=true` **and**
 > `LIVE_TRADING_CONFIRMATION=true`; otherwise the application refuses to start in `LIVE` mode.
 > See [Safety Model](#-safety-model).
+>
+> Mutating API endpoints (order submission, close/close-all, emergency-stop/reset) require a
+> bearer token **only** when `APP_ENV=production` **and** `AUTOMATION_API_TOKEN` is set
+> (`Authorization: Bearer <token>`; the dashboard sends it via `NEXT_PUBLIC_API_TOKEN`).
+> Without the token configured in production, front the API with a reverse proxy or accept
+> the exposure in writing. CORS is restricted to `CORS_ORIGINS` (default `http://localhost:3000`).
 
 > [!IMPORTANT]
 > **Strategy edge is not yet validated.** The research program (Phases 15–41) found **no
@@ -197,14 +203,14 @@ configuration layer rather than by convention.
 
 ```
 autonomous-trader/
-├── .github/workflows/ci.yml        # CI: pytest + Next.js build
+├── .github/workflows/ci.yml        # CI: pytest, ruff, contract diff, compose smoke, Next.js build
 ├── backend/                        # Python application root
 │   ├── app/
 │   │   ├── api/                    # FastAPI routers (9 routers, 19 endpoints)
 │   │   ├── backtest/               # engine, metrics, monte_carlo, tick_backtest, walk_forward
 │   │   ├── context/                # multi-timeframe bias, price location, setup classifier
 │   │   ├── core/                   # config (Settings), async database, logging
-│   │   ├── data/                   # MT5 adapter: interface / mock / real
+│   │   ├── data/                   # MT5 adapter: interface / mock / real / adapter_factory
 │   │   ├── execution/              # ExecutionEngine, models, paper simulation
 │   │   ├── fusion/                 # signal fusion & conflict detection
 │   │   ├── information/            # external data providers + pipeline
@@ -220,8 +226,8 @@ autonomous-trader/
 │   │   ├── main.py                 # FastAPI application factory + lifespan
 │   │   └── runner.py               # async autonomous trading loop
 │   ├── data/                       # 60+ research artifacts (phase*.json/md/csv)
-│   ├── scripts/                    # 39 entry-point runners (research + live bots)
-│   ├── tests/                      # 52 test modules, 165 tests + conftest.py
+│   ├── scripts/                    # 40 scripts: entry-point runners + _bootstrap.py
+│   ├── tests/                      # 76 test modules, 323 tests + conftest.py
 │   ├── Dockerfile
 │   ├── requirements.txt
 │   └── PHASE_28–30_*_REPORT.md     # published research reports
@@ -235,7 +241,7 @@ autonomous-trader/
 │   └── app/                        # layout + dashboard, strategy, risk, positions,
 │                                   #   orders (signal log), backtest pages
 ├── .env.example                    # environment template
-├── docker-compose.yml              # postgres + redis + backend
+├── docker-compose.yml              # postgres + backend
 └── LICENSE                         # MIT
 ```
 
@@ -251,7 +257,7 @@ autonomous-trader/
 | Node.js | 20+ | frontend dashboard |
 | PostgreSQL | 16 (optional) | defaults to in-memory SQLite when unset |
 | MetaTrader 5 | — | **Windows only**, required only for real/demo MT5 execution |
-| Docker | optional | for the Postgres/Redis/backend stack |
+| Docker | optional | for the Postgres/backend stack |
 
 ### 1. Clone & configure
 
@@ -297,7 +303,7 @@ npm ci
 npm run dev            # http://localhost:3000
 ```
 
-### 4. Docker stack (Postgres + Redis + Backend)
+### 4. Docker stack (Postgres + Backend)
 
 ```bash
 docker compose up --build
@@ -328,12 +334,15 @@ Configuration is split across three places: **environment variables** (`.env`),
 
 | Variable | Default | Description |
 |---|---|---|
-| `EXECUTION_MODE` | `PAPER` | `BACKTEST` · `PAPER` · `LIVE` |
+| `EXECUTION_MODE` | `PAPER` | `BACKTEST` · `PAPER` · `DEMO` · `LIVE` |
 | `ENABLE_LIVE_TRADING` | `false` | Must be `true` **and** confirmation `true` for `LIVE` |
 | `LIVE_TRADING_CONFIRMATION` | `false` | Second key required to unlock live trading |
 | `APP_NAME` / `APP_ENV` / `LOG_LEVEL` | `Autonomous Trader` / `development` / `INFO` | App metadata & logging |
-| `SECRET_KEY` | *insecure default* | **Change in production** |
 | `DATABASE_URL` | `sqlite+aiosqlite:///:memory:` | Async SQLAlchemy URL |
+| `CORS_ORIGINS` | `http://localhost:3000` | Comma-separated allowed dashboard origins (no wildcard) |
+| `AUTOMATION_API_TOKEN` | *(unset)* | When set **and** `APP_ENV=production`, mutating endpoints require `Authorization: Bearer <token>` |
+| `NEXT_PUBLIC_API_TOKEN` | *(unset)* | Frontend build-time token sent by the dashboard (must match `AUTOMATION_API_TOKEN`) |
+| `AUTOTRADER_STATE_DIR` | `<repo>/backend/state` | Directory for the cross-process emergency-stop sentinel; gitignored |
 | `MT5_LOGIN` / `MT5_PASSWORD` / `MT5_SERVER` / `MT5_PATH` | *(unset)* | MT5 credentials (live/demo only) |
 | `PORT` / `FRONTEND_PORT` | `8000` / `3000` | Service ports |
 
@@ -347,6 +356,10 @@ risk_rules:
   maximum_open_positions: 0         # 0 = disabled
   maximum_spread_pips: 0            # 0 = disabled
   minimum_rr: 1.5
+  # Optional min-lot over-risk guard (default 0 = disabled). When > 0, sizing
+  # clamped up to the broker minimum lot is rejected if it exceeds this multiple
+  # of the per-trade risk; enabling changes live sizing on small accounts.
+  reject_when_clamped_over_risk_multiple: 0
 stops_and_targets:
   take_profit_mode: FIXED_PIPS
   take_profit_pips: 5.0
@@ -450,7 +463,9 @@ curl -X POST http://localhost:8000/api/backtest/run \
 ## Web Dashboard
 
 The Next.js dashboard (`frontend/`, port `3000`) mirrors the API. Every page is a
-self-contained client component with a dark theme and a persistent **PAPER MODE** badge.
+self-contained client component with a dark theme and a header badge that reflects
+`/api/health` (e.g. **PAPER MODE** / **LIVE MODE**, plus **· SIMULATED** when a
+`DEMO`/`LIVE` mode is running on the mock adapter).
 
 | Route | Page | Data source |
 |---|---|---|
@@ -465,7 +480,7 @@ self-contained client component with a dark theme and a persistent **PAPER MODE*
 
 ## Research Program
 
-The `backend/research/` package implements a 27-phase quantitative research program
+The `backend/app/research/` package implements a 27-phase quantitative research program
 (Phases 15–41). Each phase produces machine-readable artifacts under `backend/data/` and
 is reproducible via a runner in `backend/scripts/`.
 
@@ -509,13 +524,13 @@ The suite runs entirely on the **mock MT5 adapter** — no broker, no network, n
 
 ```bash
 cd backend
-pytest tests/ -v                       # full suite (165 tests)
+pytest tests/ -v                       # full suite (323 tests)
 pytest tests/test_risk_engine.py -v    # a single module
 pytest tests/ -k phase41 -v            # by keyword
 pytest tests/ --cov=app                # with coverage (if pytest-cov installed)
 ```
 
-Layout: 52 test modules under `backend/tests/`, covering the API, execution lifecycle,
+Layout: 76 test modules under `backend/tests/`, covering the API, execution lifecycle,
 risk engine, all strategy engines, scalper bots, backtest/Monte Carlo/walk-forward, and
 every research phase. Shared fixtures (mock adapter, in-memory async DB, async HTTP client)
 live in `backend/tests/conftest.py`.
@@ -528,12 +543,16 @@ live in `backend/tests/conftest.py`.
 
 | Job | Runner | Steps |
 |---|---|---|
-| **Backend tests (pytest)** | ubuntu-latest | Python 3.12 → `pip install -r backend/requirements.txt` → `pytest tests/ -v` |
+| **Backend tests (pytest)** | ubuntu-latest | Python 3.12 → `pip install -r backend/requirements.txt` → `pytest tests/ -v` → API contract diff vs `docs/baseline/` |
+| **Backend lint (ruff)** | ubuntu-latest | Python 3.12 → `pip install ruff==0.16.8` → `ruff check app scripts` |
+| **Backend types (mypy, report-only)** | ubuntu-latest | `mypy app --ignore-missing-imports` (non-blocking) |
+| **Compose smoke (build + health)** | ubuntu-latest | `docker compose up --build -d` → poll `GET /api/health` → `docker compose down` |
 | **Frontend build (Next.js)** | ubuntu-latest | Node 20 → `npm ci` → `npm run build` (type-checks the app) |
 
 Notes:
 - `pytest-asyncio` is pinned to `<0.24` because `conftest.py` uses a session-scoped
   `event_loop` fixture (removed in pytest-asyncio 1.x).
+- The API contract diff freezes the mock clock and exits non-zero on response drift.
 - The frontend has no ESLint config yet, so `next build` serves as the quality gate.
 
 ---
@@ -545,19 +564,32 @@ Safety is enforced structurally, not by documentation alone:
 1. **Boot guard** — `Settings.validate_safety_flags()` raises at startup if
    `EXECUTION_MODE=LIVE` without both live-trading flags set to `true`.
 2. **Default-deny** — the code default and Docker default are `PAPER` with live flags off.
-3. **Layered blocks** — idempotency (duplicate order IDs), broker position sync, risk
-   approval, and emergency stop all gate order submission.
-4. **Circuit breakers** — the Phase 40 engine can halt trading on disconnect, stale data,
+3. **Destination-aware gate** — every order-sending path (the execution engine and all six
+   direct `mt5.order_send` sites) calls `core/safety.ensure_trading_allowed` first.
+   Mock/paper execution is allowed in every mode; **real broker sends are refused in
+   `PAPER`/`BACKTEST`**, allowed in `DEMO` only onto a demo account (`trade_mode == 0`),
+   and in `LIVE` only with both flags. Unknown modes/destinations fail closed. In `LIVE` a
+   mock (simulated) adapter is refused outright, so a live process with no terminal never
+   simulates a fill; `/api/health` reports `simulated_execution: true` if a `DEMO`/`LIVE`
+   mode is running on the mock.
+4. **Emergency stop, cross-process** — a stop triggered via the API is persisted to a
+   sentinel file under `AUTOTRADER_STATE_DIR` that every process reads, so new entries are
+   blocked in the API, `runner.py`, and the bot scripts alike; reset removes it. The stop
+   blocks **new entries only** — close/reduce sends and bot-command closes still work, so
+   de-risking is never trapped.
+5. **Layered blocks** — idempotency (duplicate order IDs), broker position sync, risk
+   approval, and the gate all precede order submission.
+6. **Circuit breakers** — the Phase 40 engine can halt trading on disconnect, stale data,
    spread explosion, or repeated failure, independent of the strategy.
-5. **Manual stop only** — the gold scalper trades continuously until the operator issues
+7. **Manual stop only** — the gold scalper trades continuously until the operator issues
    `STOP`; its risk metrics are displayed for *monitoring* and do not auto-halt entries
    (an explicit operational choice — pair it with account-level discipline).
 
 > [!CAUTION]
-> Running any `RealMT5Adapter` script executes **real orders** (on a demo or live account)
-> as soon as MT5 is connected, regardless of `EXECUTION_MODE` (the MT5 bots call
-> `mt5.order_send` directly). Always verify the account in the terminal header before
-> starting a bot, and prefer a demo account while validating.
+> The MT5 bots (`app/scalper/*`) and `scripts/run_demo_trader.py` build real order requests,
+> but the destination-aware gate permits them only in `DEMO` (demo account) or `LIVE` (both
+> flags) and refuses real sends in `PAPER`/`BACKTEST`. Always verify the account in the
+> terminal header before starting a bot, and prefer a demo account while validating.
 
 ---
 
@@ -596,9 +628,9 @@ Then open a Pull Request into `main`. CI must be green before merge.
 | Backend | Python 3.12, FastAPI, Uvicorn, Pydantic v2 |
 | ORM / DB | SQLAlchemy 2 (async), AsyncPG, aiosqlite, Alembic |
 | Trading | MetaTrader5 (Windows, optional), NumPy, pandas |
-| Frontend | Next.js 14 (App Router), React 18, TypeScript, Tailwind CSS, recharts, lucide-react |
-| Testing | pytest, pytest-asyncio, httpx (ASGI transport) |
-| Infra | Docker, Docker Compose (Postgres 16, Redis 7), GitHub Actions |
+| Frontend | Next.js 14 (App Router), React 18, TypeScript, Tailwind CSS, lucide-react |
+| Testing | pytest, pytest-asyncio, httpx (ASGI transport), ruff |
+| Infra | Docker, Docker Compose (Postgres 16), GitHub Actions |
 
 ---
 

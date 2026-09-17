@@ -1,6 +1,5 @@
 from dataclasses import dataclass, asdict
 from typing import Dict, Any, List, Optional
-import numpy as np
 
 from app.context.timeframe_engine import Candle
 from app.scalper.instrument import InstrumentSpecification

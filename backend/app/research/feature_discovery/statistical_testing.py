@@ -25,25 +25,9 @@ class FeatureStatisticalScorer:
     """Computes Information Coefficient (IC), Pearson Correlation, FDR p-value correction, and OOS Expectancy."""
 
     def compute_fdr_correction(self, raw_p_values: List[float], alpha: float = 0.05) -> Tuple[List[float], List[bool]]:
-        """Benjamini-Hochberg False Discovery Rate (FDR) procedure."""
-        n = len(raw_p_values)
-        if n == 0:
-            return [], []
-
-        sorted_indices = np.argsort(raw_p_values)
-        sorted_p = np.array(raw_p_values)[sorted_indices]
-
-        adjusted_p = np.zeros(n)
-        cum_min = 1.0
-
-        for i in range(n - 1, -1, -1):
-            rank = i + 1
-            adj = (sorted_p[i] * n) / rank
-            cum_min = min(cum_min, adj)
-            adjusted_p[sorted_indices[i]] = min(1.0, cum_min)
-
-        is_sig = [adjusted_p[i] <= alpha for i in range(n)]
-        return list(adjusted_p), is_sig
+        """Benjamini-Hochberg False Discovery Rate (FDR) procedure (shared impl)."""
+        from app.research.common.statistical_tests import compute_fdr_correction
+        return compute_fdr_correction(raw_p_values, alpha=alpha)
 
     def evaluate_feature(
         self,

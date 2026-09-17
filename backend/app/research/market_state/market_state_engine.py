@@ -1,9 +1,7 @@
-import json
-import hashlib
 import numpy as np
 from pathlib import Path
 from dataclasses import dataclass, asdict
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any
 
 from app.context.timeframe_engine import Candle
 
@@ -55,7 +53,6 @@ class RegimeDefinitionEngine:
         atr_30 = float(np.mean(ranges))
         vol_ratio = atr_14 / (atr_30 + 1e-6)
 
-        ma20 = float(np.mean(closes[-20:]))
         ret_20 = (c_curr.close - closes[-20]) / (closes[-20] + 1e-6)
 
         from datetime import datetime, timezone
@@ -85,12 +82,8 @@ class MarketStateEngine:
     TARGET_DATASET_HASH = "25833aa4b8fd8428bf170e456c27398933bef0a03d0f56f8cbf47fccff1a6728"
 
     def verify_dataset_hash(self, manifest_path: Path) -> bool:
-        if not manifest_path.exists():
-            return False
-        with open(manifest_path, "r") as f:
-            data = json.load(f)
-        current_hash = data.get("global_dataset_hash", "")
-        return current_hash == self.TARGET_DATASET_HASH or data.get("version") == "2.0.0"
+        from app.research.common.dataset_hash import verify_dataset_hash
+        return verify_dataset_hash(manifest_path, self.TARGET_DATASET_HASH)
 
     def evaluate_state_distributions(
         self,

@@ -6,7 +6,7 @@ import uuid
 from app.core.config import settings
 from app.scalper.instrument import InstrumentSpecification
 from app.strategy.structure import StructureEngine, TrendRegime
-from app.strategy.liquidity import LiquidityEngine, LiquiditySide
+from app.strategy.liquidity import LiquidityEngine
 from app.strategy.displacement import DisplacementEngine
 from app.strategy.fvg import FVGEngine, FVGType
 from app.strategy.sweeps import SweepEngine

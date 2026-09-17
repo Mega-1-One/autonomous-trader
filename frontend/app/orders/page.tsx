@@ -1,20 +1,20 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { apiGet, ApiError, SignalResponse } from "../../lib/api";
 
 export default function SignalLogPage() {
-  const [signalData, setSignalData] = useState<any>(null);
+  const [signalData, setSignalData] = useState<SignalResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   async function fetchSignal() {
     try {
-      const res = await fetch("http://localhost:8000/api/strategy/signals?symbol=XAUUSD");
-      if (res.ok) {
-        const json = await res.json();
-        setSignalData(json);
-      }
+      const json = await apiGet<SignalResponse>("/api/strategy/signals?symbol=XAUUSD");
+      setSignalData(json);
+      setError(null);
     } catch (err) {
-      console.error(err);
+      setError(err instanceof ApiError ? err.message : "Failed to reach backend API");
     } finally {
       setLoading(false);
     }
@@ -40,6 +40,12 @@ export default function SignalLogPage() {
           Evaluate Signal Now
         </button>
       </div>
+
+      {error && (
+        <div className="p-4 bg-danger/10 border border-danger/40 rounded-lg text-danger text-sm font-semibold">
+          {error}
+        </div>
+      )}
 
       {loading ? (
         <div className="p-8 text-center text-textSecondary">Evaluating strategy signal log...</div>

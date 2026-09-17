@@ -1,9 +1,8 @@
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import Optional
 import math
-import time
 
-from app.scalper.tick_engine import TickBuffer, TickData
+from app.scalper.tick_engine import TickBuffer
 from app.scalper.instrument import InstrumentSpecification
 
 @dataclass

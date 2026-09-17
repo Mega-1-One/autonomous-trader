@@ -4,6 +4,13 @@ import numpy as np
 
 from app.backtest.metrics import BacktestTradeRecord
 
+# N2-M5: ruin is defined per simulator (distinct names, distinct defaults).
+# Resampled-trade Monte Carlo treats ruin as a >=50% drawdown *or* a
+# non-positive balance (see run_simulation); the walk-forward variant uses
+# WALK_FORWARD_RUIN_THRESHOLD_PERCENT. The two are different methodologies
+# and intentionally do not share a value.
+MONTE_CARLO_RUIN_THRESHOLD_PERCENT = 50.0
+
 @dataclass
 class MonteCarloSimulationResult:
     iterations: int
@@ -23,7 +30,7 @@ class MonteCarloSimulationResult:
 class MonteCarloSimulator:
     """Monte Carlo Simulation Engine randomizing trade sequence & slippage."""
 
-    def __init__(self, iterations: int = 500, ruin_threshold_percent: float = 50.0):
+    def __init__(self, iterations: int = 500, ruin_threshold_percent: float = MONTE_CARLO_RUIN_THRESHOLD_PERCENT):
         self.iterations = iterations
         self.ruin_threshold_percent = ruin_threshold_percent
 

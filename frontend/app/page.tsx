@@ -1,33 +1,21 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-
-interface HealthState {
-  status: string;
-  app_name: string;
-  execution_mode: string;
-  enable_live_trading: boolean;
-  live_trading_confirmation: boolean;
-  database_connected: boolean;
-  mt5_connected: boolean;
-  timestamp: string;
-}
+import { apiGet, ApiError, HealthResponse } from "../lib/api";
 
 export default function DashboardPage() {
-  const [health, setHealth] = useState<HealthState | null>(null);
+  const [health, setHealth] = useState<HealthResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchHealth() {
       try {
-        const res = await fetch("http://localhost:8000/api/health");
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
+        const data = await apiGet<HealthResponse>("/api/health");
         setHealth(data);
         setError(null);
-      } catch (err: any) {
-        setError(err.message || "Failed to reach backend API");
+      } catch (err: unknown) {
+        setError(err instanceof ApiError ? err.message : "Failed to reach backend API");
       } finally {
         setLoading(false);
       }
@@ -56,6 +44,12 @@ export default function DashboardPage() {
           </span>
         </div>
       </div>
+
+      {error && (
+        <div className="p-4 bg-danger/10 border border-danger/40 rounded-lg text-danger text-sm font-semibold">
+          Backend unreachable: {error}
+        </div>
+      )}
 
       {/* Safety Warning Banner */}
       {health?.enable_live_trading ? (

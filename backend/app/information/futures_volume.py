@@ -1,5 +1,5 @@
-from datetime import datetime, timezone
-from dataclasses import dataclass, asdict
+from datetime import datetime
+from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
 from app.information.providers import FuturesVolumeProvider, DataAvailabilityState, ProviderMetadata

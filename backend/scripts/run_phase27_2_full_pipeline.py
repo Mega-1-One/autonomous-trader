@@ -2,7 +2,6 @@ import sys
 import json
 import logging
 from pathlib import Path
-from datetime import datetime, timezone, timedelta
 
 logging.getLogger("autotrader").setLevel(logging.ERROR)
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -53,8 +52,6 @@ def run_phase27_2_full_pipeline():
             rates_h1 = mt5.copy_rates_from_pos(canonical, mt5.TIMEFRAME_H1, 0, 10000)
             if rates_h1 is not None and len(rates_h1) > 0:
                 sym = canonical
-
-        h1_count = len(rates_h1) if rates_h1 is not None else 0
 
         # Construct tick representation for data pipeline validation
         parsed_ticks = []
@@ -125,9 +122,9 @@ def run_phase27_2_full_pipeline():
     with open(report_file, "w") as f:
         json.dump(report_output, f, indent=2)
 
-    print(f"\n==================================================")
-    print(f" PHASE 27.2 QUALITY GATE SUMMARY")
-    print(f"==================================================")
+    print("\n==================================================")
+    print(" PHASE 27.2 QUALITY GATE SUMMARY")
+    print("==================================================")
     print(f"Global Dataset Hash SHA256: {manifest_data['global_dataset_hash']}")
     print(f"Dataset Manifest Saved:     {manifest_file}")
     print(f"Final Verdict:              {verdict}")

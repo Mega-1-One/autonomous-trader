@@ -10,7 +10,6 @@ class MicrostructureFeatureGenerator:
             return {}
 
         c_curr = candles[idx]
-        past_closes = [c.close for c in candles[idx-30:idx+1]]
         past_volumes = [c.volume for c in candles[idx-30:idx+1]]
 
         # 1. Spread dynamics proxy & expansion

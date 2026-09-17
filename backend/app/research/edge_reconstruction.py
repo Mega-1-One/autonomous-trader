@@ -1,6 +1,5 @@
 from dataclasses import dataclass, asdict
-from typing import List, Dict, Any, Optional
-import numpy as np
+from typing import List, Dict, Any
 
 @dataclass
 class EdgeCandidateConfig:

@@ -123,9 +123,9 @@ def run_phase27_3_depth_audit():
     with open(report_file, "w") as f:
         json.dump(report_output, f, indent=2)
 
-    print(f"\n==================================================")
-    print(f" PHASE 27.3 DEPTH & INTEGRITY SUMMARY")
-    print(f"==================================================")
+    print("\n==================================================")
+    print(" PHASE 27.3 DEPTH & INTEGRITY SUMMARY")
+    print("==================================================")
     print(f"New Global SHA256 Hash: {manifest_data['global_dataset_hash']}")
     print(f"Dataset Manifest Saved:  {manifest_file}")
     print(f"Final Verdict:           {verdict}")

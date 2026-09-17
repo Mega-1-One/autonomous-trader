@@ -1,6 +1,4 @@
-import time
 from typing import Any, Dict, List, Optional
-import numpy as np
 
 from app.scalper.tick_engine import TickEngine
 from app.scalper.features import FeatureEngine
@@ -155,8 +153,8 @@ class TickBacktestEngine:
                         status="OPEN"
                     )
                     pos.regime_at_entry = order["regime"]
-                    pos.slippage_cost = round(slippage * pip_unit * 100.0 * order["volume"], 2)
-                    pos.spread_cost = round(tick.spread_pips * pip_unit * 100.0 * order["volume"], 2)
+                    pos.slippage_cost = round(slippage * pip_unit * self.spec.contract_size * order["volume"], 2)
+                    pos.spread_cost = round(tick.spread_pips * pip_unit * self.spec.contract_size * order["volume"], 2)
                     self.position_manager.add_position(pos)
                     self.funnel.paper_trades_executed += 1
                     pending_orders.remove(order)

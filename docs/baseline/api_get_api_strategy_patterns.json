@@ -1,0 +1,267 @@
+{
+  "method": "GET",
+  "path": "/api/strategy/patterns",
+  "result": {
+    "json": {
+      "displacements": [],
+      "fair_value_gaps": [],
+      "liquidity_sweeps": [
+        {
+          "candle_index": 36,
+          "displacement_confirmed": false,
+          "liquidity_level_type": "EQH",
+          "liquidity_price": 2403.49,
+          "reclaim_close_price": 2402.5,
+          "sweep_extreme_price": 2403.5,
+          "sweep_type": "BEARISH_SWEEP",
+          "timestamp": "2026-09-16T08:02:25+00:00"
+        },
+        {
+          "candle_index": 99,
+          "displacement_confirmed": false,
+          "liquidity_level_type": "EQH",
+          "liquidity_price": 2403.49,
+          "reclaim_close_price": 2402.5,
+          "sweep_extreme_price": 2403.5,
+          "sweep_type": "BEARISH_SWEEP",
+          "timestamp": "2026-09-16T13:17:25+00:00"
+        },
+        {
+          "candle_index": 130,
+          "displacement_confirmed": false,
+          "liquidity_level_type": "EQH",
+          "liquidity_price": 2403.49,
+          "reclaim_close_price": 2402.5,
+          "sweep_extreme_price": 2403.5,
+          "sweep_type": "BEARISH_SWEEP",
+          "timestamp": "2026-09-16T15:52:25+00:00"
+        },
+        {
+          "candle_index": 162,
+          "displacement_confirmed": false,
+          "liquidity_level_type": "EQH",
+          "liquidity_price": 2403.49,
+          "reclaim_close_price": 2402.5,
+          "sweep_extreme_price": 2403.5,
+          "sweep_type": "BEARISH_SWEEP",
+          "timestamp": "2026-09-16T18:32:25+00:00"
+        },
+        {
+          "candle_index": 193,
+          "displacement_confirmed": false,
+          "liquidity_level_type": "EQH",
+          "liquidity_price": 2403.49,
+          "reclaim_close_price": 2402.5,
+          "sweep_extreme_price": 2403.5,
+          "sweep_type": "BEARISH_SWEEP",
+          "timestamp": "2026-09-16T21:07:25+00:00"
+        },
+        {
+          "candle_index": 52,
+          "displacement_confirmed": false,
+          "liquidity_level_type": "EQL",
+          "liquidity_price": 2396.51,
+          "reclaim_close_price": 2397.5,
+          "sweep_extreme_price": 2396.5,
+          "sweep_type": "BULLISH_SWEEP",
+          "timestamp": "2026-09-16T09:22:25+00:00"
+        },
+        {
+          "candle_index": 83,
+          "displacement_confirmed": false,
+          "liquidity_level_type": "EQL",
+          "liquidity_price": 2396.51,
+          "reclaim_close_price": 2397.5,
+          "sweep_extreme_price": 2396.5,
+          "sweep_type": "BULLISH_SWEEP",
+          "timestamp": "2026-09-16T11:57:25+00:00"
+        },
+        {
+          "candle_index": 146,
+          "displacement_confirmed": false,
+          "liquidity_level_type": "EQL",
+          "liquidity_price": 2396.51,
+          "reclaim_close_price": 2397.5,
+          "sweep_extreme_price": 2396.5,
+          "sweep_type": "BULLISH_SWEEP",
+          "timestamp": "2026-09-16T17:12:25+00:00"
+        },
+        {
+          "candle_index": 52,
+          "displacement_confirmed": false,
+          "liquidity_level_type": "EQL",
+          "liquidity_price": 2396.51,
+          "reclaim_close_price": 2397.5,
+          "sweep_extreme_price": 2396.5,
+          "sweep_type": "BULLISH_SWEEP",
+          "timestamp": "2026-09-16T09:22:25+00:00"
+        },
+        {
+          "candle_index": 83,
+          "displacement_confirmed": false,
+          "liquidity_level_type": "EQL",
+          "liquidity_price": 2396.51,
+          "reclaim_close_price": 2397.5,
+          "sweep_extreme_price": 2396.5,
+          "sweep_type": "BULLISH_SWEEP",
+          "timestamp": "2026-09-16T11:57:25+00:00"
+        },
+        {
+          "candle_index": 146,
+          "displacement_confirmed": false,
+          "liquidity_level_type": "EQL",
+          "liquidity_price": 2396.51,
+          "reclaim_close_price": 2397.5,
+          "sweep_extreme_price": 2396.5,
+          "sweep_type": "BULLISH_SWEEP",
+          "timestamp": "2026-09-16T17:12:25+00:00"
+        },
+        {
+          "candle_index": 52,
+          "displacement_confirmed": false,
+          "liquidity_level_type": "EQL",
+          "liquidity_price": 2396.51,
+          "reclaim_close_price": 2397.5,
+          "sweep_extreme_price": 2396.5,
+          "sweep_type": "BULLISH_SWEEP",
+          "timestamp": "2026-09-16T09:22:25+00:00"
+        },
+        {
+          "candle_index": 83,
+          "displacement_confirmed": false,
+          "liquidity_level_type": "EQL",
+          "liquidity_price": 2396.51,
+          "reclaim_close_price": 2397.5,
+          "sweep_extreme_price": 2396.5,
+          "sweep_type": "BULLISH_SWEEP",
+          "timestamp": "2026-09-16T11:57:25+00:00"
+        },
+        {
+          "candle_index": 146,
+          "displacement_confirmed": false,
+          "liquidity_level_type": "EQL",
+          "liquidity_price": 2396.51,
+          "reclaim_close_price": 2397.5,
+          "sweep_extreme_price": 2396.5,
+          "sweep_type": "BULLISH_SWEEP",
+          "timestamp": "2026-09-16T17:12:25+00:00"
+        },
+        {
+          "candle_index": 36,
+          "displacement_confirmed": false,
+          "liquidity_level_type": "SESSION_HIGH",
+          "liquidity_price": 2403.49,
+          "reclaim_close_price": 2402.5,
+          "sweep_extreme_price": 2403.5,
+          "sweep_type": "BEARISH_SWEEP",
+          "timestamp": "2026-09-16T08:02:25+00:00"
+        },
+        {
+          "candle_index": 99,
+          "displacement_confirmed": false,
+          "liquidity_level_type": "SESSION_HIGH",
+          "liquidity_price": 2403.49,
+          "reclaim_close_price": 2402.5,
+          "sweep_extreme_price": 2403.5,
+          "sweep_type": "BEARISH_SWEEP",
+          "timestamp": "2026-09-16T13:17:25+00:00"
+        },
+        {
+          "candle_index": 130,
+          "displacement_confirmed": false,
+          "liquidity_level_type": "SESSION_HIGH",
+          "liquidity_price": 2403.49,
+          "reclaim_close_price": 2402.5,
+          "sweep_extreme_price": 2403.5,
+          "sweep_type": "BEARISH_SWEEP",
+          "timestamp": "2026-09-16T15:52:25+00:00"
+        },
+        {
+          "candle_index": 162,
+          "displacement_confirmed": false,
+          "liquidity_level_type": "SESSION_HIGH",
+          "liquidity_price": 2403.49,
+          "reclaim_close_price": 2402.5,
+          "sweep_extreme_price": 2403.5,
+          "sweep_type": "BEARISH_SWEEP",
+          "timestamp": "2026-09-16T18:32:25+00:00"
+        },
+        {
+          "candle_index": 193,
+          "displacement_confirmed": false,
+          "liquidity_level_type": "SESSION_HIGH",
+          "liquidity_price": 2403.49,
+          "reclaim_close_price": 2402.5,
+          "sweep_extreme_price": 2403.5,
+          "sweep_type": "BEARISH_SWEEP",
+          "timestamp": "2026-09-16T21:07:25+00:00"
+        },
+        {
+          "candle_index": 52,
+          "displacement_confirmed": false,
+          "liquidity_level_type": "SESSION_LOW",
+          "liquidity_price": 2396.51,
+          "reclaim_close_price": 2397.5,
+          "sweep_extreme_price": 2396.5,
+          "sweep_type": "BULLISH_SWEEP",
+          "timestamp": "2026-09-16T09:22:25+00:00"
+        },
+        {
+          "candle_index": 83,
+          "displacement_confirmed": false,
+          "liquidity_level_type": "SESSION_LOW",
+          "liquidity_price": 2396.51,
+          "reclaim_close_price": 2397.5,
+          "sweep_extreme_price": 2396.5,
+          "sweep_type": "BULLISH_SWEEP",
+          "timestamp": "2026-09-16T11:57:25+00:00"
+        },
+        {
+          "candle_index": 146,
+          "displacement_confirmed": false,
+          "liquidity_level_type": "SESSION_LOW",
+          "liquidity_price": 2396.51,
+          "reclaim_close_price": 2397.5,
+          "sweep_extreme_price": 2396.5,
+          "sweep_type": "BULLISH_SWEEP",
+          "timestamp": "2026-09-16T17:12:25+00:00"
+        },
+        {
+          "candle_index": 52,
+          "displacement_confirmed": false,
+          "liquidity_level_type": "SWING_LOW",
+          "liquidity_price": 2396.51,
+          "reclaim_close_price": 2397.5,
+          "sweep_extreme_price": 2396.5,
+          "sweep_type": "BULLISH_SWEEP",
+          "timestamp": "2026-09-16T09:22:25+00:00"
+        },
+        {
+          "candle_index": 83,
+          "displacement_confirmed": false,
+          "liquidity_level_type": "SWING_LOW",
+          "liquidity_price": 2396.51,
+          "reclaim_close_price": 2397.5,
+          "sweep_extreme_price": 2396.5,
+          "sweep_type": "BULLISH_SWEEP",
+          "timestamp": "2026-09-16T11:57:25+00:00"
+        },
+        {
+          "candle_index": 146,
+          "displacement_confirmed": false,
+          "liquidity_level_type": "SWING_LOW",
+          "liquidity_price": 2396.51,
+          "reclaim_close_price": 2397.5,
+          "sweep_extreme_price": 2396.5,
+          "sweep_type": "BULLISH_SWEEP",
+          "timestamp": "2026-09-16T17:12:25+00:00"
+        }
+      ],
+      "order_blocks": [],
+      "symbol": "XAUUSD",
+      "timeframe": "M5",
+      "trend": "RANGING"
+    },
+    "status": 200
+  }
+}

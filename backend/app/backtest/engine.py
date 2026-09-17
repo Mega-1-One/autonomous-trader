@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Optional
-import uuid
 
+from app.core.pricing import contract_size as spec_contract_size
 from app.strategy.engine import StrategyEngine
 from app.risk.engine import RiskEngine
 from app.backtest.metrics import (
@@ -11,7 +11,21 @@ from app.backtest.metrics import (
 )
 
 class BacktestEngine:
-    """Deterministic, Zero-Lookahead Backtesting Engine sharing exact live strategy and risk logic."""
+    """Deterministic, Zero-Lookahead Backtesting Engine sharing exact live strategy and risk logic.
+
+    Fill-cost methodology (N2-M2, documented explicitly):
+    - Entries fill at the exact signal price (no spread cost modeled).
+    - STOP_LOSS exits slip adversely by ``slippage_pips`` (stop orders slip);
+      TAKE_PROFIT exits fill at the exact TP (limit orders do not slip).
+    - ``spread_pips`` is a risk-gating input only (passed to the risk check);
+      it does not alter fills. Commission is deducted per closed trade.
+    Changing any of the above alters backtest numbers and must update the
+    characterization tests in the same commit.
+
+    Known pre-existing limitation (N2-L1, out of scope): HTF and LTF inputs
+    receive the same candle slice (``history``); there is no separate
+    higher-timeframe series in this engine.
+    """
 
     def __init__(
         self,
@@ -27,12 +41,16 @@ class BacktestEngine:
 
         self.strategy_engine = StrategyEngine()
         self.risk_engine = RiskEngine()
+        # ADR-5b: non-breaking trades access. run() records the completed
+        # trades here; the /api/backtest/run JSON shape is unchanged.
+        self.last_trades: List[BacktestTradeRecord] = []
 
     def run(
         self,
         symbol: str,
         candles: List[Dict[str, Any]],
-        point_size: float = 0.01
+        point_size: float = 0.01,
+        symbol_info: Optional[Dict[str, Any]] = None,
     ) -> BacktestMetricsReport:
         """Executes backtest over historical candle series without look-ahead bias."""
         balance = self.initial_balance
@@ -41,17 +59,30 @@ class BacktestEngine:
         equity_curve: List[EquityPoint] = []
 
         open_position: Optional[Dict[str, Any]] = None
+        # Spec-derived symbol info (ADR-4 precedence: broker symbol_info overrides
+        # the static spec for point/tick/contract/volume; legacy point-size
+        # fallback only when no broker info is available).
+        broker = symbol_info or {}
+        tick_size = broker.get("tick_size", point_size)
+        tick_value = broker.get("tick_value", 1.0 if point_size >= 0.01 else 10.0)
+        contract = broker.get("contract_size")
+        if not contract or contract <= 0:
+            contract = spec_contract_size(
+                symbol,
+                symbol_info={"point_size": broker.get("point_size", point_size)},
+            )
         symbol_info = {
-            "tick_size": point_size,
-            "tick_value": 1.0 if point_size >= 0.01 else 10.0,
-            "contract_size": 100.0 if point_size >= 0.01 else 100000.0,
-            "min_volume": 0.01,
-            "max_volume": 100.0,
-            "volume_step": 0.01,
+            "tick_size": tick_size,
+            "tick_value": tick_value,
+            "contract_size": contract,
+            "min_volume": broker.get("min_volume", 0.01),
+            "max_volume": broker.get("max_volume", 100.0),
+            "volume_step": broker.get("volume_step", 0.01),
         }
 
         n = len(candles)
         if n < 30:
+            self.last_trades = []
             return BacktestMetricsCalculator.calculate(self.initial_balance, [], [])
 
         peak_equity = self.initial_balance
@@ -71,7 +102,6 @@ class BacktestEngine:
 
                 high = current_candle["high"]
                 low = current_candle["low"]
-                close = current_candle["close"]
 
                 exit_price: Optional[float] = None
                 exit_reason: Optional[str] = None
@@ -146,7 +176,9 @@ class BacktestEngine:
 
                     if decision.approved:
                         open_position = {
-                            "trade_id": f"BT_{uuid.uuid4().hex[:6].upper()}",
+                            # Deterministic trade ID (P-09/C-02): symbol, entry
+                            # bar index, direction. No uuid randomness.
+                            "trade_id": f"BT_{symbol}_{i}_{signal.direction}",
                             "direction": signal.direction,
                             "entry_price": signal.entry_price,
                             "stop_loss": signal.stop_loss,
@@ -167,4 +199,5 @@ class BacktestEngine:
                 )
             )
 
+        self.last_trades = trades
         return BacktestMetricsCalculator.calculate(self.initial_balance, trades, equity_curve)

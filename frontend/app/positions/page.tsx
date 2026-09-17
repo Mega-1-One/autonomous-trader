@@ -1,20 +1,20 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { apiGet, apiPost, ApiError, PositionsResponse, PositionRecord } from "../../lib/api";
 
 export default function PositionsPage() {
-  const [positionsData, setPositionsData] = useState<any>(null);
+  const [positionsData, setPositionsData] = useState<PositionsResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   async function fetchPositions() {
     try {
-      const res = await fetch("http://localhost:8000/api/execution/positions");
-      if (res.ok) {
-        const json = await res.json();
-        setPositionsData(json);
-      }
+      const json = await apiGet<PositionsResponse>("/api/execution/positions");
+      setPositionsData(json);
+      setError(null);
     } catch (err) {
-      console.error(err);
+      setError(err instanceof ApiError ? err.message : "Failed to reach backend API");
     } finally {
       setLoading(false);
     }
@@ -27,13 +27,24 @@ export default function PositionsPage() {
   }, []);
 
   async function closePosition(posId: string) {
-    await fetch(`http://localhost:8000/api/execution/positions/${posId}/close`, { method: "POST" });
-    fetchPositions();
+    if (!window.confirm(`Close position ${posId}?`)) return;
+    try {
+      await apiPost(`/api/execution/positions/${posId}/close`);
+      await fetchPositions();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Close-position request failed");
+    }
   }
 
   async function closeAll() {
-    await fetch("http://localhost:8000/api/execution/close-all", { method: "POST" });
-    fetchPositions();
+    const count = positionsData?.open_positions?.length || 0;
+    if (!window.confirm(`Close ALL ${count} open positions? This cannot be undone.`)) return;
+    try {
+      await apiPost("/api/execution/close-all");
+      await fetchPositions();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Close-all request failed");
+    }
   }
 
   return (
@@ -45,7 +56,7 @@ export default function PositionsPage() {
             Real-time Position Monitoring, Floating P&L, Break-Even & Risk Tracking
           </p>
         </div>
-        {positionsData?.open_positions?.length > 0 && (
+        {(positionsData?.open_positions?.length ?? 0) > 0 && (
           <button
             onClick={closeAll}
             className="px-4 py-2 bg-danger text-white rounded-lg text-xs font-bold hover:bg-danger/80 transition-colors"
@@ -54,6 +65,12 @@ export default function PositionsPage() {
           </button>
         )}
       </div>
+
+      {error && (
+        <div className="p-4 bg-danger/10 border border-danger/40 rounded-lg text-danger text-sm font-semibold">
+          {error}
+        </div>
+      )}
 
       {loading ? (
         <div className="p-8 text-center text-textSecondary">Loading open positions...</div>
@@ -82,7 +99,7 @@ export default function PositionsPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
-                    {positionsData?.open_positions?.map((pos: any) => (
+                    {positionsData?.open_positions?.map((pos: PositionRecord) => (
                       <tr key={pos.position_id} className="hover:bg-background/50">
                         <td className="py-3 px-4 font-bold">{pos.symbol}</td>
                         <td className="py-3 px-4">

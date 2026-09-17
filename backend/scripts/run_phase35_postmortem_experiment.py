@@ -17,7 +17,7 @@ def run_phase35_experiment():
         return
 
     if not engine.verify_dataset_hash(manifest_file):
-        print(f"[ERROR] SHA256 Dataset Hash Mismatch! Stopping Phase 35 execution.")
+        print("[ERROR] SHA256 Dataset Hash Mismatch! Stopping Phase 35 execution.")
         return
 
     print("\n==================================================")
@@ -111,9 +111,9 @@ def run_phase35_experiment():
         f.write("## 4. Next Step Recommendation\n")
         f.write("STOP RESEARCH PROGRAM. Present findings for human review before acquiring exogenous data feeds.\n")
 
-    print(f"\n==================================================")
-    print(f" PHASE 35 POST-MORTEM SUMMARY")
-    print(f"==================================================")
+    print("\n==================================================")
+    print(" PHASE 35 POST-MORTEM SUMMARY")
+    print("==================================================")
     print(f"Coverage Matrix Saved:     {csv_file}")
     print(f"Information Gap Audit:     {gap_json}")
     print(f"Power Analysis JSON:       {power_json}")
@@ -121,7 +121,7 @@ def run_phase35_experiment():
     print(f"Recommendations JSON:      {rec_json}")
     print(f"Post-Mortem Markdown:       {postmortem_md}")
     print(f"Final Program Verdict:     {recs['verdict']}")
-    print(f"[SUCCESS] Phase 35 Research Post-Mortem completed.")
+    print("[SUCCESS] Phase 35 Research Post-Mortem completed.")
 
 if __name__ == "__main__":
     run_phase35_experiment()

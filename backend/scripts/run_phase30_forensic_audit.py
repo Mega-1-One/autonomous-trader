@@ -18,7 +18,7 @@ def run_phase30_audit():
 
     # 1. Dataset Lock Verification
     if not engine.verify_dataset_hash(manifest_file):
-        print(f"[ERROR] Dataset Manifest Hash Verification Failed! Stopping Phase 30 execution.")
+        print("[ERROR] Dataset Manifest Hash Verification Failed! Stopping Phase 30 execution.")
         return
 
     print("\n==================================================")
@@ -99,12 +99,12 @@ def run_phase30_audit():
         for k, v in syn_res.items():
             f.write(f"| {k} | BUY / SELL | VALID (SL < Entry < TP / TP < Entry < SL) | **{v}** | **0.0000** |\n")
 
-        f.write(f"\n## 4. Diagnostic Verdict\n")
+        f.write("\n## 4. Diagnostic Verdict\n")
         f.write(f"**FINAL VERDICT**: {verdict}\n")
 
-    print(f"\n==================================================")
-    print(f" PHASE 30 FORENSIC AUDIT SUMMARY")
-    print(f"==================================================")
+    print("\n==================================================")
+    print(" PHASE 30 FORENSIC AUDIT SUMMARY")
+    print("==================================================")
     print(f"Total Sampled Trades Logged: {len(all_trade_records)}")
     print(f"Trade Forensics File:        {forensics_file}")
     print(f"Final Diagnostic Verdict:    {verdict}")

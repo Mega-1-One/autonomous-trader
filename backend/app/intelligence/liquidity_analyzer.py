@@ -1,4 +1,4 @@
-from typing import List, Dict, Any, Optional
+from typing import List
 import numpy as np
 
 from app.intelligence.analyzer import AnalysisResult

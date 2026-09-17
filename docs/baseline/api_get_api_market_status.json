@@ -1,0 +1,28 @@
+{
+  "method": "GET",
+  "path": "/api/market/status",
+  "result": {
+    "json": {
+      "connected": true,
+      "freshness": {
+        "EURUSD": {
+          "is_stale": false,
+          "status": "FRESH"
+        },
+        "GBPUSD": {
+          "is_stale": false,
+          "status": "FRESH"
+        },
+        "NAS100": {
+          "is_stale": false,
+          "status": "FRESH"
+        },
+        "XAUUSD": {
+          "is_stale": false,
+          "status": "FRESH"
+        }
+      }
+    },
+    "status": 200
+  }
+}

@@ -1,5 +1,5 @@
 from dataclasses import dataclass, asdict
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 
 from app.scalper.features import ScalperFeatures
 from app.scalper.instrument import InstrumentSpecification
@@ -31,7 +31,8 @@ class MinimumViableTargetEngine:
         target_cost_ratio_max: float = 0.20
     ) -> float:
         pip_unit = spec.pip_size
-        cost_pips = total_cost_dollars / (100.0 * volume * pip_unit) if pip_unit > 0 else 1.0
+        contract = spec.contract_size
+        cost_pips = total_cost_dollars / (contract * volume * pip_unit) if pip_unit > 0 else 1.0
         min_target_pips = round(cost_pips / target_cost_ratio_max, 1)
         return max(3.0, min_target_pips)
 

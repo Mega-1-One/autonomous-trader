@@ -13,7 +13,6 @@ from app.scalper.instrument import InstrumentSpecification
 from app.scalper.tick_engine import TickEngine
 from app.scalper.features import FeatureEngine
 from app.backtest.tick_backtest import TickBacktestEngine
-from app.backtest.walk_forward import WalkForwardValidator, TickMonteCarloSimulator
 
 def fetch_100_pct_raw_exness_ticks(symbol_map: dict) -> dict:
     adapter = RealMT5Adapter()
@@ -123,9 +122,9 @@ def run_phase16_benchmark():
         # Use slice of up to 25,000 ticks for high-speed diagnostic backtesting
         eval_ticks = ticks[:25000]
 
-        print(f"\n--------------------------------------------------")
+        print("\n--------------------------------------------------")
         print(f" Instrument: {sym} (Evaluated Window: {len(eval_ticks):,} ticks)")
-        print(f"--------------------------------------------------")
+        print("--------------------------------------------------")
 
         for score in sensitivity_scores:
             engine = TickBacktestEngine(

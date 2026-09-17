@@ -15,7 +15,7 @@ def run_final_audit():
 
     # 1. Dataset Lock Verification
     if not engine.verify_dataset_hash(manifest_file):
-        print(f"[ERROR] Dataset Manifest Hash Verification Failed! Stopping Final Audit.")
+        print("[ERROR] Dataset Manifest Hash Verification Failed! Stopping Final Audit.")
         return
 
     print("\n==================================================")
@@ -56,8 +56,8 @@ def run_final_audit():
         f.write("# FINAL RESEARCH PROGRAM AUDIT REPORT (PHASES 15 - 32)\n\n")
         f.write("## 1. Executive Summary & Dataset Lock\n")
         f.write("- **Dataset Manifest Hash SHA256**: `25833aa4b8fd8428bf170e456c27398933bef0a03d0f56f8cbf47fccff1a6728` (VERIFIED & LOCKED)\n")
-        f.write(f"- **Total Research Phases Audited**: 12 Phases (Phase 15 to Phase 32)\n")
-        f.write(f"- **Total Hypothesis Tests Evaluated**: 984 total hypotheses logged in `final_research_ledger.csv`\n\n")
+        f.write("- **Total Research Phases Audited**: 12 Phases (Phase 15 to Phase 32)\n")
+        f.write("- **Total Hypothesis Tests Evaluated**: 984 total hypotheses logged in `final_research_ledger.csv`\n\n")
         f.write("## 2. Complete Research Ledger Summary\n\n")
         f.write("| Phase | Hypothesis Name | Instrument | Timeframe | Observations | Gross Exp | Cost Drag | Net Exp | Classification | Rejection Rationale |\n")
         f.write("|---|---|---|---|---|---|---|---|---|---|\n")
@@ -73,15 +73,15 @@ def run_final_audit():
         f.write("### Next Recommended Step:\n")
         f.write("STOP STRATEGY DISCOVERY PROGRAM. Review full research audit report before any future architecture planning.\n")
 
-    print(f"\n==================================================")
-    print(f" FINAL AUDIT SUMMARY")
-    print(f"==================================================")
+    print("\n==================================================")
+    print(" FINAL AUDIT SUMMARY")
+    print("==================================================")
     print(f"Total Ledger Entries:       {len(ledger)}")
     print(f"CSV Ledger Saved:          {csv_file}")
     print(f"JSON Audit Saved:          {json_file}")
     print(f"Markdown Audit Saved:      {md_file}")
     print(f"Final Program Verdict:     {audit_res['final_verdict']}")
-    print(f"[SUCCESS] Final Research Program Audit completed.")
+    print("[SUCCESS] Final Research Program Audit completed.")
 
 if __name__ == "__main__":
     run_final_audit()

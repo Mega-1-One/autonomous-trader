@@ -1,15 +1,14 @@
 import sys
-import time
-import json
 import logging
 from pathlib import Path
-from datetime import datetime, timezone
 
 logging.getLogger("autotrader").setLevel(logging.ERROR)
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from app.core.config import settings, ExecutionMode
+from app.core.safety import ensure_trading_allowed, account_trade_mode_from_mt5, SafetyViolation
 from app.data.mt5_real import RealMT5Adapter
+from app.scalper.mt5_orders import build_market_order
 
 def run_demo_trader():
     print("\n==================================================")
@@ -41,6 +40,16 @@ def run_demo_trader():
 
         if len(sys.argv) > 1 and sys.argv[1] == "--enable-demo":
             print("\nExecuting Test 0.01 Lot Demo Order on EURUSDm...")
+            # Destination-aware safety gate (ADR-3): --enable-demo sends a REAL
+            # broker order and requires EXECUTION_MODE=DEMO with a demo account
+            # (or LIVE with both live flags). This closes the old bypass where
+            # --enable-demo sent regardless of EXECUTION_MODE.
+            try:
+                ensure_trading_allowed("REAL", account_trade_mode=account_trade_mode_from_mt5())
+            except SafetyViolation as exc:
+                print(f"[SAFETY GATE REFUSED] {exc}")
+                adapter.disconnect()
+                return
             symbol = "EURUSDm"
             tick = mt5.symbol_info_tick(symbol)
             if not tick:
@@ -53,22 +62,24 @@ def run_demo_trader():
             sl = round(ask - 0.0030, 5)  # 30 pips SL
             tp = round(ask + 0.0060, 5)  # 60 pips TP
 
-            request = {
-                "action": mt5.TRADE_ACTION_DEAL,
-                "symbol": symbol,
-                "volume": lot,
-                "type": mt5.ORDER_TYPE_BUY,
-                "price": ask,
-                "sl": sl,
-                "tp": tp,
-                "deviation": 20,
-                "magic": 100001,
-                "comment": "AutoTrader Demo Test Order",
-                "type_time": mt5.ORDER_TIME_GTC,
-                "type_filling": mt5.ORDER_FILLING_IOC,
-            }
+            request = build_market_order(
+                mt5,
+                symbol=symbol,
+                order_type=mt5.ORDER_TYPE_BUY,
+                volume=lot,
+                price=ask,
+                sl=sl,
+                tp=tp,
+                deviation=20,
+                magic=100001,
+                comment="AutoTrader Demo Test Order",
+            )
 
             result = mt5.order_send(request)
+            if result is None:
+                print("\n[ERROR] order_send returned None (request failed)")
+                adapter.disconnect()
+                return
             print("\n[BROKER ORDER RESULT]")
             print(f"  Return Code: {result.retcode}")
             print(f"  Order Ticket: {result.order}")

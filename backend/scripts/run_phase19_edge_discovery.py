@@ -2,13 +2,12 @@ import sys
 import json
 import logging
 from pathlib import Path
-from datetime import datetime, timezone
+from typing import List
 import numpy as np
 
 logging.getLogger("autotrader").setLevel(logging.ERROR)
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from app.data.mt5_real import RealMT5Adapter
 from app.scalper.instrument import InstrumentSpecification
 from app.scalper.tick_engine import TickEngine
 from app.scalper.features import FeatureEngine
@@ -22,43 +21,9 @@ from app.scalper.adaptive_exit import AdaptiveExitEngine
 
 from app.research.dataset import SignalResearchObservation
 from app.research.labeler import OutcomeLabeler
-from app.research.calibration import ProbabilityCalibrator
-from app.research.walk_forward_split import WalkForwardCalibrator
 from app.research.edge_discovery import EdgeDiscoveryEngine
 
-def fetch_real_ticks(symbol_map: dict) -> dict:
-    adapter = RealMT5Adapter()
-    if not adapter.connect():
-        print("[ERROR] Failed to connect to MT5 terminal")
-        return {}
-
-    import MetaTrader5 as mt5
-
-    dataset = {}
-    utc_from = datetime(2026, 8, 10, 0, 0, tzinfo=timezone.utc)
-    utc_to = datetime(2026, 8, 18, 0, 0, tzinfo=timezone.utc)
-
-    for canonical, broker_symbol in symbol_map.items():
-        print(f"Ingesting real ticks for {canonical} ({broker_symbol})...")
-        raw_ticks = mt5.copy_ticks_range(broker_symbol, utc_from, utc_to, mt5.COPY_TICKS_ALL)
-        if raw_ticks is not None and len(raw_ticks) > 0:
-            step = max(1, len(raw_ticks) // 25000)
-            sampled = raw_ticks[::step]
-            parsed = []
-            for t in sampled:
-                parsed.append({
-                    "symbol": canonical,
-                    "bid": float(t[1]),
-                    "ask": float(t[2]),
-                    "last": float(t[3]) if len(t) > 3 and t[3] > 0 else float(t[1]),
-                    "timestamp": float(t[0]),
-                    "volume": int(t[4]) if len(t) > 4 else 1
-                })
-            dataset[canonical] = parsed
-            print(f"  -> {canonical}: Loaded {len(parsed):,} real Exness ticks.")
-
-    adapter.disconnect()
-    return dataset
+from app.research.common.mt5_ticks import fetch_real_ticks  # C-04 shared helper
 
 def generate_and_label_observations(ticks: list, spec: InstrumentSpecification) -> List[SignalResearchObservation]:
     tick_engine = TickEngine(max_stale_seconds=float('inf'))
@@ -207,9 +172,9 @@ def run_phase19_benchmark():
     with open(out_path, "w") as f:
         json.dump(report_output, f, indent=2)
 
-    print(f"\n==================================================")
+    print("\n==================================================")
     print(f" BASELINE VS CALIBRATED MODEL COMPARISON (N = {len(all_observations):,})")
-    print(f"==================================================")
+    print("==================================================")
     print(f"Out-of-Sample Baseline Brier:    {baseline_res.oos_baseline_brier:.4f}")
     print(f"Out-of-Sample Model Brier:       {baseline_res.oos_model_brier:.4f}")
     print(f"Brier Improvement Over Baseline: {baseline_res.brier_improvement_percent:+.2f}%")

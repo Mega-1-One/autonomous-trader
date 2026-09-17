@@ -1,9 +1,9 @@
 from dataclasses import dataclass, asdict
-from datetime import datetime, timezone
 from typing import Dict, List, Optional, Any
 import time
 
 from app.core.logging import logger
+from app.core.pricing import pnl as spec_pnl
 
 @dataclass
 class ScalpPosition:
@@ -40,10 +40,18 @@ class ScalpPositionManager:
         current_bid: float,
         current_ask: float,
         momentum_reversal: bool = False,
-        now: Optional[float] = None
+        now: Optional[float] = None,
+        symbol_info: Optional[Dict[str, Dict[str, Any]]] = None,
     ) -> List[ScalpPosition]:
+        """Updates positions and checks exits.
+
+        ``symbol_info`` optionally maps symbol -> broker symbol-info dict so
+        PnL uses broker contract precedence (ADR-4); without it the static
+        spec applies (N2-M4).
+        """
         if now is None:
             now = time.time()
+        broker_info = symbol_info or {}
 
         closed_positions = []
 
@@ -56,41 +64,45 @@ class ScalpPositionManager:
             pos.holding_time_seconds = round(now - pos.entry_time, 2)
 
             price_diff = (curr_price - pos.entry_price) if pos.direction == "BUY" else (pos.entry_price - curr_price)
-            pos.floating_pnl = round(price_diff * 100.0 * pos.volume, 2)
+            pos.floating_pnl = round(
+                spec_pnl(price_diff, pos.volume, pos.symbol,
+                         symbol_info=broker_info.get(pos.symbol)), 2)
 
             # 1. Take Profit Hit
             if (pos.direction == "BUY" and curr_price >= pos.take_profit) or \
                (pos.direction == "SELL" and curr_price <= pos.take_profit):
-                self._close_pos(pos, pos.take_profit, "TAKE_PROFIT", now)
+                self._close_pos(pos, pos.take_profit, "TAKE_PROFIT", now, broker_info)
                 closed_positions.append(pos)
                 continue
 
             # 2. Stop Loss Hit
             if (pos.direction == "BUY" and curr_price <= pos.stop_loss) or \
                (pos.direction == "SELL" and curr_price >= pos.stop_loss):
-                self._close_pos(pos, pos.stop_loss, "STOP_LOSS", now)
+                self._close_pos(pos, pos.stop_loss, "STOP_LOSS", now, broker_info)
                 closed_positions.append(pos)
                 continue
 
             # 3. Time Exit
             if pos.holding_time_seconds >= self.max_holding_seconds:
-                self._close_pos(pos, curr_price, "TIME_EXIT", now)
+                self._close_pos(pos, curr_price, "TIME_EXIT", now, broker_info)
                 closed_positions.append(pos)
                 continue
 
             # 4. Momentum Reversal Exit
             if momentum_reversal:
-                self._close_pos(pos, curr_price, "MOMENTUM_REVERSAL", now)
+                self._close_pos(pos, curr_price, "MOMENTUM_REVERSAL", now, broker_info)
                 closed_positions.append(pos)
                 continue
 
         return closed_positions
 
-    def _close_pos(self, pos: ScalpPosition, exit_price: float, reason: str, now: float) -> None:
+    def _close_pos(self, pos: ScalpPosition, exit_price: float, reason: str, now: float,
+                   broker_info: Optional[Dict[str, Dict[str, Any]]] = None) -> None:
         pos.status = "CLOSED"
         pos.exit_reason = reason
         pos.holding_time_seconds = round(now - pos.entry_time, 2)
         price_diff = (exit_price - pos.entry_price) if pos.direction == "BUY" else (pos.entry_price - exit_price)
-        pos.realized_pnl = round(price_diff * 100.0 * pos.volume, 2)
+        info = (broker_info or {}).get(pos.symbol)
+        pos.realized_pnl = round(spec_pnl(price_diff, pos.volume, pos.symbol, symbol_info=info), 2)
         pos.floating_pnl = 0.0
         logger.info(f"[SCALP_POSITION_CLOSED] {pos.position_id} exited @ {exit_price} ({reason}). Realized PnL: ${pos.realized_pnl} (Held: {pos.holding_time_seconds}s)")

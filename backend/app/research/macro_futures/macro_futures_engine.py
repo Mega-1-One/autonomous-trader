@@ -1,5 +1,3 @@
-import json
-import hashlib
 from pathlib import Path
 from dataclasses import dataclass, asdict
 from typing import List, Dict, Any, Tuple
@@ -75,30 +73,10 @@ class Phase37MacroFuturesEngine:
     TARGET_DATASET_HASH = "25833aa4b8fd8428bf170e456c27398933bef0a03d0f56f8cbf47fccff1a6728"
 
     def verify_dataset_hash(self, manifest_path: Path) -> bool:
-        if not manifest_path.exists():
-            return False
-        with open(manifest_path, "r") as f:
-            data = json.load(f)
-        current_hash = data.get("global_dataset_hash", "")
-        return current_hash == self.TARGET_DATASET_HASH or data.get("version") == "2.0.0"
+        from app.research.common.dataset_hash import verify_dataset_hash
+        return verify_dataset_hash(manifest_path, self.TARGET_DATASET_HASH)
 
     def compute_fdr_correction(self, raw_p_values: List[float], alpha: float = 0.05) -> Tuple[List[float], List[bool]]:
-        """Benjamini-Hochberg FDR procedure."""
-        n = len(raw_p_values)
-        if n == 0:
-            return [], []
-
-        sorted_indices = np.argsort(raw_p_values)
-        sorted_p = np.array(raw_p_values)[sorted_indices]
-
-        adjusted_p = np.zeros(n)
-        cum_min = 1.0
-
-        for i in range(n - 1, -1, -1):
-            rank = i + 1
-            adj = (sorted_p[i] * n) / rank
-            cum_min = min(cum_min, adj)
-            adjusted_p[sorted_indices[i]] = min(1.0, cum_min)
-
-        is_sig = [adjusted_p[i] <= alpha for i in range(n)]
-        return list(adjusted_p), is_sig
+        """Benjamini-Hochberg FDR procedure (shared impl)."""
+        from app.research.common.statistical_tests import compute_fdr_correction
+        return compute_fdr_correction(raw_p_values, alpha=alpha)

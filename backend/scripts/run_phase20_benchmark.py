@@ -2,13 +2,10 @@ import sys
 import json
 import logging
 from pathlib import Path
-from datetime import datetime, timezone
-import numpy as np
 
 logging.getLogger("autotrader").setLevel(logging.ERROR)
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from app.data.mt5_real import RealMT5Adapter
 from app.scalper.instrument import InstrumentSpecification
 from app.scalper.tick_engine import TickEngine
 from app.scalper.features import FeatureEngine
@@ -16,43 +13,10 @@ from app.context.timeframe_engine import TimeframeEngine
 from app.context.bias_engine import BiasEngine
 from app.context.setup_engine import SetupEngine
 from app.intelligence.cost_analyzer import CostFilter
-from app.intelligence.ev_engine import ExpectedValueEngine
 from app.scalper.adaptive_exit import AdaptiveExitEngine
 from app.backtest.tick_metrics import TickMetricsCalculator
 
-def fetch_real_ticks(symbol_map: dict) -> dict:
-    adapter = RealMT5Adapter()
-    if not adapter.connect():
-        print("[ERROR] Failed to connect to MT5 terminal")
-        return {}
-
-    import MetaTrader5 as mt5
-
-    dataset = {}
-    utc_from = datetime(2026, 8, 10, 0, 0, tzinfo=timezone.utc)
-    utc_to = datetime(2026, 8, 18, 0, 0, tzinfo=timezone.utc)
-
-    for canonical, broker_symbol in symbol_map.items():
-        print(f"Ingesting real ticks for {canonical} ({broker_symbol})...")
-        raw_ticks = mt5.copy_ticks_range(broker_symbol, utc_from, utc_to, mt5.COPY_TICKS_ALL)
-        if raw_ticks is not None and len(raw_ticks) > 0:
-            step = max(1, len(raw_ticks) // 25000)
-            sampled = raw_ticks[::step]
-            parsed = []
-            for t in sampled:
-                parsed.append({
-                    "symbol": canonical,
-                    "bid": float(t[1]),
-                    "ask": float(t[2]),
-                    "last": float(t[3]) if len(t) > 3 and t[3] > 0 else float(t[1]),
-                    "timestamp": float(t[0]),
-                    "volume": int(t[4]) if len(t) > 4 else 1
-                })
-            dataset[canonical] = parsed
-            print(f"  -> {canonical}: Loaded {len(parsed):,} real Exness ticks.")
-
-    adapter.disconnect()
-    return dataset
+from app.research.common.mt5_ticks import fetch_real_ticks  # C-04 shared helper
 
 def run_system_c_backtest(
     ticks: list,
@@ -67,7 +31,6 @@ def run_system_c_backtest(
     bias_engine = BiasEngine()
     setup_engine = SetupEngine()
     cost_filter = CostFilter(commission_per_lot=7.0, base_slippage_pips=0.1)
-    ev_engine = ExpectedValueEngine()
     adaptive_exit = AdaptiveExitEngine()
 
     executed_trades = []

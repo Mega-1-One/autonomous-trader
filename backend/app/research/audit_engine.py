@@ -1,6 +1,5 @@
 from dataclasses import dataclass, asdict
 from typing import Dict, Any, List
-import numpy as np
 
 @dataclass
 class InstrumentCoverageAudit:

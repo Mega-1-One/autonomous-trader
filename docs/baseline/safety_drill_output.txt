@@ -1,0 +1,30 @@
+﻿PASS 1a emergency-stop triggers
+PASS 1b sentinel file written
+PASS 1c API order rejected while stopped
+PASS 2a fresh ExecutionEngine refuses entries (sentinel)
+PASS 2b gate refuses entries on sentinel
+PASS 2c gate allows closes on sentinel
+PASS 3a reset ok
+PASS 3b sentinel cleared
+PASS 3c order path re-enabled
+PASS 4a close-all ok
+PASS 6a LIVE-without-flags raises
+PASS 6b PAPER+REAL refused
+PASS 6c BACKTEST+REAL refused
+PASS 6d PAPER+MOCK allowed
+PASS 6e LIVE+MOCK refused (no simulated live fills)
+PASS 5 gate in app/scalper/autonomous_scalper_daemon.py
+PASS 5 gate in app/scalper/demo_scalper_engine.py
+PASS 5 gate in app/scalper/ultra_tick_scalper.py
+PASS 5 gate in app/scalper/gold_multi_scalper.py
+PASS 5 gate in app/scalper/grid_martingale_bot.py
+PASS 5 gate in scripts/run_demo_trader.py
+PASS 5b close intent in app/scalper/autonomous_scalper_daemon.py
+PASS 5b close intent in app/scalper/demo_scalper_engine.py
+PASS 5b close intent in app/scalper/ultra_tick_scalper.py
+PASS 5b close intent in app/scalper/gold_multi_scalper.py
+PASS 5b close intent in app/scalper/grid_martingale_bot.py
+7 LIMITATION (ADR-8): the sentinel blocks NEW gated entries cross-process;
+  bot-command/basket/timeout closes stay allowed (intent=close, H-1) but the
+  sentinel itself never closes positions and does not stop bot loops.
+E-04 DRILL COMPLETE: all checks passed.

@@ -1,14 +1,19 @@
 import sys
 import time
-import json
 import logging
 import threading
-from pathlib import Path
 from datetime import datetime, timezone
 from typing import List, Dict, Any, Optional, Tuple
 
-from app.core.config import settings, ExecutionMode
+from app.core.pricing import pnl as spec_pnl
+from app.core.safety import ensure_trading_allowed, account_trade_mode_from_mt5, SafetyViolation
 from app.data.mt5_real import RealMT5Adapter
+from app.scalper.mt5_orders import (
+    broker_reject_hint,
+    build_close_request,
+    build_market_order,
+    pip_scale_for,
+)
 
 class GoldMultiPositionProfitScalper:
     """Gold (XAUUSDm) Reversal Scalper Engine (Explicit TP + protective SL, profit-target close).
@@ -112,7 +117,10 @@ class GoldMultiPositionProfitScalper:
                         with self.lock:
                             self.test_entry = True
                         print("\n[TEST ENTRY COMMAND] Safe Test Entry mode activated for 1 trade.\n")
-                except Exception:
+                except Exception as exc:
+                    # D-03: log command-listener exceptions with context instead
+                    # of silently swallowing them.
+                    logging.getLogger("autotrader").warning(f"[COMMAND LISTENER ERROR] {exc}")
                     time.sleep(0.1)
 
         t = threading.Thread(target=listener, daemon=True)
@@ -145,17 +153,17 @@ class GoldMultiPositionProfitScalper:
         total_floating_pnl = sum(p.profit + p.swap for p in active_positions)
         net_daily_pnl = self.todays_realized_pnl + total_floating_pnl
 
-        # Calculate open SL risk for monitoring
+        # Calculate open SL risk for monitoring (spec-based contract, gold => 100)
         current_open_risk_usd = 0.0
         for pos in active_positions:
             if pos.sl > 0:
-                current_open_risk_usd += abs(pos.price_open - pos.sl) * pos.volume * 100.0
+                current_open_risk_usd += spec_pnl(abs(pos.price_open - pos.sl), pos.volume, self.symbol)
             else:
                 current_open_risk_usd += self.max_loss_usd
 
         entry_price = tick.ask if proposed_direction == "BUY" else tick.bid
         proposed_sl_dist = abs(entry_price - proposed_sl_price)
-        new_trade_sl_risk_usd = proposed_sl_dist * proposed_volume * 100.0
+        new_trade_sl_risk_usd = spec_pnl(proposed_sl_dist, proposed_volume, self.symbol)
         projected_total_risk_usd = current_open_risk_usd + new_trade_sl_risk_usd
 
         risk_used_pct = (current_open_risk_usd / balance * 100.0) if balance > 0 else 0.0
@@ -188,7 +196,6 @@ class GoldMultiPositionProfitScalper:
         """Display non-blocking status summary for monitoring to terminal."""
         import MetaTrader5 as mt5
         acc = mt5.account_info()
-        tick = mt5.symbol_info_tick(self.symbol)
         open_positions = mt5.positions_get(group=f"*{self.symbol}*")
         active = [p for p in (open_positions or []) if p.magic == self.magic_number]
         floating_pnl = sum(p.profit + p.swap for p in active) if active else 0.0
@@ -200,7 +207,7 @@ class GoldMultiPositionProfitScalper:
         
         margin_usage_pct = (margin_used / equity * 100.0) if (equity and equity > 0) else 0.0
         current_drawdown_pct = ((self.peak_equity - equity) / self.peak_equity * 100.0) if (self.peak_equity and self.peak_equity > 0) else 0.0
-        current_open_risk = sum((abs(p.price_open - p.sl) * p.volume * 100.0) if p.sl > 0 else self.max_loss_usd for p in active)
+        current_open_risk = sum((spec_pnl(abs(p.price_open - p.sl), p.volume, self.symbol)) if p.sl > 0 else self.max_loss_usd for p in active)
         risk_used_pct = (current_open_risk / balance * 100.0) if (balance and balance > 0) else 0.0
 
         print("\n==================================================")
@@ -232,7 +239,7 @@ class GoldMultiPositionProfitScalper:
             print("[ERROR] Could not fetch account info.")
             return
 
-        pip_scale = 0.10 if ("XAU" in self.symbol or "GOLD" in self.symbol) else 0.0001
+        pip_scale = pip_scale_for(self.symbol)
 
         print("\n==================================================")
         print(" GOLD REVERSAL SCALPER (MANUAL STOP ONLY MODE)   ")
@@ -241,7 +248,7 @@ class GoldMultiPositionProfitScalper:
         print(f"Current Balance:        ${acc.balance:.2f} USD")
         print(f"Target Symbol:          {self.symbol} (Gold)")
         print(f"Micro Volume:           {self.volume} lot per trade")
-        print(f"Control Model:          MANUAL STOP ONLY (No Auto Halts)")
+        print("Control Model:          MANUAL STOP ONLY (No Auto Halts)")
         print(f"Take Profit Target:     +{self.take_profit_pips} pips (Explicit TP on Broker)")
         print(f"Stop Loss:              -{self.stop_loss_pips} pips (Protective SL on Broker) + ${self.max_loss_usd:.2f} loss cap")
         print(f"Close Triggers:         PROFIT >= +${self.min_profit_target_usd:.2f} | LOSS <= -${self.max_loss_usd:.2f}")
@@ -315,19 +322,23 @@ class GoldMultiPositionProfitScalper:
                         continue
 
                     close_price = tick.bid if pos.type == 0 else tick.ask
-                    req_close = {
-                        "action": mt5.TRADE_ACTION_DEAL,
-                        "symbol": self.symbol,
-                        "volume": pos.volume,
-                        "type": mt5.ORDER_TYPE_SELL if pos.type == 0 else mt5.ORDER_TYPE_BUY,
-                        "position": pos.ticket,
-                        "price": close_price,
-                        "deviation": 10,
-                        "magic": self.magic_number,
-                        "comment": comment,
-                        "type_time": mt5.ORDER_TIME_GTC,
-                        "type_filling": mt5.ORDER_FILLING_IOC,
-                    }
+                    req_close = build_close_request(
+                        mt5,
+                        symbol=self.symbol,
+                        volume=pos.volume,
+                        close_type=mt5.ORDER_TYPE_SELL if pos.type == 0 else mt5.ORDER_TYPE_BUY,
+                        position_ticket=pos.ticket,
+                        price=close_price,
+                        deviation=10,
+                        magic=self.magic_number,
+                        comment=comment,
+                    )
+                    try:
+                        # Close/reduce intent: de-risking is never trapped by the sentinel.
+                        ensure_trading_allowed("REAL", account_trade_mode=account_trade_mode_from_mt5(), intent="close")
+                    except SafetyViolation as exc:
+                        print(f"[SAFETY GATE REFUSED] {exc}")
+                        return {"error": str(exc)}
                     res_close = mt5.order_send(req_close)
                     if res_close and res_close.retcode == mt5.TRADE_RETCODE_DONE:
                         self.todays_trades += 1
@@ -342,7 +353,7 @@ class GoldMultiPositionProfitScalper:
                         self.last_trade_time = datetime.now(timezone.utc).strftime("%H:%M:%S")
 
                         direction_str = "BUY" if pos.type == 0 else "SELL"
-                        print(f"\n[TRADE CLOSED]")
+                        print("\n[TRADE CLOSED]")
                         print(f"Ticket:       #{pos.ticket}")
                         print(f"Symbol:       {self.symbol}")
                         print(f"Direction:    {direction_str}")
@@ -422,22 +433,30 @@ class GoldMultiPositionProfitScalper:
                         # Deduplication Protection: minimum 0.2s between orders (bypassed for TEST_ENTRY)
                         if is_test_mode or (now - self.last_order_time >= 0.2):
                             t_order_start = time.perf_counter()
-                            req_open = {
-                                "action": mt5.TRADE_ACTION_DEAL,
-                                "symbol": self.symbol,
-                                "volume": self.volume,
-                                "type": mt5.ORDER_TYPE_BUY if is_buy else mt5.ORDER_TYPE_SELL,
-                                "price": entry_price,
-                                "sl": sl,
-                                "tp": tp,
-                                "deviation": 10,
-                                "magic": self.magic_number,
-                                "comment": f"Gold Scalp {'TEST' if is_test_mode else '#' + str(self.todays_trades+len(active)+1)}",
-                                "type_time": mt5.ORDER_TIME_GTC,
-                                "type_filling": mt5.ORDER_FILLING_IOC,
-                            }
+                            req_open = build_market_order(
+                                mt5,
+                                symbol=self.symbol,
+                                order_type=mt5.ORDER_TYPE_BUY if is_buy else mt5.ORDER_TYPE_SELL,
+                                volume=self.volume,
+                                price=entry_price,
+                                sl=sl,
+                                tp=tp,
+                                deviation=10,
+                                magic=self.magic_number,
+                                comment=f"Gold Scalp {'TEST' if is_test_mode else '#' + str(self.todays_trades+len(active)+1)}",
+                            )
+
+                            try:
+                                ensure_trading_allowed("REAL", account_trade_mode=account_trade_mode_from_mt5())
+                            except SafetyViolation as exc:
+                                print(f"[SAFETY GATE REFUSED] {exc}")
+                                return {"error": str(exc)}
 
                             res_open = mt5.order_send(req_open)
+                            if res_open is None:
+                                print("[BROKER RESPONSE] order_send returned None (request failed)")
+                                self.last_order_sub_time = time.perf_counter() - t_order_start
+                                continue
                             self.last_order_sub_time = time.perf_counter() - t_order_start
 
                             # Reset test_entry flag after single test execution
@@ -446,20 +465,12 @@ class GoldMultiPositionProfitScalper:
                                     self.test_entry = False
                                 print("[TEST ENTRY COMPLETE] Test trade execution finished. Reset TEST_ENTRY=OFF.\n")
 
-                            retcode_desc = {
-                                10009: "TRADE_RETCODE_DONE (Order executed cleanly)",
-                                10013: "TRADE_RETCODE_INVALID (Invalid order parameters)",
-                                10014: "TRADE_RETCODE_INVALID_VOLUME (Invalid lot size)",
-                                10015: "TRADE_RETCODE_INVALID_PRICE (Invalid entry price)",
-                                10016: "TRADE_RETCODE_INVALID_STOPS (Invalid SL or TP distance)",
-                                10019: "TRADE_RETCODE_NO_MONEY (Insufficient margin on MT5 account)",
-                                10027: "TRADE_RETCODE_AUTOTRADER_DISABLED (Algo Trading disabled in MT5 toolbar)"
-                            }.get(res_open.retcode if res_open else -1, f"Retcode {res_open.retcode if res_open else 'None'}")
+                            retcode_desc = broker_reject_hint(res_open.retcode if res_open else None)
 
                             if res_open and res_open.retcode == mt5.TRADE_RETCODE_DONE:
                                 self.last_order_time = now
                                 open_time_str = datetime.now(timezone.utc).strftime("%H:%M:%S")
-                                print(f"\n[TRADE OPENED]")
+                                print("\n[TRADE OPENED]")
                                 print(f"Ticket:    #{res_open.order}")
                                 print(f"Symbol:    {self.symbol}")
                                 print(f"Direction: {direction}")
@@ -481,11 +492,11 @@ class GoldMultiPositionProfitScalper:
                                     "time_str": open_time_str
                                 }
                             else:
-                                print(f"\n[ORDER REJECTED BY MT5]")
+                                print("\n[ORDER REJECTED BY MT5]")
                                 print(f"Retcode:   {res_open.retcode if res_open else 'None'}")
                                 print(f"Reason:    {retcode_desc}")
                                 print(f"Signal:    {direction} at {entry_price}")
-                                print(f"Returning to market scan...\n")
+                                print("Returning to market scan...\n")
 
                 # Fast yield (50ms) to maintain fast scanning without CPU saturation
                 time.sleep(0.05)

@@ -1,9 +1,8 @@
-import os
 from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, Optional
 import yaml
-from pydantic import Field, model_validator
+from pydantic import AliasChoices, Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class ExecutionMode(str, Enum):
@@ -22,7 +21,9 @@ class Settings(BaseSettings):
     APP_NAME: str = "Autonomous Trader"
     APP_ENV: str = "development"
     LOG_LEVEL: str = "INFO"
-    SECRET_KEY: str = "default-insecure-secret-key-change-in-prod"
+    # NEW-06: the old SECRET_KEY placeholder was removed — nothing consumed
+    # it (API auth uses AUTOMATION_API_TOKEN). A SECRET_KEY will be
+    # reintroduced if/when session/JWT signing is actually needed.
 
     # Execution & Safety Flags
     EXECUTION_MODE: ExecutionMode = ExecutionMode.PAPER
@@ -40,6 +41,20 @@ class Settings(BaseSettings):
 
     # Config directory path
     CONFIG_DIR: Path = Path(__file__).resolve().parent.parent.parent.parent / "config"
+
+    # CORS origins for the dashboard (comma-separated; replaces wildcard, C-06/P-05)
+    CORS_ORIGINS: str = "http://localhost:3000"
+
+    # Optional bearer token for mutating API endpoints in production (D-01).
+    # Unset by default: local dev flow stays open.
+    AUTOMATION_API_TOKEN: Optional[str] = None
+
+    # State directory for cross-process files (e.g. the emergency-stop sentinel).
+    # Env vars: AUTOTRADER_STATE_DIR (preferred) or STATE_DIR
+    STATE_DIR: Path = Field(
+        default=Path(__file__).resolve().parent.parent.parent / "state",
+        validation_alias=AliasChoices("AUTOTRADER_STATE_DIR", "STATE_DIR"),
+    )
 
     strategy_config: Dict[str, Any] = Field(default_factory=dict)
     risk_config: Dict[str, Any] = Field(default_factory=dict)

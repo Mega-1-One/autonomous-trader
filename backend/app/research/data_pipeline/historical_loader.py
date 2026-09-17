@@ -1,10 +1,9 @@
 from dataclasses import dataclass, asdict
-from typing import List, Dict, Any, Tuple, Optional
-from datetime import datetime, timezone, timedelta
+from typing import List, Dict, Any, Tuple
+from datetime import datetime, timedelta
 import numpy as np
 
 from app.context.timeframe_engine import Candle
-from app.scalper.instrument import InstrumentSpecification
 
 @dataclass
 class DepthAuditMetrics:

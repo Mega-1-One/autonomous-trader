@@ -1,6 +1,7 @@
 import "./globals.css";
 import React from "react";
 import Link from "next/link";
+import ModeBadge from "./mode-badge";
 
 export const metadata = {
   title: "Autonomous Trader Dashboard",
@@ -35,9 +36,7 @@ export default function RootLayout({
           </div>
 
           <div className="flex items-center space-x-4 text-sm font-medium">
-            <span className="px-3 py-1 bg-surface border border-border rounded-full text-xs font-semibold text-textSecondary">
-              PAPER MODE
-            </span>
+            <ModeBadge />
           </div>
         </header>
         <main className="flex-1 p-6">{children}</main>

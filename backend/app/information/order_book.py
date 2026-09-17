@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from dataclasses import dataclass, asdict, field
+from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
 from app.information.providers import OrderBookProvider, DataAvailabilityState, ProviderMetadata

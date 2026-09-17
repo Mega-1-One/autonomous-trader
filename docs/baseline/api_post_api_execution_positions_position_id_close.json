@@ -1,0 +1,10 @@
+{
+  "method": "POST",
+  "path": "/api/execution/positions/{position_id}/close",
+  "result": {
+    "json": {
+      "detail": "Open position {position_id} not found"
+    },
+    "status": 404
+  }
+}

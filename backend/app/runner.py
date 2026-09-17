@@ -2,22 +2,23 @@ import asyncio
 from datetime import datetime, timezone
 from app.core.config import settings
 from app.core.logging import logger
+from app.core.pricing import spread_in_pips
+from app.data.adapter_factory import build_adapter
 from app.data.mt5_real import RealMT5Adapter
-from app.data.mt5_mock import MockMT5Adapter
+from app.risk.engine import RiskEngine
 from app.services.market_data import MarketDataService
 from app.strategy.engine import StrategyEngine
 from app.execution.engine import ExecutionEngine
 
-def calculate_spread_in_pips(bid: float, ask: float, digits: int, point_size: float) -> float:
-    """Calculates spread in standard pips (accounting for 3-digit Gold and 5-digit Forex broker quotes)."""
-    raw_diff = abs(ask - bid)
-    if digits == 3: # Gold 3-digit (e.g. 4425.518 -> 0.260 spread is 2.6 pips)
-        pips = raw_diff / (point_size * 100.0)
-    elif digits == 5: # Forex 5-digit (e.g. 1.08500 -> 0.00010 spread is 1.0 pip)
-        pips = raw_diff / (point_size * 10.0)
-    else:
-        pips = raw_diff / point_size
-    return round(pips, 1)
+def calculate_spread_in_pips(bid: float, ask: float, digits: int, point_size: float, symbol: str = "") -> float:
+    """Calculates spread in standard pips.
+
+    Migrated onto the canonical pip-size semantics (ADR-4): when a symbol is
+    supplied and resolves to a specification, the spec's pip_size is used
+    (gold 0.1, 5-digit FX 0.0001). Without a symbol the legacy digits-derived
+    rules are retained for compatibility.
+    """
+    return spread_in_pips(bid, ask, symbol=symbol, digits=digits, point_size=point_size)
 
 async def run_autonomous_trader(symbol: str = "XAUUSD", poll_interval_seconds: int = 5):
     logger.info("==================================================")
@@ -27,19 +28,21 @@ async def run_autonomous_trader(symbol: str = "XAUUSD", poll_interval_seconds: i
     logger.info(f"Execution Mode: {settings.EXECUTION_MODE.value}")
     logger.info(f"Safety Live Trading Flag: {settings.ENABLE_LIVE_TRADING}")
 
-    # 1. Connect MT5 Adapter
-    real_mt5 = RealMT5Adapter()
-    if real_mt5.connect():
-        adapter = real_mt5
+    # 1. Select broker adapter honoring EXECUTION_MODE (I-3/H-2 parity).
+    #    PAPER/BACKTEST use the mock adapter regardless of host; DEMO/LIVE try
+    #    the real terminal first and fall back to mock (which the gate then
+    #    refuses for entries in LIVE, so no simulated live fills).
+    adapter = build_adapter()
+    if isinstance(adapter, RealMT5Adapter):
         logger.info("Connected to Real MetaTrader 5 Terminal (Exness).")
     else:
-        logger.warning("Real MT5 connection failed; using Mock MT5 Adapter.")
-        adapter = MockMT5Adapter()
-        adapter.connect()
+        logger.warning("Using Mock MT5 Adapter (PAPER/BACKTEST mode or terminal unavailable).")
 
     market_service = MarketDataService(adapter=adapter)
     strategy_engine = StrategyEngine()
-    execution_engine = ExecutionEngine(adapter=adapter)
+    # One RiskEngine per process (ADR-2): explicitly injected into the engine.
+    risk_engine = RiskEngine()
+    execution_engine = ExecutionEngine(adapter=adapter, risk_engine=risk_engine)
 
     info = market_service.get_symbol_info(symbol) or {"digits": 3, "point_size": 0.001}
     digits = info.get("digits", 3)
@@ -57,7 +60,7 @@ async def run_autonomous_trader(symbol: str = "XAUUSD", poll_interval_seconds: i
                 latest = ltf_candles[-1]
                 bid = info.get("bid", latest["close"])
                 ask = info.get("ask", latest["close"])
-                spread_pips = calculate_spread_in_pips(bid, ask, digits, point_size)
+                spread_pips = calculate_spread_in_pips(bid, ask, digits, point_size, symbol=symbol)
 
                 # 2. Update active positions
                 execution_engine.update_positions({symbol: bid}, point_size=point_size)

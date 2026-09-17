@@ -1,6 +1,5 @@
 from enum import Enum
 from dataclasses import dataclass
-from typing import Dict, Any, Optional
 
 from app.scalper.features import ScalperFeatures
 
@@ -29,8 +28,6 @@ class MarketRegimeEngine:
         features: ScalperFeatures,
         event_lockout: bool = False
     ) -> RegimeState:
-        reasons = []
-
         if event_lockout:
             return RegimeState(
                 regime=MarketRegime.HIGH_RISK_EVENT,

@@ -1,13 +1,12 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
-from typing import Optional
 
+from app.api.deps import get_market_service
 from app.services.market_data import MarketDataService
 from app.backtest.engine import BacktestEngine
 from app.backtest.monte_carlo import MonteCarloSimulator
 
 router = APIRouter(prefix="/api/backtest", tags=["Backtesting & Monte Carlo"])
-market_service = MarketDataService()
 
 class BacktestRunRequest(BaseModel):
     symbol: str = "XAUUSD"
@@ -26,7 +25,10 @@ class MonteCarloRequest(BaseModel):
     iterations: int = 200
 
 @router.post("/run", status_code=status.HTTP_200_OK)
-async def run_backtest(req: BacktestRunRequest):
+async def run_backtest(
+    req: BacktestRunRequest,
+    market_service: MarketDataService = Depends(get_market_service),
+):
     """Runs zero-lookahead backtest using exact live strategy and risk logic."""
     candles = market_service.fetch_candles(req.symbol, req.timeframe, count=req.candle_count)
     if not candles:
@@ -45,7 +47,7 @@ async def run_backtest(req: BacktestRunRequest):
         commission_per_lot=req.commission_per_lot
     )
 
-    report = engine.run(symbol=req.symbol, candles=candles, point_size=point_size)
+    report = engine.run(symbol=req.symbol, candles=candles, point_size=point_size, symbol_info=info)
 
     return {
         "symbol": req.symbol,
@@ -54,18 +56,21 @@ async def run_backtest(req: BacktestRunRequest):
     }
 
 @router.post("/monte-carlo", status_code=status.HTTP_200_OK)
-async def run_monte_carlo(req: MonteCarloRequest):
+async def run_monte_carlo(
+    req: MonteCarloRequest,
+    market_service: MarketDataService = Depends(get_market_service),
+):
     """Runs Monte Carlo simulation over backtested trade results."""
     candles = market_service.fetch_candles(req.symbol, req.timeframe, count=req.candle_count)
     info = market_service.get_symbol_info(req.symbol) or {"point_size": 0.01}
     point_size = info.get("point_size", 0.01)
 
     engine = BacktestEngine(initial_balance=req.initial_balance)
-    report = engine.run(symbol=req.symbol, candles=candles, point_size=point_size)
+    engine.run(symbol=req.symbol, candles=candles, point_size=point_size, symbol_info=info)
 
-    # Reconstruct trades from report or run simulation
+    # Monte Carlo over the actual backtest trades (ADR-5b last_trades; P-03 fix).
     simulator = MonteCarloSimulator(iterations=req.iterations)
-    res = simulator.run_simulation(req.initial_balance, [])
+    res = simulator.run_simulation(req.initial_balance, engine.last_trades)
 
     return {
         "symbol": req.symbol,

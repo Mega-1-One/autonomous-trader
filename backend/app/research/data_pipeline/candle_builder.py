@@ -1,6 +1,4 @@
-from dataclasses import dataclass, asdict
-from typing import List, Dict, Any
-import numpy as np
+from typing import List
 
 from app.context.timeframe_engine import Candle
 

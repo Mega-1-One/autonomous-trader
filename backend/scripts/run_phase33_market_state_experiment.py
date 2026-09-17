@@ -4,15 +4,13 @@ import csv
 import logging
 from pathlib import Path
 from datetime import datetime, timezone, timedelta
-import numpy as np
 
 logging.getLogger("autotrader").setLevel(logging.ERROR)
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from app.data.mt5_real import RealMT5Adapter
-from app.scalper.instrument import InstrumentSpecification
 from app.research.data_pipeline.historical_loader import PaginatedHistoricalLoader
-from app.research.market_state.market_state_engine import MarketStateEngine, MarketStateMetrics
+from app.research.market_state.market_state_engine import MarketStateEngine
 
 def run_phase33_experiment():
     engine = MarketStateEngine()
@@ -22,7 +20,7 @@ def run_phase33_experiment():
         return
 
     if not engine.verify_dataset_hash(manifest_file):
-        print(f"[ERROR] SHA256 Dataset Hash Mismatch! Stopping Phase 33 execution.")
+        print("[ERROR] SHA256 Dataset Hash Mismatch! Stopping Phase 33 execution.")
         return
 
     print("\n==================================================")
@@ -114,12 +112,12 @@ def run_phase33_experiment():
         for m in sorted(all_state_metrics, key=lambda x: x.sample_size, reverse=True)[:30]:
             f.write(f"| **{m.symbol}** | {m.state_name} | {m.horizon} | {m.sample_size} | {m.frequency_pct}% | {m.win_probability} | {m.gross_expectancy_r} R | **{m.net_expectancy_r} R** | **{m.profit_factor}** | {m.classification} |\n")
 
-        f.write(f"\n## 3. Final Diagnostic Verdict\n")
+        f.write("\n## 3. Final Diagnostic Verdict\n")
         f.write(f"**FINAL DIAGNOSTIC VERDICT**: {verdict}\n")
 
-    print(f"\n==================================================")
-    print(f" PHASE 33 MARKET STATE SUMMARY")
-    print(f"==================================================")
+    print("\n==================================================")
+    print(" PHASE 33 MARKET STATE SUMMARY")
+    print("==================================================")
     print(f"Total Market State Horizons Analyzed: {len(all_state_metrics)}")
     print(f"Surviving Positive Expectancy States:  {len(surviving_states)}")
     print(f"Market State Registry Saved:           {reg_file}")

@@ -1,12 +1,10 @@
 import hashlib
 import json
-import csv
 from datetime import datetime, timezone
 from dataclasses import dataclass, asdict
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List
 import numpy as np
 
-from app.core.config import settings, ExecutionMode
 
 @dataclass
 class ForwardTradeResult:

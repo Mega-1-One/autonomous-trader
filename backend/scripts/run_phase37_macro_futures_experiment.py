@@ -10,9 +10,8 @@ logging.getLogger("autotrader").setLevel(logging.ERROR)
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from app.data.mt5_real import RealMT5Adapter
-from app.scalper.instrument import InstrumentSpecification
 from app.research.data_pipeline.historical_loader import PaginatedHistoricalLoader
-from app.research.macro_futures.macro_futures_engine import Phase37MacroFuturesEngine, MacroEventEngine, FuturesVolumeEngine, MacroFuturesMetrics
+from app.research.macro_futures.macro_futures_engine import Phase37MacroFuturesEngine, MacroEventEngine, FuturesVolumeEngine
 from app.research.feature_discovery.return_labeler import ReturnLabeler
 from app.research.feature_discovery.statistical_testing import FeatureStatisticalScorer
 
@@ -24,7 +23,7 @@ def run_phase37_experiment():
         return
 
     if not engine.verify_dataset_hash(manifest_file):
-        print(f"[ERROR] SHA256 Dataset Hash Mismatch! Stopping Phase 37 execution.")
+        print("[ERROR] SHA256 Dataset Hash Mismatch! Stopping Phase 37 execution.")
         return
 
     print("\n==================================================")
@@ -161,14 +160,14 @@ def run_phase37_experiment():
         for r in sorted(raw_results, key=lambda x: abs(x.oos_ic), reverse=True)[:25]:
             f.write(f"| {r.feature_name} | {r.instrument} | {r.horizon} | {r.sample_count} | {r.pearson_r} | {r.raw_p_value} | {r.fdr_adjusted_p_value} | **{r.is_fdr_significant}** | **{r.oos_net_expectancy}** | {r.classification} |\n")
 
-        f.write(f"\n## 3. Final Diagnostic Verdict\n")
+        f.write("\n## 3. Final Diagnostic Verdict\n")
         f.write(f"**FINAL DIAGNOSTIC VERDICT**: {verdict}\n\n")
         f.write("### Strategic Conclusion:\n")
         f.write("Across 120 macro event and futures volume hypotheses, zero features achieved statistically defensible positive OOS net expectancy after transaction costs.\n")
 
-    print(f"\n==================================================")
-    print(f" PHASE 37 DISCOVERY SUMMARY")
-    print(f"==================================================")
+    print("\n==================================================")
+    print(" PHASE 37 DISCOVERY SUMMARY")
+    print("==================================================")
     print(f"Total Hypotheses Tested:    {len(raw_results)}")
     print(f"FDR Significant Features:   {sum(1 for r in raw_results if r.is_fdr_significant)}")
     print(f"Surviving OOS Edges:        {len(surviving_features)}")

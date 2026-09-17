@@ -1,35 +1,53 @@
-from fastapi import APIRouter, HTTPException, status, Body
-from pydantic import BaseModel
-from typing import Dict, Any, Optional
+from fastapi import APIRouter, Depends, HTTPException, status, Body
+from pydantic import BaseModel, field_validator
+from typing import Dict, Literal, Optional
 
+from app.api.deps import get_market_service, get_execution_engine, require_api_token
 from app.execution.engine import ExecutionEngine
 from app.services.market_data import MarketDataService
 
 router = APIRouter(prefix="/api/execution", tags=["Execution & Position Management"])
-market_service = MarketDataService()
-execution_engine = ExecutionEngine(adapter=market_service.adapter)
 
 class OrderSubmitRequest(BaseModel):
     client_signal_id: Optional[str] = None
     symbol: str = "XAUUSD"
-    direction: str = "LONG"
+    direction: Literal["LONG", "SHORT"] = "LONG"
     entry_price: float
     stop_loss: float
     take_profit: float
     spread_pips: float = 1.0
 
+    @field_validator("direction", mode="before")
+    @classmethod
+    def _normalize_direction(cls, value: object) -> object:
+        # N2-H2: normalize case explicitly; anything else fails Literal -> 422.
+        if isinstance(value, str):
+            return value.strip().upper()
+        return value
+
 @router.get("/positions", status_code=status.HTTP_200_OK)
-async def get_positions():
+async def get_positions(
+    market_service: MarketDataService = Depends(get_market_service),
+    execution_engine: ExecutionEngine = Depends(get_execution_engine),
+):
     """Returns active and historical simulated positions with real-time floating P&L and metrics."""
-    # Update active positions with live prices
+    # Update active positions with live prices (no hard-coded fallback, P-17/C-01).
+    # N2-M8: mark each symbol on the side its open positions share (LONG->bid,
+    # SHORT->ask); mixed-side symbols fall back to bid and note it.
     symbols = market_service.get_supported_symbols()
+    open_sides: Dict[str, set] = {}
+    for p in execution_engine.positions.values():
+        if p.status == "OPEN":
+            open_sides.setdefault(p.symbol, set()).add(p.direction)
     current_prices = {}
     for s in symbols:
-        info = market_service.get_symbol_info(s)
-        if info:
-            current_prices[s] = info.get("bid", 2400.0)
+        sides = open_sides.get(s, set())
+        side = next(iter(sides)) if len(sides) == 1 else "LONG"
+        price = market_service.get_latest_price(s, side=side)
+        if price is not None:
+            current_prices[s] = price
 
-    updated = execution_engine.update_positions(current_prices)
+    execution_engine.update_positions(current_prices)
     all_positions = [p.to_dict() for p in execution_engine.positions.values()]
 
     return {
@@ -39,9 +57,20 @@ async def get_positions():
     }
 
 @router.post("/orders", status_code=status.HTTP_200_OK)
-async def submit_order(req: OrderSubmitRequest):
+async def submit_order(
+    req: OrderSubmitRequest,
+    execution_engine: ExecutionEngine = Depends(get_execution_engine),
+    _: None = Depends(require_api_token),
+):
     """Submits order to execution engine with idempotency & safety checks."""
     result = execution_engine.execute_signal(req.model_dump(), current_spread_pips=req.spread_pips)
+    if result["status"] == "FAILED":
+        # Broker rejected/failed the send: surface as a bad-gateway failure
+        # path (C-01 owns this change exclusively; success shapes unchanged).
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=result.get("reason", "Broker order send failed"),
+        )
     if result["status"] == "REJECTED":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -50,7 +79,11 @@ async def submit_order(req: OrderSubmitRequest):
     return result
 
 @router.post("/positions/{position_id}/close", status_code=status.HTTP_200_OK)
-async def close_position(position_id: str):
+async def close_position(
+    position_id: str,
+    execution_engine: ExecutionEngine = Depends(get_execution_engine),
+    _: None = Depends(require_api_token),
+):
     """Manually closes an individual open position."""
     pos = execution_engine.positions.get(position_id)
     if not pos or pos.status != "OPEN":
@@ -63,8 +96,17 @@ async def close_position(position_id: str):
     return {"status": "CLOSED", "position": pos.to_dict()}
 
 @router.post("/close-all", status_code=status.HTTP_200_OK)
-async def close_all_positions(reason: Optional[str] = Body(None, embed=True)):
-    """Emergency closes all active positions immediately."""
+async def close_all_positions(
+    reason: Optional[str] = Body(None, embed=True),
+    execution_engine: ExecutionEngine = Depends(get_execution_engine),
+    _: None = Depends(require_api_token),
+):
+    """Emergency closes all active positions immediately.
+
+    L-4: this settles the API engine's in-memory simulated positions only; it
+    never sends broker closes. Flatten real broker baskets from the MT5
+    terminal or the bot-command close paths.
+    """
     closed = execution_engine.close_all_positions(reason or "EMERGENCY_CLOSE_ALL")
     return {
         "status": "ALL_POSITIONS_CLOSED",
