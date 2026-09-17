@@ -18,7 +18,8 @@ class MT5GridMartingaleScalper:
         basket_profit_target_usd: float = 0.50,
         max_basket_loss_usd: float = 0.50,
         commission_per_lot: float = 7.0,
-        max_drawdown_pct: float = 20.0
+        max_drawdown_pct: float = 20.0,
+        protective_sl_pips: float = 100.0,
     ):
         self.symbol = symbol
         self.base_volume = base_volume
@@ -29,8 +30,22 @@ class MT5GridMartingaleScalper:
         self.max_basket_loss_usd = max_basket_loss_usd
         self.commission_per_lot = commission_per_lot
         self.max_drawdown_pct = max_drawdown_pct
+        # H-1 defense-in-depth: every grid order carries a wide broker-side
+        # disaster stop so the basket is never fully uncapped if this loop
+        # dies. It sits far outside normal operation (basket stop-loss and
+        # equity guard always act first); set to 0 to disable explicitly.
+        self.protective_sl_pips = protective_sl_pips
         self.adapter = RealMT5Adapter()
         self.magic_number = 888999
+
+    def _protective_sl(self, entry_price: float, is_buy: bool, pip_scale: float) -> float | None:
+        """Broker-side disaster-stop price, or None when disabled (0)."""
+        if not self.protective_sl_pips or self.protective_sl_pips <= 0:
+            return None
+        digits = 5 if "EUR" in self.symbol else 3
+        dist = self.protective_sl_pips * pip_scale
+        sl = entry_price - dist if is_buy else entry_price + dist
+        return round(sl, digits)
 
     def initialize(self) -> bool:
         if not self.adapter.connect():
@@ -79,6 +94,7 @@ class MT5GridMartingaleScalper:
             order_type=mt5.ORDER_TYPE_BUY if is_buy else mt5.ORDER_TYPE_SELL,
             volume=self.base_volume,
             price=price,
+            sl=self._protective_sl(price, is_buy, pip_scale),
             deviation=10,
             magic=self.magic_number,
             comment="Grid Base #1",
@@ -156,6 +172,7 @@ class MT5GridMartingaleScalper:
                         order_type=mt5.ORDER_TYPE_BUY if is_buy else mt5.ORDER_TYPE_SELL,
                         volume=next_vol,
                         price=curr_price,
+                        sl=self._protective_sl(curr_price, is_buy, pip_scale),
                         deviation=10,
                         magic=self.magic_number,
                         comment=f"Grid Step #{len(active_grid)+1}",
@@ -206,10 +223,11 @@ class MT5GridMartingaleScalper:
                     comment="Grid Basket Close",
                 )
                 try:
-                    ensure_trading_allowed("REAL", account_trade_mode=account_trade_mode_from_mt5())
+                    # Close/reduce intent: de-risking is never trapped by the sentinel.
+                    ensure_trading_allowed("REAL", account_trade_mode=account_trade_mode_from_mt5(), intent="close")
                 except SafetyViolation as exc:
-                    print(f"[SAFETY GATE REFUSED] {exc}")
-                    return
+                    print(f"[SAFETY GATE REFUSED] Ticket #{pos.ticket}: {exc}")
+                    continue
                 res = mt5.order_send(req)
                 if res and res.retcode == mt5.TRADE_RETCODE_DONE:
                     print(f"  Closed Grid Ticket #{pos.ticket} at {res.price}")

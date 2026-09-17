@@ -334,7 +334,8 @@ class GoldMultiPositionProfitScalper:
                         comment=comment,
                     )
                     try:
-                        ensure_trading_allowed("REAL", account_trade_mode=account_trade_mode_from_mt5())
+                        # Close/reduce intent: de-risking is never trapped by the sentinel.
+                        ensure_trading_allowed("REAL", account_trade_mode=account_trade_mode_from_mt5(), intent="close")
                     except SafetyViolation as exc:
                         print(f"[SAFETY GATE REFUSED] {exc}")
                         return {"error": str(exc)}

@@ -11,10 +11,12 @@ Truth table (destination = where the order is actually sent):
 | PAPER    | allowed | refused |
 | DEMO     | allowed | allowed only if account_trade_mode == 0 (demo account) |
 | LIVE     | allowed | allowed only if both live flags set |
-| any, with sentinel present | refused | refused |
+| any, with sentinel present | entries refused, closes allowed | entries refused, closes allowed |
 
 Every order-sending path (ExecutionEngine and the six direct order-path files)
-must call :func:`ensure_trading_allowed` before sending.
+must call :func:`ensure_trading_allowed` before sending. Risk-increasing
+(entry) sends pass ``intent="entry"`` (the default); risk-reducing (close)
+sends pass ``intent="close"`` so de-risking is never trapped by the sentinel.
 """
 from typing import Any, Optional
 
@@ -25,6 +27,9 @@ from app.core.config import ExecutionMode
 DEST_MOCK = "MOCK"
 DEST_REAL = "REAL"
 
+INTENT_ENTRY = "entry"
+INTENT_CLOSE = "close"
+
 
 class SafetyViolation(Exception):
     """Raised when an order send is not permitted by the mode × destination model."""
@@ -34,14 +39,26 @@ def ensure_trading_allowed(
     destination: str,
     *,
     account_trade_mode: Optional[int] = None,
+    intent: str = INTENT_ENTRY,
 ) -> None:
-    """Raises :class:`SafetyViolation` if sending to ``destination`` is not allowed."""
-    # 1. Cross-process emergency-stop sentinel first (blocks everything).
-    stop_reason = stop_state.is_active()
-    if stop_reason is not None:
-        raise SafetyViolation(
-            f"EMERGENCY STOP ACTIVE ({stop_reason}). All new order submissions blocked."
-        )
+    """Raises :class:`SafetyViolation` if sending to ``destination`` is not allowed.
+
+    ``intent="close"`` marks risk-reducing (close/reduce) sends: these bypass
+    the emergency-stop sentinel so protective closes and basket stops can
+    always de-risk, but mode/destination rules still apply.
+    """
+    if intent not in (INTENT_ENTRY, INTENT_CLOSE):
+        raise SafetyViolation(f"Unknown order intent: {intent!r}")
+
+    # 1. Cross-process emergency-stop sentinel first (blocks new entries;
+    #    close/reduce sends are always allowed through so the kill switch
+    #    can never trap an open position).
+    if intent == INTENT_ENTRY:
+        stop_reason = stop_state.is_active()
+        if stop_reason is not None:
+            raise SafetyViolation(
+                f"EMERGENCY STOP ACTIVE ({stop_reason}). All new order submissions blocked."
+            )
 
     if destination not in (DEST_MOCK, DEST_REAL):
         raise SafetyViolation(f"Unknown order destination: {destination!r}")
@@ -76,6 +93,11 @@ def ensure_trading_allowed(
                 "LIVE_TRADING_CONFIRMATION to be true."
             )
         return
+
+    raise SafetyViolation(
+        f"EXECUTION_MODE={getattr(mode, 'value', mode)!r} is not a known execution mode; "
+        "refusing order submission (fail-closed)."
+    )
 
 
 def destination_for_adapter(adapter: Any) -> str:

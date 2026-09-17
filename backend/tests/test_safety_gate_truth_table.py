@@ -119,6 +119,49 @@ def test_unknown_destination_refused(mode_env):
         ensure_trading_allowed("SOMEWHERE")
 
 
+def test_close_intent_allowed_under_sentinel(mode_env):
+    """H-1: the kill switch blocks new entries but never traps closes."""
+    from app.core import stop_state
+    mode_env(ExecutionMode.DEMO)
+    try:
+        stop_state.trigger("H-1 test")
+        with pytest.raises(SafetyViolation, match="EMERGENCY STOP"):
+            ensure_trading_allowed("REAL", account_trade_mode=0)
+        with pytest.raises(SafetyViolation, match="EMERGENCY STOP"):
+            ensure_trading_allowed("MOCK")
+        # Close/reduce sends pass through on both destinations.
+        assert ensure_trading_allowed("REAL", account_trade_mode=0, intent="close") is None
+        assert ensure_trading_allowed("MOCK", intent="close") is None
+    finally:
+        stop_state.reset()
+
+
+def test_close_intent_still_enforces_mode(mode_env):
+    """Close intent bypasses only the sentinel, not the mode/destination rules."""
+    mode_env(ExecutionMode.PAPER)
+    with pytest.raises(SafetyViolation, match="forbids real broker"):
+        ensure_trading_allowed("REAL", account_trade_mode=0, intent="close")
+
+
+def test_unknown_intent_refused(mode_env):
+    mode_env(ExecutionMode.PAPER)
+    with pytest.raises(SafetyViolation, match="Unknown order intent"):
+        ensure_trading_allowed("MOCK", intent="reduce")
+
+
+def test_unknown_mode_fail_closed(mode_env):
+    """N2-M1: a mode outside the enum table must refuse, never fall through."""
+    mode_env(ExecutionMode.PAPER)
+    import app.core.safety as safety_module
+    orig_mode = config_module.settings.EXECUTION_MODE
+    try:
+        object.__setattr__(config_module.settings, "EXECUTION_MODE", "SOMEDAY")
+        with pytest.raises(SafetyViolation, match="not a known execution mode"):
+            safety_module.ensure_trading_allowed("REAL")
+    finally:
+        object.__setattr__(config_module.settings, "EXECUTION_MODE", orig_mode)
+
+
 # ---------------------------------------------------------------------------
 # Destination derivation + account trade mode
 # ---------------------------------------------------------------------------
