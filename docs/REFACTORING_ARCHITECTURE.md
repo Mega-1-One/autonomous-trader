@@ -229,6 +229,15 @@ Every change below is a *documented intent*, not an accident:
 | 11 | CORS origins restricted to `CORS_ORIGINS` (default `localhost:3000`); optional production token gate | P-05 | C-06/D-01 |
 | 12 | `get_default_spec` strips only a trailing "M" | P-18 | B-02 |
 | 13 | `RealMT5Adapter.send_order` uses caller's `magic`/`comment` | P-16 | C-07 |
+| 14 | Close/reduce sends (`intent="close"`) bypass the stop sentinel but keep mode/destination rules; entry sends stay blocked | Phase 2 reviews H-1 | fix |
+| 15 | Grid orders carry a wide broker-side disaster stop (`protective_sl_pips`, default 100) | Phase 2 reviews H-1 | fix |
+| 16 | API order `direction` restricted to LONG/SHORT (case-normalized); anything else is 422 / REJECTED, never silent SELL | Phase 2 reviews N2-H2 | fix |
+| 17 | Broker `FAILED` no longer consumes the idempotency ID; only `EXECUTED` marks it, so retries proceed | Phase 2 reviews N2-H3 | fix |
+| 18 | Executed fills increment `today_trade_count`, closes accumulate `today_realized_pnl` (with date rollover), so daily limits and locks can actually fire | Phase 2 reviews N2-H1 | fix |
+| 19 | Break-even offset and rounding use per-symbol point size/digits instead of fixed 0.01/2dp | Phase 2 reviews N2-M3 | fix |
+| 20 | API adapter selection is mode-aware: PAPER/BACKTEST always use the mock adapter; DEMO/LIVE try real first | Phase 2 reviews H-2 | fix |
+| 21 | `/api/risk/evaluate` counts real open positions (no max-open bypass); unknown execution modes fail closed | Phase 2 reviews N2-M7/N2-M1 | fix |
+| 22 | Position marking is side-aware (LONG→bid, SHORT→ask; mixed symbols default bid) | Phase 2 reviews N2-M8 | fix |
 
 ---
 
@@ -276,9 +285,9 @@ Every change below is a *documented intent*, not an accident:
   review** because it would leave real broker sends permitted in PAPER — the exact
   defect — while a blanket PAPER block would also break legitimate mock paper tests.
 - **Decision:** `ensure_trading_allowed(destination: "MOCK"|"REAL",
-  *, account_trade_mode: int | None = None)`. Destination is derived from the adapter
-  type (`MockMT5Adapter` → MOCK; anything constructing requests against the real
-  `mt5` API → REAL). Truth table:
+  *, account_trade_mode: int | None = None, intent: str = "entry")`. Destination
+  is derived from the adapter type (`MockMT5Adapter` → MOCK; anything constructing
+  requests against the real `mt5` API → REAL). Truth table:
 
   | Execution mode | Destination = MOCK (paper sim / mock adapter) | Destination = REAL broker |
   |---|---|---|
@@ -286,10 +295,18 @@ Every change below is a *documented intent*, not an accident:
   | `PAPER` | allowed | **refused** |
   | `DEMO` | allowed | allowed **only if** `account_trade_mode == 0` (demo account) |
   | `LIVE` | allowed | allowed **only if** both live flags set (also enforced at boot) |
-  | any, with sentinel present | **refused** | **refused** |
+  | any, with sentinel present | entries refused, **closes allowed** | entries refused, **closes allowed** |
+  | unknown mode / destination / intent | **refused (fail-closed)** | **refused (fail-closed)** |
 
 - **Emergency-stop integration:** the gate reads `core/stop_state.is_active()` first —
-  a triggered stop blocks gated order paths in every process, not just the API.
+  a triggered stop blocks gated *entry* paths in every process, not just the API.
+  Close/reduce sends (`intent="close"`) bypass only the sentinel check so
+  protective closes and basket stops can always de-risk; mode/destination rules
+  still apply to closes (Phase 2 fix H-1).
+- **Adapter selection (Phase 2 fix H-2):** `api/deps.py:build_adapter` is mode-aware —
+  PAPER/BACKTEST always construct the mock adapter (the dashboard paper flow never
+  touches a real terminal regardless of host); DEMO/LIVE try the real terminal
+  first with mock fallback.
 - **Coverage (all direct order-send sites, verified by grep):**
   `scalper/autonomous_scalper_daemon.py`, `scalper/demo_scalper_engine.py`,
   `scalper/ultra_tick_scalper.py`, `scalper/gold_multi_scalper.py`,
@@ -320,6 +337,10 @@ Every change below is a *documented intent*, not an accident:
   locked before the change. Trading-level SL/TP math already flows through the spec
   and is preserved bit-for-bit; displayed spread values in the mock environment may
   change (documented, §2.6 #6).
+- **NAS100 reconciliation (Phase 2 fix, L-7):** the static spec carries contract 1.0
+  while the mock broker info carries 20.0. Per the precedence rule the broker value
+  wins wherever broker info is available; spec-only paths (e.g. `ScalpPositionManager`
+  without symbol info) use 1.0. Both resolutions are locked by tests.
 - **Symbol-name fix:** `get_default_spec` normalizes with a trailing-suffix rule
   (`removesuffix("M")`) instead of stripping all "M" characters.
 
@@ -338,6 +359,10 @@ Every change below is a *documented intent*, not an accident:
   nothing silently changes; `strict=True` is opt-in and documented. Whether to tighten
   is recorded as an explicit decision in the task, not smuggled in. The 3 tests that
   embed the fallback keep passing under the default.
+- **Venv precedence (Phase 2 fix M-3):** `_bootstrap.ensure_backend_on_path` restores
+  the pre-C-04 ordering `[backend, *venv-site-packages, ...]` so a venv-installed
+  package (e.g. `MetaTrader5`) shadows any globally installed copy on standalone
+  bot-script hosts.
 
 ### ADR-5b — Backtest trades access without changing the `/run` contract
 
@@ -389,10 +414,16 @@ Every change below is a *documented intent*, not an accident:
 - **Guarantees (precise):** blocks **new order submissions** in every process that
   routes through the gate or `ExecutionEngine`; persists across process restarts
   (closing the previously-noted restart gap); reset works from any process.
+  Close/reduce sends are **not** blocked by the sentinel, so bot-command closes,
+  basket stops, and timeout closes keep working while stopped (Phase 2 fix H-1).
 - **Limits (precise, no overclaiming):** does **not** close already-open positions in
-  bot processes; does **not** terminate bot loops — sends fail fast with a clear
-  reason; processes that write `mt5.order_send` without the gate (none after B-03, by
-  E-05 audit) would bypass it.
+  bot processes by itself; does **not** terminate bot loops — entry sends fail fast
+  with a clear reason; processes that write `mt5.order_send` without the gate
+  (none after B-03, by E-05 audit) would bypass it.
+- **Failure reporting (Phase 2 fix L-2):** `stop_state.trigger/reset` return whether
+  the sentinel persisted; `RiskEngine` propagates the boolean and the API appends a
+  WARNING to the response message on failure (no new response keys). Absent files
+  mean no stop; malformed/empty/unreadable/inaccessible files fail closed (N2-M6).
 - **Alternatives:** (a) DB row — rejected because the default DB is per-process
   in-memory SQLite; (b) TCP/IPC daemon — rejected as over-engineering for a
   single-operator tool; (c) documented API-only scope — rejected by review as

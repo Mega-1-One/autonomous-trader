@@ -21,6 +21,10 @@ class BacktestEngine:
       it does not alter fills. Commission is deducted per closed trade.
     Changing any of the above alters backtest numbers and must update the
     characterization tests in the same commit.
+
+    Known pre-existing limitation (N2-L1, out of scope): HTF and LTF inputs
+    receive the same candle slice (``history``); there is no separate
+    higher-timeframe series in this engine.
     """
 
     def __init__(

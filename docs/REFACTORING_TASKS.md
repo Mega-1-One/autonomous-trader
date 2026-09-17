@@ -139,8 +139,11 @@
 - **Objective:** every order-sending path enforces the mode × destination model
   (ADR-3 truth table) and the cross-process stop sentinel (P-02, P-14).
 - **Affected (new):** `backend/app/core/safety.py` —
-  `ensure_trading_allowed(destination: str, *, account_trade_mode: int | None = None) -> None`
-  raising `SafetyViolation`; consults `core/stop_state.is_active()` first.
+  `ensure_trading_allowed(destination: str, *, account_trade_mode: int | None = None, intent: str = "entry") -> None`
+  raising `SafetyViolation`; consults `core/stop_state.is_active()` first for
+  entries. Close/reduce sends pass `intent="close"` and bypass only the
+  sentinel check (Phase 2 fix H-1); unknown modes/destinations/intents fail
+  closed (N2-M1).
 - **Affected (edit):** `backend/app/execution/engine.py` (gate call inside
   `execute_signal`, replacing the inline LIVE check; sentinel read as
   defense-in-depth); and **all six order-path files / twelve `mt5.order_send` call
@@ -157,7 +160,9 @@
 - **Intended behavior changes (documented, §2.6 register):** direct real-broker sends
   refused in `PAPER`/`BACKTEST`; `DEMO` real sends require `account_trade_mode == 0`
   (bots/`run_demo_trader.py` pass `adapter.get_account_info().get("trade_mode")` when
-  available); sentinel blocks all gated sends when triggered.
+  available); sentinel blocks gated *entries* when triggered while close/reduce
+  sends stay allowed (§2.6 #14); grid orders carry a wide broker disaster stop
+  (§2.6 #15); the API adapter is mode-aware (§2.6 #20).
 - **Deps:** B-05 (sentinel exists before the gate consumes it).
 - **Risks:** breaking legitimate paper tests — mitigated by the truth table (mock is
   always allowed) and explicit tests.
@@ -509,6 +514,10 @@ Compare every endpoint enumerated in A-02 against `docs/baseline/` samples. Perm
 diffs only: Monte Carlo simulation content (C-02), failure-path status codes (C-01),
 security/CORS headers (C-06/D-01), position price values (C-01, N-06). Everything
 else must match — notably `POST /api/backtest/run` must be unchanged.
+`docs/baseline/contract_diff.py` exits non-zero on drift and runs in CI (M-5);
+liquidity/patterns endpoints compare keys only (wall-clock mock data).
+The orders/close-all samples were re-captured with valid `LONG` direction after
+N2-H2 (the A-02 samples used `"BUY"`, which the fixed code rejects).
 
 ### E-04 Safety drill (paper mode; runs against the mock adapter)
 1. `POST /api/system/emergency-stop` → `POST /api/execution/orders` must be rejected
@@ -524,10 +533,17 @@ else must match — notably `POST /api/backtest/run` must be unchanged.
    REAL-destination → refused; PAPER + MOCK-destination → allowed (paper workflows
    preserved).
 7. **Explicit limitation stated in the drill report:** the sentinel blocks *new
-   entries* cross-process; it does not close open bot positions (ADR-8 limits).
+   entries* cross-process; bot-command closes stay allowed (`intent="close"`,
+   H-1) but the sentinel itself never closes positions (ADR-8 limits).
+8. Close-under-sentinel proven per bot via stubbed-`mt5` control-flow tests
+   (`test_bot_gate_control_flow.py`), not only the textual gate audit.
 
 ### E-05 Duplication/dead-code/coverage grep audit
-- Single `verify_dataset_hash` definition; single `compute_fdr_correction`.
+- Single `verify_dataset_hash` *implementation body* (`research/common/dataset_hash.py`;
+  the 9 engine methods are two-line delegating wrappers kept as the engines'
+  public interface — enforced by `test_research_common.py`), single
+  `compute_fdr_correction` implementation (`research/common/statistical_tests.py`;
+  2 delegating methods).
 - No `fusion_2.0` references; root `app/` gone.
 - No module-level `MarketDataService(` instantiations in `app/api/` (8 routers).
 - No unseeded `np.random.choice` in `app/backtest/`.

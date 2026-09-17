@@ -24,27 +24,33 @@ def _open_position(engine, symbol, entry, sl, tp, volume=0.1):
 
 
 def test_eurusd_floating_pnl_uses_forex_contract():
-    # EURUSD diff 0.001 (10 pips) * contract 100000 * actual risk-sized volume
+    # Independently derived volume: $10 risk / (100 ticks * $1) = 0.1 lots.
+    # PnL = diff 0.001 * contract 100000 * 0.1 = 10.0.
     engine = _engine()
     pos = _open_position(engine, "EURUSD", 1.08500, 1.08400, 1.09500, volume=0.1)
+    assert pos.volume == 0.1
     updated = engine.update_positions({"EURUSD": 1.08600})
-    assert updated[0]["floating_pnl"] == pytest.approx(0.001 * 100000.0 * pos.volume)
+    assert updated[0]["floating_pnl"] == pytest.approx(10.0)
 
 
 def test_xauusd_pnl_regression_unchanged():
-    # XAUUSD diff 1.0 * contract 100 * actual volume (identical to old x100 math)
+    # Independently derived volume: $10 risk / (1000 ticks * $1) = 0.01 lots.
+    # PnL = diff 1.0 * contract 100 * 0.01 = 1.0 (identical to old x100 math).
     engine = _engine()
     pos = _open_position(engine, "XAUUSD", 2400.0, 2390.0, 2420.0, volume=0.1)
+    assert pos.volume == 0.01
     updated = engine.update_positions({"XAUUSD": 2401.0})
-    assert updated[0]["floating_pnl"] == pytest.approx(1.0 * 100.0 * pos.volume)
+    assert updated[0]["floating_pnl"] == pytest.approx(1.0)
 
 
 def test_nas100_realized_pnl_broker_contract():
     # L-7: the mock broker info contract (20.0) wins over the static spec (1.0).
+    # Volume clamps to min 0.01 ($10 risk / $10000 per lot); PnL = 10*20*0.01.
     engine = _engine()
     pos = _open_position(engine, "NAS100", 19500.0, 19400.0, 19700.0, volume=0.1)
+    assert pos.volume == 0.01
     engine._close_position(pos, 19510.0, "MANUAL_CLOSE")
-    assert pos.realized_pnl == pytest.approx(10.0 * 20.0 * pos.volume)
+    assert pos.realized_pnl == pytest.approx(2.0)
 
 
 def test_position_manager_forex_pnl():
@@ -96,9 +102,9 @@ def test_position_manager_nas100_broker_precedence():
 @pytest.mark.asyncio
 async def test_broker_failed_maps_to_502(async_client):
     """A broker FAILED send surfaces as HTTP 502 (C-01 owns this; success shapes unchanged)."""
-    from httpx import ASGITransport, AsyncClient
     from app.main import app
     from app.api import deps
+    from app.execution.engine import ExecutionEngine as EE
 
     deps.init_app_state(app)
 
@@ -109,20 +115,15 @@ async def test_broker_failed_maps_to_502(async_client):
     failing = _FailingAdapter()
     failing.connect()
 
-    from app.api.deps import get_execution_engine
-    svc = deps.get_execution_engine.__wrapped__ if hasattr(deps.get_execution_engine, "__wrapped__") else None
-    # Simpler: swap the shared engine's adapter (DI override-free, same-process)
+    # Swap the shared engine for one wired to the failing adapter (restored after).
     old_engine = app.state.execution_engine
-    from app.execution.engine import ExecutionEngine as EE
     app.state.execution_engine = EE(adapter=failing, risk_engine=app.state.risk_engine)
     try:
-        transport = ASGITransport(app=app)
-        async with AsyncClient(transport=transport, base_url="http://test") as client:
-            res = await client.post("/api/execution/orders", json={
-                "client_signal_id": "SIG_FAIL_502",
-                "symbol": "XAUUSD", "direction": "LONG",
-                "entry_price": 2400.0, "stop_loss": 2390.0, "take_profit": 2420.0,
-            })
+        res = await async_client.post("/api/execution/orders", json={
+            "client_signal_id": "SIG_FAIL_502",
+            "symbol": "XAUUSD", "direction": "LONG",
+            "entry_price": 2400.0, "stop_loss": 2390.0, "take_profit": 2420.0,
+        })
         assert res.status_code == 502
         assert "Algo trading disabled" in res.json()["detail"]
     finally:

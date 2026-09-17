@@ -76,19 +76,18 @@ async def test_position_endpoint_uses_real_prices_for_eurusd(async_client):
     res_pos = await async_client.get("/api/execution/positions")
     assert res_pos.status_code == 200
     data = res_pos.json()
-    # The mock's sine-wave candle closes may TP/SL the position; it must be
-    # present somewhere and marked at a real (non-constant) price either way.
+    # Mock has no bid/ask on the spec -> falls back to a fresh M5 candle
+    # close, which is deterministic: base 1.0850 + cos(0)*1.5 = 2.585.
+    # (2.585 >= TP 1.095, so the position TP-closes; it must be present.)
     mine = [p for p in data["open_positions"] + data["closed_positions"]
             if p["position_id"] == pos_id]
     assert mine, "position missing from endpoint"
+    assert mine[0]["current_price"] == pytest.approx(2.585, abs=1e-9)
     assert mine[0]["current_price"] != 2400.0
-    # Mock has no bid/ask on the spec -> falls back to a candle close
-    assert abs(mine[0]["current_price"] - 1.0850) < 5.0
 
 
 def test_get_latest_price_prefers_candle_close_over_constant():
     svc = MarketDataService()
     price = svc.get_latest_price("EURUSD")
-    assert price is not None
+    assert price == pytest.approx(2.585, abs=1e-9)  # deterministic mock close
     assert price != 2400.0
-    assert abs(price - 1.0850) < 5.0  # mock candle close range

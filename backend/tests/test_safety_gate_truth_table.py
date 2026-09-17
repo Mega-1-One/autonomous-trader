@@ -194,7 +194,6 @@ def test_engine_real_destination_refused_in_paper():
         pass
     adapter = _FakeRealAdapter()
     adapter.connect()
-    from app.execution.engine import ExecutionEngine
     engine = ExecutionEngine(adapter=adapter)
     # Force the gate to classify this adapter as REAL by patching derivation
     import app.execution.engine as ee

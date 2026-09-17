@@ -57,6 +57,36 @@ def test_fdr_single_shared_definition():
     assert "app.research.common.statistical_tests import compute_fdr_correction" in macro_src
 
 
+def test_hash_delegators_contain_no_logic():
+    """M-1: the 9 engine verify_dataset_hash methods must stay thin delegators.
+
+    E-05 enforces a single implementation body; this test fails if anyone
+    reintroduces hash logic into an engine wrapper.
+    """
+    import inspect
+    from app.research.phase28_engine import Phase28BaselineEngine
+    from app.research.phase29_conditional_engine import Phase29ConditionalEngine
+    from app.research.phase30_forensic_engine import Phase30ForensicEngine
+    from app.research.phase34_engine import Phase34ConfirmationEngine
+    from app.research.phase35_engine import Phase35PostMortemEngine
+    from app.research.phase36_external_engine import Phase36ExternalEngine
+    from app.research.final_audit_engine import FinalResearchAuditEngine
+    from app.research.market_state.market_state_engine import MarketStateEngine
+    from app.research.macro_futures.macro_futures_engine import Phase37MacroFuturesEngine
+
+    engines = [
+        Phase28BaselineEngine, Phase29ConditionalEngine, Phase30ForensicEngine,
+        Phase34ConfirmationEngine, Phase35PostMortemEngine, Phase36ExternalEngine,
+        FinalResearchAuditEngine, MarketStateEngine, Phase37MacroFuturesEngine,
+    ]
+    assert len(engines) == 9
+    for cls in engines:
+        src = inspect.getsource(cls.verify_dataset_hash)
+        assert "app.research.common.dataset_hash import verify_dataset_hash" in src, cls.__name__
+        assert "2.0.0" not in src, cls.__name__
+        assert "global_dataset_hash" not in src, cls.__name__
+
+
 def test_chronological_split_convention():
     assert chronological_split_indices(100) == (60, 80)
     assert chronological_split_indices(10) == (6, 8)
