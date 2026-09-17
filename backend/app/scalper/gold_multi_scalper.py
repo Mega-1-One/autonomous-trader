@@ -196,7 +196,6 @@ class GoldMultiPositionProfitScalper:
         """Display non-blocking status summary for monitoring to terminal."""
         import MetaTrader5 as mt5
         acc = mt5.account_info()
-        tick = mt5.symbol_info_tick(self.symbol)
         open_positions = mt5.positions_get(group=f"*{self.symbol}*")
         active = [p for p in (open_positions or []) if p.magic == self.magic_number]
         floating_pnl = sum(p.profit + p.swap for p in active) if active else 0.0
@@ -249,7 +248,7 @@ class GoldMultiPositionProfitScalper:
         print(f"Current Balance:        ${acc.balance:.2f} USD")
         print(f"Target Symbol:          {self.symbol} (Gold)")
         print(f"Micro Volume:           {self.volume} lot per trade")
-        print(f"Control Model:          MANUAL STOP ONLY (No Auto Halts)")
+        print("Control Model:          MANUAL STOP ONLY (No Auto Halts)")
         print(f"Take Profit Target:     +{self.take_profit_pips} pips (Explicit TP on Broker)")
         print(f"Stop Loss:              -{self.stop_loss_pips} pips (Protective SL on Broker) + ${self.max_loss_usd:.2f} loss cap")
         print(f"Close Triggers:         PROFIT >= +${self.min_profit_target_usd:.2f} | LOSS <= -${self.max_loss_usd:.2f}")
@@ -353,7 +352,7 @@ class GoldMultiPositionProfitScalper:
                         self.last_trade_time = datetime.now(timezone.utc).strftime("%H:%M:%S")
 
                         direction_str = "BUY" if pos.type == 0 else "SELL"
-                        print(f"\n[TRADE CLOSED]")
+                        print("\n[TRADE CLOSED]")
                         print(f"Ticket:       #{pos.ticket}")
                         print(f"Symbol:       {self.symbol}")
                         print(f"Direction:    {direction_str}")
@@ -470,7 +469,7 @@ class GoldMultiPositionProfitScalper:
                             if res_open and res_open.retcode == mt5.TRADE_RETCODE_DONE:
                                 self.last_order_time = now
                                 open_time_str = datetime.now(timezone.utc).strftime("%H:%M:%S")
-                                print(f"\n[TRADE OPENED]")
+                                print("\n[TRADE OPENED]")
                                 print(f"Ticket:    #{res_open.order}")
                                 print(f"Symbol:    {self.symbol}")
                                 print(f"Direction: {direction}")
@@ -492,11 +491,11 @@ class GoldMultiPositionProfitScalper:
                                     "time_str": open_time_str
                                 }
                             else:
-                                print(f"\n[ORDER REJECTED BY MT5]")
+                                print("\n[ORDER REJECTED BY MT5]")
                                 print(f"Retcode:   {res_open.retcode if res_open else 'None'}")
                                 print(f"Reason:    {retcode_desc}")
                                 print(f"Signal:    {direction} at {entry_price}")
-                                print(f"Returning to market scan...\n")
+                                print("Returning to market scan...\n")
 
                 # Fast yield (50ms) to maintain fast scanning without CPU saturation
                 time.sleep(0.05)

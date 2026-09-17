@@ -30,8 +30,6 @@ class SetupClassifier:
         spec: InstrumentSpecification,
         target_setup_filter: Optional[str] = None
     ) -> SetupClassificationResult:
-        reasons = []
-
         if bias_res.bias in ["NEUTRAL", "NO_TRADE"]:
             return SetupClassificationResult(
                 setup_type="NO_SETUP", direction="NONE", approved=False,

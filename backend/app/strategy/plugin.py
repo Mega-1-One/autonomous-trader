@@ -113,7 +113,7 @@ class UnvalidatedResearchStrategy(StrategyPlugin):
 
         reasons = [
             f"Trend alignment: {trend}",
-            f"Fast SMA vs Slow SMA confluence",
+            "Fast SMA vs Slow SMA confluence",
             "Micro-scalp fixed-pip geometry"
         ]
 

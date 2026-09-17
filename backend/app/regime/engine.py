@@ -28,8 +28,6 @@ class MarketRegimeEngine:
         features: ScalperFeatures,
         event_lockout: bool = False
     ) -> RegimeState:
-        reasons = []
-
         if event_lockout:
             return RegimeState(
                 regime=MarketRegime.HIGH_RISK_EVENT,

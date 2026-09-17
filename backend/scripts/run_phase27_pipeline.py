@@ -83,9 +83,9 @@ def run_phase27_pipeline():
     with open(report_path, "w") as f:
         json.dump(report_output, f, indent=2)
 
-    print(f"\n==================================================")
-    print(f" PHASE 27 PIPELINE SUMMARY")
-    print(f"==================================================")
+    print("\n==================================================")
+    print(" PHASE 27 PIPELINE SUMMARY")
+    print("==================================================")
     print(f"Dataset Manifest Saved: {manifest_file}")
     print(f"Final Verdict:           {verdict}")
     print(f"[SUCCESS] Phase 27 Report saved to {report_path}")

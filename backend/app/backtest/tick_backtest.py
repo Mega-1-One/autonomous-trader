@@ -1,4 +1,3 @@
-import time
 from typing import Any, Dict, List, Optional
 
 from app.scalper.tick_engine import TickEngine

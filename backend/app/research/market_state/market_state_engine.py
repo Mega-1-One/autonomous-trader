@@ -53,7 +53,6 @@ class RegimeDefinitionEngine:
         atr_30 = float(np.mean(ranges))
         vol_ratio = atr_14 / (atr_30 + 1e-6)
 
-        ma20 = float(np.mean(closes[-20:]))
         ret_20 = (c_curr.close - closes[-20]) / (closes[-20] + 1e-6)
 
         from datetime import datetime, timezone

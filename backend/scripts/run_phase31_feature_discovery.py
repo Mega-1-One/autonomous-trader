@@ -10,7 +10,6 @@ logging.getLogger("autotrader").setLevel(logging.ERROR)
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from app.data.mt5_real import RealMT5Adapter
-from app.scalper.instrument import InstrumentSpecification
 from app.research.data_pipeline.historical_loader import PaginatedHistoricalLoader
 from app.research.feature_discovery.feature_generator import FeatureGenerator
 from app.research.feature_discovery.return_labeler import ReturnLabeler
@@ -28,7 +27,7 @@ def run_phase31_discovery():
     expected_hash = "25833aa4b8fd8428bf170e456c27398933bef0a03d0f56f8cbf47fccff1a6728"
     current_hash = manifest_data.get("global_dataset_hash", "")
     if current_hash != expected_hash and manifest_data.get("version") != "2.0.0":
-        print(f"[ERROR] SHA256 Dataset Hash Mismatch! Stopping Phase 31 execution.")
+        print("[ERROR] SHA256 Dataset Hash Mismatch! Stopping Phase 31 execution.")
         return
 
     print("\n==================================================")
@@ -61,7 +60,6 @@ def run_phase31_discovery():
     raw_results = []
 
     for canonical, sym in symbols:
-        spec = InstrumentSpecification.get_default_spec(canonical)
         print(f"\nIngesting Full-Resolution Dataset for {canonical} ({sym})...")
 
         candles, _ = loader.load_full_history(canonical, sym, mt5, mt5.TIMEFRAME_M1, start_dt, end_dt)
@@ -143,9 +141,9 @@ def run_phase31_discovery():
     with open(json_file, "w") as f:
         json.dump(report_output, f, indent=2)
 
-    print(f"\n==================================================")
-    print(f" PHASE 31 DISCOVERY SUMMARY")
-    print(f"==================================================")
+    print("\n==================================================")
+    print(" PHASE 31 DISCOVERY SUMMARY")
+    print("==================================================")
     print(f"Total Hypotheses Tested:    {len(raw_results)}")
     print(f"FDR Significant Features:   {report_output['fdr_significant_count']}")
     print(f"Surviving OOS Edges:        {len(surviving_features)}")

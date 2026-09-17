@@ -2,6 +2,7 @@ import sys
 import json
 import logging
 from pathlib import Path
+from typing import List
 import numpy as np
 
 logging.getLogger("autotrader").setLevel(logging.ERROR)
@@ -171,9 +172,9 @@ def run_phase19_benchmark():
     with open(out_path, "w") as f:
         json.dump(report_output, f, indent=2)
 
-    print(f"\n==================================================")
+    print("\n==================================================")
     print(f" BASELINE VS CALIBRATED MODEL COMPARISON (N = {len(all_observations):,})")
-    print(f"==================================================")
+    print("==================================================")
     print(f"Out-of-Sample Baseline Brier:    {baseline_res.oos_baseline_brier:.4f}")
     print(f"Out-of-Sample Model Brier:       {baseline_res.oos_model_brier:.4f}")
     print(f"Brier Improvement Over Baseline: {baseline_res.brier_improvement_percent:+.2f}%")

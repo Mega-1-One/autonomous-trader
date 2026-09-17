@@ -2,6 +2,7 @@ import sys
 import json
 import logging
 from pathlib import Path
+from typing import List
 
 logging.getLogger("autotrader").setLevel(logging.ERROR)
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -163,9 +164,9 @@ def run_phase18_benchmark():
     with open(out_path, "w") as f:
         json.dump(report_output, f, indent=2)
 
-    print(f"\n==================================================")
+    print("\n==================================================")
     print(f" OVERALL CALIBRATION SUMMARY (N = {len(all_observations):,})")
-    print(f"==================================================")
+    print("==================================================")
     print(f"Status:             {overall_wf.train_result.calibration_status}")
     print(f"Brier Score (OOS):  {overall_wf.out_of_sample_result.brier_score:.4f}")
     print(f"Log Loss (OOS):     {overall_wf.out_of_sample_result.log_loss:.4f}")

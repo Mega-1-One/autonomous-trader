@@ -184,9 +184,9 @@ def run_phase24_benchmark():
     with open(out_path, "w") as f:
         json.dump(report_output, f, indent=2)
 
-    print(f"\n==================================================")
+    print("\n==================================================")
     print(f" PHASE 24 BENCHMARK SUMMARY (Tested {len(all_candidate_results)} Combinations)")
-    print(f"==================================================")
+    print("==================================================")
     print(f"Positive OOS Edge Candidates: {len(positive_edge_candidates)}")
     print(f"Final Verdict:                 {verdict}")
     print(f"[SUCCESS] Phase 24 Report saved to {out_path}")

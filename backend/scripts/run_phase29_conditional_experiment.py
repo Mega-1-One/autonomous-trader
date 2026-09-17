@@ -18,7 +18,7 @@ def run_phase29_conditional_experiment():
 
     # 1. Dataset Lock Verification
     if not engine.verify_dataset_hash(manifest_file):
-        print(f"[ERROR] Dataset Manifest Hash Verification Failed! Stopping Phase 29 execution.")
+        print("[ERROR] Dataset Manifest Hash Verification Failed! Stopping Phase 29 execution.")
         return
 
     print("\n==================================================")
@@ -122,12 +122,12 @@ def run_phase29_conditional_experiment():
             c_str = ", ".join([f"{k}={v}" for k, v in r['regime_conditions'].items()])
             f.write(f"| **{r['instrument']}** | {r['setup_name']} | {c_str} | {r['sample_size']} | {r['win_rate']}% | {r['gross_expectancy_r']} R | **{r['net_expectancy_r']} R** | **{r['oos_net_expectancy_r']} R** | **{r['oos_profit_factor']}** | {r['classification']} |\n")
 
-        f.write(f"\n## 3. Diagnostic Verdict\n")
+        f.write("\n## 3. Diagnostic Verdict\n")
         f.write(f"**FINAL VERDICT**: {verdict_text}\n")
 
-    print(f"\n==================================================")
-    print(f" PHASE 29 CONDITIONAL EDGE SUMMARY")
-    print(f"==================================================")
+    print("\n==================================================")
+    print(" PHASE 29 CONDITIONAL EDGE SUMMARY")
+    print("==================================================")
     print(f"Total Conditional Experiments: {len(logged_experiments)}")
     print(f"Robust OOS Candidates:         {len(robust_candidates)}")
     print(f"Final Diagnostic Verdict:      {verdict_text}")

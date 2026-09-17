@@ -136,7 +136,6 @@ class ExecutionEngine:
             "magic": magic_number
         }
 
-        order_send_start = time.perf_counter()
         broker_resp = self.adapter.send_order(order_req)
         latency_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
 
@@ -208,7 +207,6 @@ class ExecutionEngine:
 
             entry = pos.entry_price
             sl = pos.stop_loss
-            tp = pos.take_profit
             direction = pos.direction
             vol = pos.volume
             risk_dist = abs(entry - sl)

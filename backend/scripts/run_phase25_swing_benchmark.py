@@ -173,9 +173,9 @@ def run_phase25_benchmark():
     with open(out_path, "w") as f:
         json.dump(report_output, f, indent=2)
 
-    print(f"\n==================================================")
-    print(f" PHASE 25 SWING BENCHMARK SUMMARY")
-    print(f"==================================================")
+    print("\n==================================================")
+    print(" PHASE 25 SWING BENCHMARK SUMMARY")
+    print("==================================================")
     print(f"Positive OOS Edge Candidates Discovered: {len(positive_edge_candidates)}")
     print(f"Final Verdict:                           {verdict}")
     print(f"[SUCCESS] Phase 25 Report saved to {out_path}")

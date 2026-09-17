@@ -122,9 +122,9 @@ def run_phase16_benchmark():
         # Use slice of up to 25,000 ticks for high-speed diagnostic backtesting
         eval_ticks = ticks[:25000]
 
-        print(f"\n--------------------------------------------------")
+        print("\n--------------------------------------------------")
         print(f" Instrument: {sym} (Evaluated Window: {len(eval_ticks):,} ticks)")
-        print(f"--------------------------------------------------")
+        print("--------------------------------------------------")
 
         for score in sensitivity_scores:
             engine = TickBacktestEngine(

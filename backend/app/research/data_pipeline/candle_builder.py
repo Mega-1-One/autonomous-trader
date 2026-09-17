@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from typing import List
 
 from app.context.timeframe_engine import Candle

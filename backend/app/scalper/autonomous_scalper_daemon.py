@@ -73,8 +73,8 @@ class AutonomousScalperDaemon:
         print(f"MT5 Account:          {acc.login} ({acc.server})")
         print(f"Current Balance:      ${acc.balance:.2f} USD")
         print(f"Target Symbol:        {self.symbol}")
-        print(f"Micro Volume:         0.01 lot")
-        print(f"Target Risk/Reward:   5.0 pips SL / 10.0 pips TP")
+        print("Micro Volume:         0.01 lot")
+        print("Target Risk/Reward:   5.0 pips SL / 10.0 pips TP")
         print(f"Max Holding Horizon:  {self.max_holding_seconds} seconds")
         print(f"Post-Trade Cooldown:  {self.cooldown_seconds} seconds")
         print(f"Equity Stop Guard:    {self.max_drawdown_pct if self.max_drawdown_pct > 0 else 'Disabled (Continuous Scalp)'}")
@@ -93,7 +93,6 @@ class AutonomousScalperDaemon:
                 now = time.time()
                 acc_curr = mt5.account_info()
                 if acc_curr:
-                    balance = acc_curr.balance
                     equity = acc_curr.equity
                     dd_pct = ((start_balance - equity) / start_balance) * 100.0
                     if self.max_drawdown_pct > 0 and dd_pct >= self.max_drawdown_pct:

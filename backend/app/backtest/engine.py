@@ -88,7 +88,6 @@ class BacktestEngine:
 
                 high = current_candle["high"]
                 low = current_candle["low"]
-                close = current_candle["close"]
 
                 exit_price: Optional[float] = None
                 exit_reason: Optional[str] = None

@@ -28,7 +28,7 @@ def run_phase32_experiment():
     expected_hash = "25833aa4b8fd8428bf170e456c27398933bef0a03d0f56f8cbf47fccff1a6728"
     current_hash = manifest_data.get("global_dataset_hash", "")
     if current_hash != expected_hash and manifest_data.get("version") != "2.0.0":
-        print(f"[ERROR] SHA256 Dataset Hash Mismatch! Stopping Phase 32 execution.")
+        print("[ERROR] SHA256 Dataset Hash Mismatch! Stopping Phase 32 execution.")
         return
 
     print("\n==================================================")
@@ -153,9 +153,9 @@ def run_phase32_experiment():
             "final_verdict": verdict
         }, f, indent=2)
 
-    print(f"\n==================================================")
-    print(f" PHASE 32 DISCOVERY SUMMARY")
-    print(f"==================================================")
+    print("\n==================================================")
+    print(" PHASE 32 DISCOVERY SUMMARY")
+    print("==================================================")
     print(f"Total Hypotheses Tested:    {len(raw_results)}")
     print(f"FDR Significant Features:   {sum(1 for r in raw_results if r.is_fdr_significant)}")
     print(f"Surviving OOS Edges:        {len(surviving_features)}")

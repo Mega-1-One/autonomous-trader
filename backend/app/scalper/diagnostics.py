@@ -17,9 +17,9 @@ class DiagnosticFunnel:
 
     def print_funnel_summary(self, symbol: str) -> None:
         total = max(1, self.raw_ticks_ingested)
-        print(f"\n==================================================")
+        print("\n==================================================")
         print(f" DIAGNOSTIC FUNNEL SUMMARY: {symbol}")
-        print(f"==================================================")
+        print("==================================================")
         print(f"1. Raw Ticks Ingested:        {self.raw_ticks_ingested:,} (100.0%)")
         print(f"2. Passed Tick Validation:     {self.ticks_passed_validation:,} ({(self.ticks_passed_validation/total)*100:.2f}%)")
         print(f"3. Passed Spread Gate:         {self.ticks_passed_spread:,} ({(self.ticks_passed_spread/total)*100:.2f}%)")

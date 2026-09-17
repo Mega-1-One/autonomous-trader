@@ -1,5 +1,4 @@
 import time
-from datetime import datetime
 
 from app.core.safety import ensure_trading_allowed, account_trade_mode_from_mt5, SafetyViolation
 from app.data.mt5_real import RealMT5Adapter
@@ -64,7 +63,7 @@ class MT5DemoMicroScalper:
             comment="MicroScalp 30s",
         )
 
-        print(f"Submitting Instant Micro-Scalp Order to MT5...")
+        print("Submitting Instant Micro-Scalp Order to MT5...")
         try:
             ensure_trading_allowed("REAL", account_trade_mode=account_trade_mode_from_mt5())
         except SafetyViolation as exc:

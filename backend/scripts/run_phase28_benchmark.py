@@ -18,7 +18,7 @@ def run_phase28_benchmark():
 
     # 1. Dataset Lock & Hash Verification
     if not engine.verify_dataset_hash(manifest_file):
-        print(f"[ERROR] Dataset Manifest Hash Verification Failed! Stopping Phase 28 execution.")
+        print("[ERROR] Dataset Manifest Hash Verification Failed! Stopping Phase 28 execution.")
         return
 
     print("\n==================================================")
@@ -106,9 +106,9 @@ def run_phase28_benchmark():
         f.write("1. **Gross Edge vs Cost Drag**: In-sample gross expectancy before transaction costs ranges from -0.05R to +0.02R, but fixed ECN transaction friction (-0.14R to -0.22R) reduces all 10 baseline strategies to negative net expectancy.\n")
         f.write("2. **Core Verdict**: The previous negative results were NOT caused by data truncation or lookahead errors, but by the fundamental cost drag of uncalibrated directional entry signals.\n")
 
-    print(f"\n==================================================")
-    print(f" PHASE 28 BENCHMARK SUMMARY")
-    print(f"==================================================")
+    print("\n==================================================")
+    print(" PHASE 28 BENCHMARK SUMMARY")
+    print("==================================================")
     print(f"Total Logged Experiments: {len(registry_experiments)}")
     print(f"Experiment Registry:      {registry_path}")
     print(f"Markdown Report Saved:    {md_report_path}")

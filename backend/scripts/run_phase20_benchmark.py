@@ -13,7 +13,6 @@ from app.context.timeframe_engine import TimeframeEngine
 from app.context.bias_engine import BiasEngine
 from app.context.setup_engine import SetupEngine
 from app.intelligence.cost_analyzer import CostFilter
-from app.intelligence.ev_engine import ExpectedValueEngine
 from app.scalper.adaptive_exit import AdaptiveExitEngine
 from app.backtest.tick_metrics import TickMetricsCalculator
 
@@ -32,7 +31,6 @@ def run_system_c_backtest(
     bias_engine = BiasEngine()
     setup_engine = SetupEngine()
     cost_filter = CostFilter(commission_per_lot=7.0, base_slippage_pips=0.1)
-    ev_engine = ExpectedValueEngine()
     adaptive_exit = AdaptiveExitEngine()
 
     executed_trades = []

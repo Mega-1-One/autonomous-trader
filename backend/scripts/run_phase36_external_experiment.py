@@ -17,7 +17,7 @@ def run_phase36_experiment():
         return
 
     if not engine.verify_dataset_hash(manifest_file):
-        print(f"[ERROR] SHA256 Dataset Hash Mismatch! Stopping Phase 36 execution.")
+        print("[ERROR] SHA256 Dataset Hash Mismatch! Stopping Phase 36 execution.")
         return
 
     print("\n==================================================")
@@ -133,13 +133,13 @@ def run_phase36_experiment():
         f.write("|---|---|---|---|---|\n")
         f.write(f"| **CME Gold Futures (GC)** | **{cme_scores.total_score} / 100** | {cme_scores.confidence_level} | `NEW_INFORMATION` | **PARTIALLY READY** |\n")
         f.write(f"| **Macro News Calendar** | **{macro_scores.total_score} / 100** | {macro_scores.confidence_level} | `NEW_INFORMATION` | **PARTIALLY READY** |\n")
-        f.write(f"| **Level-2 Depth Feed** | **0.0 / 100** | LOW | `UNAVAILABLE` | **UNAVAILABLE** |\n\n")
+        f.write("| **Level-2 Depth Feed** | **0.0 / 100** | LOW | `UNAVAILABLE` | **UNAVAILABLE** |\n\n")
         f.write("## 3. Recommended Next Step\n")
         f.write("STOP FOR HUMAN REVIEW. Present data vendor access & licensing requirements for CME Futures data ingestion.\n")
 
-    print(f"\n==================================================")
-    print(f" PHASE 36 EXTERNAL DATA AUDIT SUMMARY")
-    print(f"==================================================")
+    print("\n==================================================")
+    print(" PHASE 36 EXTERNAL DATA AUDIT SUMMARY")
+    print("==================================================")
     print(f"CME Futures Readiness Score: {cme_scores.total_score} / 100 ({cme_scores.confidence_level})")
     print(f"Macro News Readiness Score:  {macro_scores.total_score} / 100 ({macro_scores.confidence_level})")
     print(f"Final Audit Verdict:        {verdict}")

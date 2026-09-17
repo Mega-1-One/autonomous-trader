@@ -61,9 +61,9 @@ def run_phase26_audit():
     with open(out_path, "w") as f:
         json.dump(report_output, f, indent=2)
 
-    print(f"\n==================================================")
-    print(f" PHASE 26 DIAGNOSTIC SUMMARY")
-    print(f"==================================================")
+    print("\n==================================================")
+    print(" PHASE 26 DIAGNOSTIC SUMMARY")
+    print("==================================================")
     print(f"Final Diagnostic Verdict: {verdict}")
     print(f"[SUCCESS] Phase 26 Report saved to {out_path}")
 
