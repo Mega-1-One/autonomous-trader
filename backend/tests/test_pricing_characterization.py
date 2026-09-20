@@ -171,25 +171,21 @@ def test_mock_get_symbol_info_has_no_bid_key():
 # backtest/engine contract heuristic (current point-size guess)
 # ---------------------------------------------------------------------------
 
-class _FakeSignal:
-    def __init__(self, entry, sl, tp, direction="LONG"):
-        self.status = "APPROVED"
-        self.direction = direction
-        self.entry_price = entry
-        self.stop_loss = sl
-        self.take_profit = tp
-        self.to_dict = lambda: {
-            "entry_price": entry, "stop_loss": sl, "take_profit": tp,
-            "direction": direction, "symbol": "TEST",
-        }
-
-
 class _FakeStrategy:
+    """Test double implementing the StrategyProvider seam (dict in/out)."""
+
     def __init__(self, entry, sl, tp, direction="LONG"):
         self.entry, self.sl, self.tp, self.direction = entry, sl, tp, direction
 
-    def evaluate_setup(self, *args, **kwargs):
-        return _FakeSignal(self.entry, self.sl, self.tp, self.direction)
+    def configure(self, config=None):
+        pass
+
+    def evaluate(self, inputs):
+        return {"client_signal_id": "SIG_CHAR", "symbol": inputs.symbol,
+                "direction": self.direction, "entry_price": self.entry,
+                "stop_loss": self.sl, "take_profit": self.tp,
+                "status": "APPROVED", "setup_type": "FAKE",
+                "confidence": 1.0, "reasons": {}, "timestamp": "t"}
 
 
 class _FakeRisk:

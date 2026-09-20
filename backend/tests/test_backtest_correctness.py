@@ -13,19 +13,18 @@ def _mini_backtest(symbol="XAUUSD", point_size=0.01, entry=2400.0, sl=2399.0, tp
     """Engine with injected always-approve strategy/risk (deterministic trades)."""
     from app.risk.engine import RiskDecision
 
-    class _FakeSignal:
-        status = "APPROVED"
-        direction = "LONG"
-        entry_price = entry
-        stop_loss = sl
-        take_profit = tp
-        def to_dict(self):
-            return {"entry_price": entry, "stop_loss": sl, "take_profit": tp,
-                    "direction": "LONG", "symbol": symbol}
-
     class _FakeStrategy:
-        def evaluate_setup(self, *a, **k):
-            return _FakeSignal()
+        """Test double implementing the StrategyProvider seam (dict in/out)."""
+
+        def configure(self, config=None):
+            pass
+
+        def evaluate(self, inputs):
+            return {"client_signal_id": "SIG_FAKE", "symbol": inputs.symbol,
+                    "direction": "LONG", "entry_price": entry,
+                    "stop_loss": sl, "take_profit": tp, "status": "APPROVED",
+                    "setup_type": "FAKE", "confidence": 1.0,
+                    "reasons": {}, "timestamp": "t"}
 
     class _FakeRisk:
         def evaluate_trade_risk(self, *a, **k):
@@ -70,20 +69,16 @@ def test_fill_methodology_tp_no_slippage_sl_adverse():
 
     sl_engine = BacktestEngine(initial_balance=10000.0, slippage_pips=0.5, commission_per_lot=0.0)
 
-    class _SLSignal:
-        status = "APPROVED"
-        direction = "LONG"
-        entry_price = 2400.0
-        stop_loss = 2399.0
-        take_profit = 2410.0
-
-        def to_dict(self):
-            return {"entry_price": 2400.0, "stop_loss": 2399.0,
-                    "take_profit": 2410.0, "direction": "LONG", "symbol": "X"}
-
     class _SLStrategy:
-        def evaluate_setup(self, *a, **k):
-            return _SLSignal()
+        def configure(self, config=None):
+            pass
+
+        def evaluate(self, inputs):
+            return {"client_signal_id": "SIG_SL", "symbol": inputs.symbol,
+                    "direction": "LONG", "entry_price": 2400.0,
+                    "stop_loss": 2399.0, "take_profit": 2410.0,
+                    "status": "APPROVED", "setup_type": "FAKE",
+                    "confidence": 1.0, "reasons": {}, "timestamp": "t"}
 
     class _SLRisk:
         def evaluate_trade_risk(self, *a, **k):
@@ -115,20 +110,16 @@ def test_spread_does_not_alter_fills():
     # Re-run with a wide spread through a fresh engine with the same fakes.
     e2 = BE(initial_balance=10000.0, spread_pips=50.0, slippage_pips=0.0, commission_per_lot=7.0)
 
-    class _FakeSignal:
-        status = "APPROVED"
-        direction = "LONG"
-        entry_price = 2400.0
-        stop_loss = 2399.0
-        take_profit = 2401.0
-
-        def to_dict(self):
-            return {"entry_price": 2400.0, "stop_loss": 2399.0,
-                    "take_profit": 2401.0, "direction": "LONG", "symbol": "X"}
-
     class _FakeStrategy:
-        def evaluate_setup(self, *a, **k):
-            return _FakeSignal()
+        def configure(self, config=None):
+            pass
+
+        def evaluate(self, inputs):
+            return {"client_signal_id": "SIG_FAKE2", "symbol": inputs.symbol,
+                    "direction": "LONG", "entry_price": 2400.0,
+                    "stop_loss": 2399.0, "take_profit": 2401.0,
+                    "status": "APPROVED", "setup_type": "FAKE",
+                    "confidence": 1.0, "reasons": {}, "timestamp": "t"}
 
     class _FakeRisk:
         def evaluate_trade_risk(self, *a, **k):
