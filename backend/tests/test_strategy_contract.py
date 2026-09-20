@@ -128,3 +128,33 @@ def test_market_inputs_defaults():
     mi = MarketInputs(symbol="EURUSD")
     assert mi.candles == {}
     assert mi.point_size == 0.01
+
+
+def test_resolve_strategy_config_legacy_default():
+    """E4: without sections, ict_scalp gets the full top-level dict unchanged."""
+    from app.strategy.provider import resolve_strategy_config
+    cfg = {"mode": "SCALP", "entry": {"minimum_rr": 1.5}}
+    name, section = resolve_strategy_config(cfg)
+    assert name == "ict_scalp"
+    assert section == cfg
+    name, section = resolve_strategy_config({**cfg, "name": "ict_scalp"})
+    assert (name, section) == ("ict_scalp", {**cfg, "name": "ict_scalp"})
+
+
+def test_resolve_strategy_config_isolated_section():
+    """E4: a named section is passed verbatim; ICT keys never leak into it."""
+    from app.strategy.provider import resolve_strategy_config
+    cfg = {"name": "other", "entry": {"minimum_rr": 9.9},
+           "strategies": {"other": {"lookback": 50}}}
+    name, section = resolve_strategy_config(cfg)
+    assert name == "other"
+    assert section == {"lookback": 50}
+
+
+def test_resolve_strategy_config_unknown_name():
+    """E4: unknown names fail loudly instead of silently using ICT config."""
+    from app.strategy.provider import resolve_strategy_config
+    with pytest.raises(ContractViolation):
+        resolve_strategy_config({"name": "ghost"})
+    with pytest.raises(ContractViolation):
+        resolve_strategy_config({}, name="ghost")

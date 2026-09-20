@@ -8,7 +8,7 @@ from app.data.mt5_real import RealMT5Adapter
 from app.risk.engine import RiskEngine
 from app.services.market_data import MarketDataService
 from app.strategy import ict_adapter  # noqa: F401 (registers the ict_scalp provider)
-from app.strategy.provider import MarketInputs, create_provider, evaluate_strategy
+from app.strategy.provider import MarketInputs, create_provider, evaluate_strategy, resolve_strategy_config
 from app.execution.engine import ExecutionEngine
 
 def calculate_spread_in_pips(bid: float, ask: float, digits: int, point_size: float, symbol: str = "") -> float:
@@ -40,12 +40,10 @@ async def run_autonomous_trader(symbol: str = "XAUUSD", poll_interval_seconds: i
         logger.warning("Using Mock MT5 Adapter (PAPER/BACKTEST mode or terminal unavailable).")
 
     market_service = MarketDataService(adapter=adapter)
-    # E2: strategy behind the provider seam (default ict_scalp, same config
-    # source as the previous direct StrategyEngine() construction).
-    strategy_engine = create_provider(
-        settings.strategy_config.get("name", "ict_scalp"),
-        settings.strategy_config,
-    )
+    # E2/E4: strategy behind the provider seam; each provider receives
+    # only its own config section.
+    provider_name, provider_config = resolve_strategy_config(settings.strategy_config)
+    strategy_engine = create_provider(provider_name, provider_config)
     # One RiskEngine per process (ADR-2): explicitly injected into the engine.
     risk_engine = RiskEngine()
     execution_engine = ExecutionEngine(adapter=adapter, risk_engine=risk_engine)

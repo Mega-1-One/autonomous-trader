@@ -2,6 +2,15 @@
 
 enabled: true
 
+# Strategy provider selection (E4): the active provider receives only its own
+# config. The default "ict_scalp" uses this whole file (legacy shape,
+# unchanged). A future strategy adds its isolated section here, e.g.:
+#   strategies:
+#     my_strategy:
+#       lookback: 50
+# and sets `name: "my_strategy"` — no ICT keys are read for it.
+name: "ict_scalp"
+
 mode: "SCALP"
 
 # Timeframe rules

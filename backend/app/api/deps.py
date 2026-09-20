@@ -19,7 +19,7 @@ from app.services.market_data import MarketDataService
 from app.risk.engine import RiskEngine
 from app.execution.engine import ExecutionEngine
 from app.strategy import ict_adapter  # noqa: F401 (registers the ict_scalp provider)
-from app.strategy.provider import StrategyProvider, create_provider
+from app.strategy.provider import StrategyProvider, create_provider, resolve_strategy_config
 
 _bearer_scheme = HTTPBearer(auto_error=False)
 
@@ -62,11 +62,10 @@ def init_app_state(app: Any) -> None:
     app.state.execution_engine = ExecutionEngine(
         adapter=adapter, risk_engine=app.state.risk_engine
     )
-    # E2: strategy behind the provider seam (default ict_scalp).
-    app.state.strategy_engine = create_provider(
-        _config.settings.strategy_config.get("name", "ict_scalp"),
-        _config.settings.strategy_config,
-    )
+    # E2/E4: strategy behind the provider seam; each provider receives
+    # only its own config section.
+    provider_name, provider_config = resolve_strategy_config(_config.settings.strategy_config)
+    app.state.strategy_engine = create_provider(provider_name, provider_config)
 
 
 def _ensure_state(request: Request) -> Any:

@@ -15,7 +15,7 @@ reach risk approval. Direction/price rules apply to APPROVED decisions only.
 import math
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 APPROVED = "APPROVED"
 REJECTED = "REJECTED"
@@ -123,6 +123,29 @@ def register_provider(name: str, factory: Callable[[], StrategyProvider]) -> Non
 
 def registered_providers() -> List[str]:
     return sorted(_PROVIDER_REGISTRY)
+
+
+def resolve_strategy_config(
+    strategy_config: Optional[Dict[str, Any]] = None,
+    name: Optional[str] = None,
+) -> Tuple[str, Dict[str, Any]]:
+    """Splits routing keys from the strategy's own config section (E4).
+
+    Rule: if ``strategies.<name>`` exists it is used verbatim (isolated —
+    future strategies never see ICT keys); otherwise the legacy ``ict_scalp``
+    default receives the full top-level dict unchanged (zero behavior delta).
+    Anything else is an error, not a silent fallback.
+    """
+    cfg = dict(strategy_config or {})
+    key = name or cfg.get("name", "ict_scalp")
+    sections = cfg.get("strategies")
+    if isinstance(sections, dict) and isinstance(sections.get(key), dict):
+        return key, sections[key]
+    if key == "ict_scalp":
+        return key, cfg
+    raise ContractViolation(
+        f"unknown strategy {key!r}; registered: {registered_providers()}"
+    )
 
 
 def create_provider(name: Optional[str] = None, config: Optional[Dict[str, Any]] = None) -> StrategyProvider:

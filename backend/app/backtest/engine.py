@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional
 from app.core.pricing import contract_size as spec_contract_size
 from app.core.config import settings
 from app.strategy import ict_adapter  # noqa: F401 (registers the ict_scalp provider)
-from app.strategy.provider import MarketInputs, create_provider, evaluate_strategy
+from app.strategy.provider import MarketInputs, create_provider, evaluate_strategy, resolve_strategy_config
 from app.risk.engine import RiskEngine
 from app.backtest.metrics import (
     BacktestTradeRecord,
@@ -43,11 +43,12 @@ class BacktestEngine:
         self.slippage_pips = slippage_pips
         self.commission_per_lot = commission_per_lot
 
-        # E2: strategy behind the provider seam (default ict_scalp, same config
-        # source as the previous direct StrategyEngine() construction).
+        # E2/E4: strategy behind the provider seam; each provider receives
+        # only its own config section.
         if strategy_config is None:
             strategy_config = settings.strategy_config
-        self.strategy_engine = create_provider(strategy_name, strategy_config)
+        provider_name, provider_section = resolve_strategy_config(strategy_config, strategy_name)
+        self.strategy_engine = create_provider(provider_name, provider_section)
         self.risk_engine = RiskEngine()
         # ADR-5b: non-breaking trades access. run() records the completed
         # trades here; the /api/backtest/run JSON shape is unchanged.
