@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query, HTTPException, status
 from app.api.deps import get_market_service, get_strategy_engine
 from app.services.market_data import MarketDataService
-from app.strategy.engine import StrategyEngine
+from app.strategy.provider import MarketInputs, StrategyProvider, evaluate_strategy
 
 router = APIRouter(prefix="/api/strategy", tags=["Strategy Engine"])
 
@@ -9,9 +9,9 @@ router = APIRouter(prefix="/api/strategy", tags=["Strategy Engine"])
 async def evaluate_signals(
     symbol: str = Query("XAUUSD", description="Symbol name"),
     market_service: MarketDataService = Depends(get_market_service),
-    strategy_engine: StrategyEngine = Depends(get_strategy_engine),
+    strategy_engine: StrategyProvider = Depends(get_strategy_engine),
 ):
-    """Evaluates live market state against the ICT/SMC strategy engine."""
+    """Evaluates live market state against the active strategy provider."""
     htf_candles = market_service.fetch_candles(symbol, "H1", count=100)
     ltf_candles = market_service.fetch_candles(symbol, "M5", count=200)
 
@@ -24,14 +24,16 @@ async def evaluate_signals(
     info = market_service.get_symbol_info(symbol) or {"point_size": 0.01}
     point_size = info.get("point_size", 0.01)
 
-    signal = strategy_engine.evaluate_setup(
-        symbol=symbol,
-        htf_candles=htf_candles,
-        ltf_candles=ltf_candles,
-        point_size=point_size
+    signal = evaluate_strategy(
+        strategy_engine,
+        MarketInputs(
+            symbol=symbol,
+            candles={"HTF": htf_candles, "LTF": ltf_candles},
+            point_size=point_size,
+        ),
     )
 
     return {
         "symbol": symbol,
-        "signal": signal.to_dict()
+        "signal": signal
     }

@@ -1,7 +1,9 @@
 from typing import Any, Dict, List, Optional
 
 from app.core.pricing import contract_size as spec_contract_size
-from app.strategy.engine import StrategyEngine
+from app.core.config import settings
+from app.strategy import ict_adapter  # noqa: F401 (registers the ict_scalp provider)
+from app.strategy.provider import MarketInputs, create_provider, evaluate_strategy, resolve_strategy_config
 from app.risk.engine import RiskEngine
 from app.backtest.metrics import (
     BacktestTradeRecord,
@@ -32,14 +34,21 @@ class BacktestEngine:
         initial_balance: float = 10000.0,
         spread_pips: float = 1.0,
         slippage_pips: float = 0.5,
-        commission_per_lot: float = 7.0
+        commission_per_lot: float = 7.0,
+        strategy_name: Optional[str] = None,
+        strategy_config: Optional[Dict[str, Any]] = None,
     ):
         self.initial_balance = initial_balance
         self.spread_pips = spread_pips
         self.slippage_pips = slippage_pips
         self.commission_per_lot = commission_per_lot
 
-        self.strategy_engine = StrategyEngine()
+        # E2/E4: strategy behind the provider seam; each provider receives
+        # only its own config section.
+        if strategy_config is None:
+            strategy_config = settings.strategy_config
+        provider_name, provider_section = resolve_strategy_config(strategy_config, strategy_name)
+        self.strategy_engine = create_provider(provider_name, provider_section)
         self.risk_engine = RiskEngine()
         # ADR-5b: non-breaking trades access. run() records the completed
         # trades here; the /api/backtest/run JSON shape is unchanged.
@@ -157,17 +166,19 @@ class BacktestEngine:
 
             # 2. Evaluate new entries if no position open
             if not open_position:
-                signal = self.strategy_engine.evaluate_setup(
-                    symbol=symbol,
-                    htf_candles=history,
-                    ltf_candles=history,
-                    point_size=point_size,
+                signal = evaluate_strategy(
+                    self.strategy_engine,
+                    MarketInputs(
+                        symbol=symbol,
+                        candles={"HTF": history, "LTF": history},
+                        point_size=point_size,
+                    ),
                 )
 
-                if signal.status == "APPROVED":
+                if signal["status"] == "APPROVED":
                     acc_info = {"equity": equity}
                     decision = self.risk_engine.evaluate_trade_risk(
-                        signal=signal.to_dict(),
+                        signal=signal,
                         account_info=acc_info,
                         symbol_info=symbol_info,
                         current_open_positions_count=0,
@@ -178,11 +189,11 @@ class BacktestEngine:
                         open_position = {
                             # Deterministic trade ID (P-09/C-02): symbol, entry
                             # bar index, direction. No uuid randomness.
-                            "trade_id": f"BT_{symbol}_{i}_{signal.direction}",
-                            "direction": signal.direction,
-                            "entry_price": signal.entry_price,
-                            "stop_loss": signal.stop_loss,
-                            "take_profit": signal.take_profit,
+                            "trade_id": f"BT_{symbol}_{i}_{signal['direction']}",
+                            "direction": signal["direction"],
+                            "entry_price": signal["entry_price"],
+                            "stop_loss": signal["stop_loss"],
+                            "take_profit": signal["take_profit"],
                             "volume": decision.calculated_volume,
                             "entry_time": current_candle["timestamp"],
                         }

@@ -29,7 +29,8 @@ class TickBacktestEngine:
         min_opportunity_score: float = 0.65,
         min_norm_momentum: float = 0.8,
         min_imbalance_edge: float = 0.05,
-        diagnostic_mode: bool = True
+        diagnostic_mode: bool = True,
+        scalp_strategy: Optional[ScalpStrategyEngine] = None,
     ):
         self.symbol = symbol
         self.initial_balance = initial_balance
@@ -53,12 +54,17 @@ class TickBacktestEngine:
         self.feature_engine = FeatureEngine()
         self.regime_engine = MarketRegimeEngine()
         self.selector = StrategySelector()
+        # V1: the tick strategy is injectable so experiments can substitute a
+        # different ScalpStrategyEngine-compatible object without forking the
+        # harness. Default construction is unchanged.
         max_spread = 300.0 if self.spec.asset_class.name == "INDICES" else 3.0
-        self.scalp_strategy = ScalpStrategyEngine(
-            max_allowed_spread=max_spread,
-            min_norm_momentum=self.min_norm_momentum,
-            min_imbalance_edge=self.min_imbalance_edge
-        )
+        if scalp_strategy is None:
+            scalp_strategy = ScalpStrategyEngine(
+                max_allowed_spread=max_spread,
+                min_norm_momentum=self.min_norm_momentum,
+                min_imbalance_edge=self.min_imbalance_edge
+            )
+        self.scalp_strategy = scalp_strategy
         self.fusion_engine = SignalFusionEngine()
         self.risk_engine = RiskEngine(config={"minimum_rr": 1.5, "maximum_spread_pips": max_spread})
 

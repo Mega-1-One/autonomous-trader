@@ -7,7 +7,8 @@ from app.data.adapter_factory import build_adapter
 from app.data.mt5_real import RealMT5Adapter
 from app.risk.engine import RiskEngine
 from app.services.market_data import MarketDataService
-from app.strategy.engine import StrategyEngine
+from app.strategy import ict_adapter  # noqa: F401 (registers the ict_scalp provider)
+from app.strategy.provider import MarketInputs, create_provider, evaluate_strategy, resolve_strategy_config
 from app.execution.engine import ExecutionEngine
 
 def calculate_spread_in_pips(bid: float, ask: float, digits: int, point_size: float, symbol: str = "") -> float:
@@ -39,7 +40,10 @@ async def run_autonomous_trader(symbol: str = "XAUUSD", poll_interval_seconds: i
         logger.warning("Using Mock MT5 Adapter (PAPER/BACKTEST mode or terminal unavailable).")
 
     market_service = MarketDataService(adapter=adapter)
-    strategy_engine = StrategyEngine()
+    # E2/E4: strategy behind the provider seam; each provider receives
+    # only its own config section.
+    provider_name, provider_config = resolve_strategy_config(settings.strategy_config)
+    strategy_engine = create_provider(provider_name, provider_config)
     # One RiskEngine per process (ADR-2): explicitly injected into the engine.
     risk_engine = RiskEngine()
     execution_engine = ExecutionEngine(adapter=adapter, risk_engine=risk_engine)
@@ -70,19 +74,21 @@ async def run_autonomous_trader(symbol: str = "XAUUSD", poll_interval_seconds: i
 
                 # 3. Evaluate setup if no active position open
                 if len(open_positions) == 0:
-                    signal = strategy_engine.evaluate_setup(
-                        symbol=symbol,
-                        htf_candles=htf_candles,
-                        ltf_candles=ltf_candles,
-                        point_size=point_size
+                    signal = evaluate_strategy(
+                        strategy_engine,
+                        MarketInputs(
+                            symbol=symbol,
+                            candles={"HTF": htf_candles, "LTF": ltf_candles},
+                            point_size=point_size,
+                        ),
                     )
 
-                    if signal.status == "APPROVED":
-                        logger.info(f"SETUP APPROVED: {signal.direction} {symbol} @ {signal.entry_price} (SL: {signal.stop_loss}, TP: {signal.take_profit})")
-                        exec_result = execution_engine.execute_signal(signal.to_dict(), current_spread_pips=spread_pips)
+                    if signal["status"] == "APPROVED":
+                        logger.info(f"SETUP APPROVED: {signal['direction']} {symbol} @ {signal['entry_price']} (SL: {signal['stop_loss']}, TP: {signal['take_profit']})")
+                        exec_result = execution_engine.execute_signal(signal, current_spread_pips=spread_pips)
                         logger.info(f"Execution Result: {exec_result}")
                     else:
-                        rej_reason = signal.reasons.get("rejection_reason", "Scanning...")
+                        rej_reason = signal["reasons"].get("rejection_reason", "Scanning...")
                         logger.info(f"  [Scan] No trade: {rej_reason}")
 
         except Exception as e:
