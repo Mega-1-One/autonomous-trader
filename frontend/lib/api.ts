@@ -123,11 +123,14 @@ export interface SignalResponse {
 }
 
 export interface FvgItem {
-  fvg_type: string;
-  lower_boundary: number;
-  upper_boundary: number;
-  mitigation_status: string;
-  fill_percentage: number;
+  // V2: all fields optional — a future strategy's pattern items only need
+  // to be renderable objects, not ICT/FVG-shaped records.
+  fvg_type?: string;
+  lower_boundary?: number;
+  upper_boundary?: number;
+  mitigation_status?: string;
+  fill_percentage?: number;
+  [key: string]: unknown;
 }
 
 export interface PatternResponse {

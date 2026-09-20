@@ -1,4 +1,3 @@
-from abc import ABC, abstractmethod
 from dataclasses import dataclass, asdict
 from datetime import datetime, timezone
 from enum import Enum
@@ -37,31 +36,14 @@ class UnifiedSignal:
         d["direction"] = self.direction.value
         return d
 
-class StrategyPlugin(ABC):
-    """Abstract Strategy Plugin interface for modular signal generation."""
+class UnvalidatedResearchStrategy:
+    """Integrates ICT/SMC research patterns labeled strictly as UNVALIDATED_RESEARCH_STRATEGY.
 
-    @abstractmethod
-    def initialize(self, config: Dict[str, Any]) -> bool:
-        pass
-
-    @abstractmethod
-    def evaluate_market(self, instrument: str, market_data: Dict[str, Any]) -> Dict[str, Any]:
-        pass
-
-    @abstractmethod
-    def generate_signal(self, instrument: str, market_state: Dict[str, Any]) -> Optional[UnifiedSignal]:
-        pass
-
-    @abstractmethod
-    def validate_signal(self, signal: UnifiedSignal) -> Tuple[bool, Optional[str]]:
-        pass
-
-    @abstractmethod
-    def explain_signal(self, signal: UnifiedSignal) -> str:
-        pass
-
-class UnvalidatedResearchStrategy(StrategyPlugin):
-    """Integrates ICT/SMC research patterns labeled strictly as UNVALIDATED_RESEARCH_STRATEGY."""
+    Research fixture used by phase 38/41 tests. It is intentionally NOT the
+    platform's strategy seam — live paths use StrategyProvider
+    (app/strategy/provider.py). The former StrategyPlugin ABC was deleted as
+    dead abstraction (it had no runtime callers).
+    """
 
     def __init__(self):
         self.strategy_name = "UNVALIDATED_RESEARCH_STRATEGY"

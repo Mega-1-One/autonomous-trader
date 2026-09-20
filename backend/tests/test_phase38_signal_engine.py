@@ -2,7 +2,6 @@ import pytest
 from app.core.config import settings, ExecutionMode
 from app.risk.engine import RiskEngine
 from app.strategy.plugin import (
-    StrategyPlugin,
     UnvalidatedResearchStrategy,
     SignalQualityGate,
     UnifiedSignal,

@@ -99,13 +99,16 @@ export default function StrategyMonitorPage() {
                 data?.fair_value_gaps?.map((fvg, idx: number) => (
                   <div key={idx} className="p-3 bg-background rounded-lg border border-border flex items-center justify-between text-xs">
                     <div>
-                      <span className={`font-bold ${fvg.fvg_type === "BULLISH" ? "text-success" : "text-danger"}`}>
-                        {fvg.fvg_type} FVG
+                      <span className={`font-bold ${
+                        fvg.fvg_type === "BULLISH" ? "text-success" :
+                        fvg.fvg_type === "BEARISH" ? "text-danger" : "text-textSecondary"
+                      }`}>
+                        {fvg.fvg_type ?? "Pattern"} FVG
                       </span>
-                      <p className="text-textSecondary mt-0.5">{fvg.lower_boundary} - {fvg.upper_boundary}</p>
+                      <p className="text-textSecondary mt-0.5">{fvg.lower_boundary ?? "?"} - {fvg.upper_boundary ?? "?"}</p>
                     </div>
                     <span className="px-2 py-1 bg-surface border border-border rounded text-textSecondary font-mono">
-                      {fvg.mitigation_status} ({fvg.fill_percentage}%)
+                      {fvg.mitigation_status ?? "n/a"} ({fvg.fill_percentage ?? 0}%)
                     </span>
                   </div>
                 ))

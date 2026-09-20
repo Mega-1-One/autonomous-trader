@@ -155,9 +155,12 @@ configuration layer rather than by convention.
 - **ICT pattern engines** — fair value gaps (FVG) with mitigation tracking, order blocks,
   displacement, and liquidity sweeps.
 - **Session filter** — London / New York trading windows (UTC), toggleable.
-- **Plugin architecture** — `StrategyPlugin` ABC with a `UnifiedSignal` schema and a
-  **6-stage quality gate**: Signal → Data Quality → Market State → Strategy Validation →
-  Risk Validation → Execution Validation.
+- **Strategy seam** — strategies plug in behind `StrategyProvider`
+  (`app/strategy/provider.py`) and emit a validated decision dict
+  (`symbol`/`direction`/`entry_price`/`stop_loss`/`take_profit`); the default
+  `ict_scalp` provider wraps the ICT/SMC engine. The research-only
+  `UnifiedSignal` schema and 6-stage quality gate live in `strategy/plugin.py`
+  for phase 38/41 tests and are not on any live path.
 
 ### Risk management
 - Equity-based position sizing snapped to broker volume steps.
