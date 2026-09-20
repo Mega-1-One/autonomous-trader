@@ -9,9 +9,10 @@
 [![Next.js 14](https://img.shields.io/badge/Next.js-14-black.svg)](https://nextjs.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-An ICT/SMC-inspired strategy engine, quantitative risk engine, real-time tick scalpers,
-paper-trading simulator, deterministic backtesting suite, and a live web dashboard —
-backed by a 27-phase quantitative research program.
+An ICT/SMC-inspired strategy engine behind a swappable provider seam, a destination-aware
+safety gate, a quantitative risk engine, real-time tick scalpers, a paper-trading simulator,
+a deterministic backtesting suite, and a live web dashboard — backed by a 26-phase
+quantitative research program (Phases 16–41).
 
 </div>
 
@@ -30,10 +31,18 @@ backed by a 27-phase quantitative research program.
 > the exposure in writing. CORS is restricted to `CORS_ORIGINS` (default `http://localhost:3000`).
 
 > [!IMPORTANT]
-> **Strategy edge is not yet validated.** The research program (Phases 15–41) found **no
-> statistically significant, out-of-sample-robust trading edge** in the tested feature space.
-> The infrastructure is production-grade; the *profitability* of the strategies is not proven.
-> Treat this as an engineering and research platform, not a money machine.
+> **Strategy edge is not yet validated.** The research program (Phases 16–41; Phase 15 is
+> nominal) found **no statistically significant, out-of-sample-robust trading edge** in the
+> tested feature space — Phase 34 refuted the one Phase-33 candidate as a likely false
+> discovery, and Phase 39's prospective forward test returned a profit factor of 0.70
+> (expectancy −0.18R). The infrastructure is production-grade; the *profitability* of the
+> strategies is not proven. Treat this as an engineering and research platform, not a money
+> machine.
+>
+> The live/demo scalper bots are a **separate, cruder system** from the researched strategy:
+> [`PROFITABILITY_INVESTIGATION.md`](PROFITABILITY_INVESTIGATION.md) documents unbounded
+> position churn, tick-momentum (effectively coin-flip) entries, disabled risk halts, and
+> spread-blind SL/TP geometry. Run them on a demo account only, and read that document first.
 
 ---
 
@@ -49,6 +58,7 @@ backed by a 27-phase quantitative research program.
 - [API Reference](#-api-reference)
 - [Web Dashboard](#-web-dashboard)
 - [Research Program](#-research-program)
+- [Engineering Documentation](#-engineering-documentation)
 - [Testing](#-testing)
 - [Continuous Integration](#-continuous-integration)
 - [Safety Model](#-safety-model)
@@ -66,19 +76,24 @@ MetaTrader 5 (MT5). It combines:
 
 - **A strategy layer** — ICT/SMC market-structure analysis (liquidity sweeps, fair value
   gaps, order blocks, displacement, BOS/MSS) that produces entry signals with explicit
-  stop-loss and take-profit levels.
+  stop-loss and take-profit levels. It sits behind a narrow `StrategyProvider` seam
+  (`app/strategy/provider.py`) so the platform never depends on a concrete strategy.
 - **A risk layer** — position sizing from account equity, risk/reward gating,
   spread/margin checks, emergency-stop and circuit-breaker controls.
 - **An execution layer** — a broker-adapter abstraction with `Mock`, `Real` (MT5), and
   paper-trading implementations, plus an order/position lifecycle manager.
-- **A research layer** — 27 phases of data pipeline, feature discovery, edge discovery,
-  walk-forward validation, and forensic auditing, with machine-readable artifacts.
+- **A safety layer** — a destination-aware gate (`core/safety.py`) and a cross-process
+  emergency-stop sentinel (`core/stop_state.py`) that every order-sending path consults.
+- **A research layer** — 26 implemented phases (16–41) of data pipeline, feature discovery,
+  edge discovery, walk-forward validation, and forensic auditing, with machine-readable
+  artifacts.
 - **A presentation layer** — a Next.js dashboard for monitoring signals, positions, risk,
   and backtests.
 
 The codebase is intentionally deterministic: data pipelines are hashed and manifests
-locked, walk-forward splits are chronological, and live-trading safety is enforced at the
-configuration layer rather than by convention.
+locked, walk-forward splits are chronological, and live-trading safety is enforced
+structurally (boot guard, destination-aware gate, cross-process stop sentinel) rather than
+by convention.
 
 ---
 
@@ -92,9 +107,10 @@ configuration layer rather than by convention.
                                             │ HTTP / JSON (CORS)
                     ┌───────────────────────▼──────────────────────┐
                     │            FastAPI Application               │
-                    │  api/ ─ market · structure · liquidity ·     │
-                    │         strategy · risk · backtest ·         │
-                    │         execution · health                   │
+                    │  api/ ─ health · market · structure ·        │
+                    │         liquidity · setups/signals · risk ·  │
+                    │         backtest · execution                 │
+                    │  (DI-wired app.state; shared engines)        │
                     └───────┬───────────────┬───────────────┬──────┘
                             │               │               │
              ┌──────────────▼──┐   ┌────────▼────────┐   ┌──▼──────────────┐
@@ -105,20 +121,21 @@ configuration layer rather than by convention.
              │  order_block,    │   │  recovery,      │   │  position mgmt  │
              │  sweeps,         │   │  circuit        │   │                 │
              │  sessions,       │   │  breakers       │   │                 │
-             │  plugin/gate     │   │                 │   │                 │
+             │  provider/ict    │   │                 │   │                 │
              └──────────┬───────┘   └────────┬────────┘   └──┬──────────────┘
                         │                    │                │
              ┌──────────▼────────────────────▼────────────────▼──────────┐
              │              Data & Intelligence Layer                     │
-             │  data/ (MT5 adapter: abstract / mock / real)               │
-             │  intelligence/ (technical, structure, liquidity, cost, EV) │
-             │  context/ · regime/ · fusion/ · information/ · services/   │
+             │  core/ (config · safety gate · stop sentinel · pricing)    │
+             │  data/ (MT5 adapter: abstract / mock / real / factory)     │
+             │  services/ (MarketDataService)                             │
+             │  intelligence/ · context/ · regime/ · fusion/ · information/│
              └───────────────────────────┬────────────────────────────────┘
                                          │
              ┌───────────────────────────▼────────────────────────────────┐
              │                 Research & Backtest Layer                   │
              │  backtest/ (engine · metrics · monte_carlo · walk_forward)  │
-             │  research/ (27 phases · data_pipeline · feature discovery)  │
+             │  research/ (26 phases 16–41 · data_pipeline · features)     │
              └───────────────────────────┬────────────────────────────────┘
                                          │
              ┌───────────────────────────▼────────────────────────────────┐
@@ -131,17 +148,18 @@ configuration layer rather than by convention.
 
 | Layer | Package | Responsibility |
 |---|---|---|
-| HTTP API | `backend/app/api/` | FastAPI routers and request/response schemas |
-| Strategy | `backend/app/strategy/` | ICT/SMC engines + plugin interface & 6-stage quality gate |
+| HTTP API | `backend/app/api/` | FastAPI routers (9) and request/response schemas, DI-wired |
+| Core | `backend/app/core/` | Settings, async DB, logging, safety gate, stop sentinel, pricing |
+| Strategy | `backend/app/strategy/` | ICT/SMC engines behind the `StrategyProvider` seam; research quality gate |
 | Risk | `backend/app/risk/` | Position sizing, RR gating, emergency stop, failure recovery |
 | Execution | `backend/app/execution/` | Order submission, position lifecycle, paper simulation |
-| Data | `backend/app/data/`, `services/` | MT5 adapter abstraction (mock/real), market data service |
+| Data | `backend/app/data/`, `services/` | Mode-aware MT5 adapter factory (mock/real), market data service |
 | Intelligence | `backend/app/intelligence/` | Multi-factor analysis, cost/EV engines, Fusion 2.0 |
 | Context | `backend/app/context/`, `regime/`, `fusion/` | Multi-timeframe bias, market regime, signal fusion |
 | Information | `backend/app/information/` | Pluggable external data (calendar, futures volume, L2 book) |
 | Scalping | `backend/app/scalper/` | Tick-level engines and standalone trading bots |
 | Backtest | `backend/app/backtest/` | Deterministic backtests, metrics, Monte Carlo, walk-forward |
-| Research | `backend/app/research/` | Phase engines, data pipeline, feature discovery |
+| Research | `backend/app/research/` | Phase engines, data pipeline, feature discovery, common utilities |
 | Persistence | `backend/app/models/`, `database/` | SQLAlchemy domain models and Alembic migrations |
 
 ---
@@ -157,10 +175,18 @@ configuration layer rather than by convention.
 - **Session filter** — London / New York trading windows (UTC), toggleable.
 - **Strategy seam** — strategies plug in behind `StrategyProvider`
   (`app/strategy/provider.py`) and emit a validated decision dict
-  (`symbol`/`direction`/`entry_price`/`stop_loss`/`take_profit`); the default
-  `ict_scalp` provider wraps the ICT/SMC engine. The research-only
-  `UnifiedSignal` schema and 6-stage quality gate live in `strategy/plugin.py`
-  for phase 38/41 tests and are not on any live path.
+  (`symbol`/`direction ∈ {LONG, SHORT}`/`entry_price`/`stop_loss`/`take_profit`/
+  `client_signal_id`/`status ∈ {APPROVED, REJECTED}` plus opaque strategy extras).
+  `validate_decision()` enforces the contract (finite positive prices, SL/TP on the
+  correct side of entry, non-empty ID); `MarketInputs` carries the candles the strategy
+  requests; a name→factory registry resolves the active provider. The default
+  `ict_scalp` provider (`ICTStrategyAdapter`) wraps the ICT/SMC engine bit-for-bit.
+  Providers also expose an optional `describe()` used by the analysis pages. Each
+  provider receives **only its own config section** (`strategies.<name>`), so a new
+  strategy never inherits ICT keys.
+- **Research-only plugin fixtures** — the `UnifiedSignal` schema and 6-stage
+  `SignalQualityGate` live in `strategy/plugin.py` for phase 38/41 tests and are on no
+  live path; the abandoned `StrategyPlugin` ABC was deleted as dead abstraction.
 
 ### Risk management
 - Equity-based position sizing snapped to broker volume steps.
@@ -171,8 +197,13 @@ configuration layer rather than by convention.
   circuit-breaker state machine handling disconnects, stale ticks, spread explosions,
   crossed books, duplicate replay and process-restart recovery.
 
-### Execution
+### Execution & safety
 - Broker-adapter abstraction: `AbstractMT5Adapter` → `MockMT5Adapter`, `RealMT5Adapter`.
+- **Mode-aware adapter factory** — one `build_adapter()` shared by the API and runner:
+  `PAPER`/`BACKTEST` always use the mock; `DEMO`/`LIVE` try the real terminal with a
+  constrained mock fallback.
+- **Destination-aware safety gate** (`core/safety.py`) consulted before every order
+  send, plus the **cross-process emergency-stop sentinel** (`core/stop_state.py`).
 - Idempotent order submission (duplicate order-ID blocking) and broker position sync.
 - Paper-trading simulator and a real-time tick stream monitor.
 - Position management: SL/TP touch detection, break-even, max-holding-time stops.
@@ -183,10 +214,16 @@ configuration layer rather than by convention.
 - Tick-level backtester driven by the same position manager as live scalping.
 - Monte Carlo simulation, walk-forward validation, and a full metrics suite
   (win rate, profit factor, expectancy, Sharpe, Sortino, max drawdown, streaks).
-- 27-phase research program with locked datasets, hashed manifests, FDR
+- 26 implemented research phases (16–41) with locked datasets, hashed manifests, FDR
   multiple-testing correction, placebo tests, and machine-readable artifacts.
 
 ### Every trading bot
+> [!CAUTION]
+> These bots do **not** run the researched ICT/SMC strategy and have documented
+> structural defects (unbounded position churn, coin-flip entries, spread-blind
+> stops). See [`PROFITABILITY_INVESTIGATION.md`](PROFITABILITY_INVESTIGATION.md)
+> before running any of them.
+
 - `AutonomousScalperDaemon` — EMA-trend micro-scalper with SL/TP and max-hold.
 - `GoldMultiPositionProfitScalper` — XAUUSD multi-position scalper with profit target,
   protective stop-loss, loss cap and max-hold; commission-aware close decisions.
@@ -210,9 +247,11 @@ autonomous-trader/
 ├── backend/                        # Python application root
 │   ├── app/
 │   │   ├── api/                    # FastAPI routers (9 routers, 19 endpoints)
+│   │   │                           #   health · market · structure · liquidity ·
+│   │   │                           #   setups (patterns) · signals · risk · backtest · execution
 │   │   ├── backtest/               # engine, metrics, monte_carlo, tick_backtest, walk_forward
 │   │   ├── context/                # multi-timeframe bias, price location, setup classifier
-│   │   ├── core/                   # config (Settings), async database, logging
+│   │   ├── core/                   # config, async DB, logging, safety gate, stop sentinel, pricing
 │   │   ├── data/                   # MT5 adapter: interface / mock / real / adapter_factory
 │   │   ├── execution/              # ExecutionEngine, models, paper simulation
 │   │   ├── fusion/                 # signal fusion & conflict detection
@@ -220,31 +259,37 @@ autonomous-trader/
 │   │   ├── intelligence/           # analyzers, cost/EV engines, fusion 2.0
 │   │   ├── models/                 # SQLAlchemy base + 12 domain entities
 │   │   ├── regime/                 # market-regime detection
-│   │   ├── research/               # phase engines, data_pipeline, feature_discovery
+│   │   ├── research/               # phase engines, data_pipeline, feature_discovery,
+│   │   │                           #   microstructure, market_state, macro_futures, common
 │   │   ├── risk/                   # RiskEngine, Phase 40 failure recovery
 │   │   ├── scalper/                # tick engines + standalone bots
 │   │   ├── services/               # market data service
-│   │   ├── strategy/               # ICT/SMC engines, plugin + SignalQualityGate
+│   │   ├── strategy/               # provider seam + ICT adapter + ICT/SMC engines,
+│   │   │                           #   research-only plugin/SignalQualityGate
 │   │   ├── swing/                  # multi-timeframe swing engine
 │   │   ├── main.py                 # FastAPI application factory + lifespan
 │   │   └── runner.py               # async autonomous trading loop
-│   ├── data/                       # 60+ research artifacts (phase*.json/md/csv)
+│   ├── data/                       # ~50 research artifacts (phase*.json/md/csv) + phase36_external/
 │   ├── scripts/                    # 40 scripts: entry-point runners + _bootstrap.py
-│   ├── tests/                      # 76 test modules, 323 tests + conftest.py
+│   ├── tests/                      # 76 test modules, 358 tests + conftest.py
+│   ├── state/                      # cross-process emergency-stop sentinel (gitignored)
 │   ├── Dockerfile
 │   ├── requirements.txt
 │   └── PHASE_28–30_*_REPORT.md     # published research reports
 ├── config/
 │   ├── risk.yaml                   # risk rules, stops/targets, position management
-│   └── strategy.yaml               # timeframes, structure, liquidity, entries
+│   └── strategy.yaml               # provider name, timeframes, structure, liquidity, entries
 ├── database/
 │   ├── alembic.ini
 │   └── migrations/                 # env.py, script template, versions/
+├── docs/                           # refactoring architecture/plan, strategy-independence
+│   └── baseline/                   # frozen API-contract samples + contract_diff.py
 ├── frontend/                       # Next.js 14 dashboard (App Router)
 │   └── app/                        # layout + dashboard, strategy, risk, positions,
 │                                   #   orders (signal log), backtest pages
 ├── .env.example                    # environment template
 ├── docker-compose.yml              # postgres + backend
+├── PROFITABILITY_INVESTIGATION.md  # live-path defect audit (read before running bots)
 └── LICENSE                         # MIT
 ```
 
@@ -285,6 +330,10 @@ pip install -r requirements.txt
 
 # Run the test suite (no MT5 required — uses the mock adapter)
 pytest tests/ -v
+
+# Lint (correctness rules) and optional type check
+ruff check app scripts
+mypy app --ignore-missing-imports   # report-only
 
 # Start the API
 uvicorn app.main:app --reload --port 8000
@@ -354,11 +403,15 @@ Configuration is split across three places: **environment variables** (`.env`),
 ```yaml
 risk_rules:
   risk_per_trade_percent: 0.1
-  maximum_daily_loss_percent: 0     # 0 = disabled
-  maximum_trades_per_day: 0         # 0 = disabled
-  maximum_open_positions: 0         # 0 = disabled
-  maximum_spread_pips: 0            # 0 = disabled
+  maximum_daily_loss_percent: 0           # 0 = disabled
+  maximum_total_drawdown_percent: 0       # 0 = disabled
+  maximum_trades_per_day: 0               # 0 = disabled
+  maximum_open_positions: 0               # 0 = disabled
+  maximum_symbol_exposure_percent: 0      # 0 = disabled
+  maximum_spread_pips: 0                  # 0 = disabled
   minimum_rr: 1.5
+  maximum_position_size_lots: 10.0
+  minimum_position_size_lots: 0.01
   # Optional min-lot over-risk guard (default 0 = disabled). When > 0, sizing
   # clamped up to the broker minimum lot is rejected if it exceeds this multiple
   # of the per-trade risk; enabling changes live sizing on small accounts.
@@ -367,26 +420,38 @@ stops_and_targets:
   take_profit_mode: FIXED_PIPS
   take_profit_pips: 5.0
   stop_loss_pips: 3.0
+  stop_loss_safety_buffer_pips: 0.2
 position_management:
   break_even_enabled: false
+  break_even_trigger_r: 0.5
+  break_even_offset_pips: 0.1
   trailing_stop_enabled: false
   partial_tp_enabled: false
   max_holding_time_seconds: 30
+symbol_mappings:                         # canonical -> broker aliases
+  XAUUSD: ["XAUUSD", "XAUUSDm", "GOLD", "GOLDm"]
 ```
 
 ### `config/strategy.yaml`
 
 ```yaml
+name: "ict_scalp"          # active StrategyProvider (registry key)
 mode: "SCALP"
 timeframes: { htf: M5, ltf: M1 }
+market_structure: { swing_lookback: 3, confirm_on_close: false }
 entry:
   minimum_rr: 1.5
   require_liquidity_sweep: true
   take_profit_pips: 5.0
   stop_loss_pips: 3.0
-# plus market_structure, liquidity, displacement, fvg, order_block, sessions blocks
+# plus liquidity, displacement, fvg, order_block, sessions blocks
 ```
 
+> **Per-strategy config isolation (E4):** a provider receives **only** its own
+> `strategies.<name>` section. The legacy `ict_scalp` default still reads the whole
+> top-level file unchanged, so existing behavior is preserved. A new strategy adds an
+> isolated block and sets `name` to it — it never inherits ICT keys.
+>
 > Limits set to `0` are treated as **disabled** — the engine will not block on them.
 > `symbol_mappings` in `risk.yaml` maps canonical symbols (e.g. `XAUUSD`) to broker
 > aliases (`XAUUSDm`, `GOLD`, `GOLDm`).
@@ -425,6 +490,14 @@ During a live gold session the bot accepts terminal commands:
 > **Windows + MT5 required** for any `RealMT5Adapter` runner. Ensure "Algo Trading" is
 > enabled in the MT5 toolbar, or orders return retcode `10027`.
 
+> [!CAUTION]
+> Every bot order send passes the destination-aware safety gate, so real broker sends are
+> refused in `PAPER`/`BACKTEST` and allowed in `DEMO` only onto a demo account. The bots
+> nevertheless carry **known structural defects** (no concurrent-position cap, tick-momentum
+> entries, disabled risk halts, spread-blind stops) — see
+> [`PROFITABILITY_INVESTIGATION.md`](PROFITABILITY_INVESTIGATION.md). Prefer a demo account
+> and account-level discipline.
+
 ---
 
 ## API Reference
@@ -453,6 +526,12 @@ Base URL: `http://localhost:8000` · Interactive docs: `/docs`
 | `POST` | `/api/execution/positions/{position_id}/close` | Close one position |
 | `POST` | `/api/execution/close-all` | Emergency close all positions |
 
+> The three analysis endpoints (`/api/structure/analyze`, `/api/liquidity/levels`,
+> `/api/strategy/patterns`) are served through the active provider's optional
+> `describe()` method; a provider that offers no analysis returns `404`. Mutating
+> endpoints (`/api/execution/*`, `/api/system/*`) require a bearer token when
+> `APP_ENV=production` **and** `AUTOMATION_API_TOKEN` is set.
+
 ```bash
 curl http://localhost:8000/api/health
 curl "http://localhost:8000/api/strategy/signals?symbol=XAUUSD"
@@ -479,13 +558,21 @@ self-contained client component with a dark theme and a header badge that reflec
 | `/orders` | Signal log — status, direction, setup, RR, JSON reasons | `/api/strategy/signals` |
 | `/backtest` | Backtest & Monte Carlo — net profit, win rate, profit factor, DD, expectancy, Sharpe/Sortino, prob-of-ruin | `/api/backtest/run`, `/api/backtest/monte-carlo` |
 
+> The shared API client (`frontend/lib/api.ts`) is config-driven
+> (`NEXT_PUBLIC_API_URL`, optional `NEXT_PUBLIC_API_TOKEN`) and keeps the decision
+> contract fields strict while treating strategy-owned extras (`setup_type`, `reasons`,
+> pattern lists) as opaque, so a strategy swap does not ripple into TypeScript types.
+
 ---
 
 ## Research Program
 
-The `backend/app/research/` package implements a 27-phase quantitative research program
-(Phases 15–41). Each phase produces machine-readable artifacts under `backend/data/` and
-is reproducible via a runner in `backend/scripts/`.
+The `backend/app/research/` package implements a **26-phase quantitative research
+program (Phases 16–41; Phase 15 is nominal — it has no module, runner, or artifact).**
+Each phase is reproducible via a runner in `backend/scripts/` and produces machine-readable
+artifacts. Phases 16–30 write run reports under `backend/scripts/`; the published
+deliverables for Phases 31–41 live under `backend/data/` (plus the
+`backend/PHASE_28–30_*_REPORT.md` write-ups).
 
 | Phase | Focus |
 |---|---|
@@ -495,23 +582,35 @@ is reproducible via a runner in `backend/scripts/`.
 | 21–22 | Adaptive targets & stops; independent setup-entry benchmark |
 | 23–24 | Confluence ladder; combinatorial edge reconstruction (OOS ranking) |
 | 25–26 | Multi-timeframe swing benchmark; methodology & data-quality audit |
-| 27 | Data pipeline — ingestion, validation, candle rebuild, 60/20/20 split, SHA256 manifest |
-| 28–30 | Research baseline rebuild; conditional-edge discovery; forensic audit |
-| 31–33 | Feature discovery, microstructure/cross-asset, market-state classification |
-| 34–35 | Volatility-compression confirmation (walk-forward/placebo/FDR); post-mortem |
-| 36–37 | External data architecture & readiness; macro/futures-volume research |
-| 38 | Unified signal schema + 6-stage signal-quality gate |
+| 27 | Data pipeline — ingestion, validation, candle rebuild, 60/20/20 split, SHA256 manifest (27.1–27.3 sub-runs) |
+| 28–30 | Research baseline rebuild; conditional-edge discovery (200 rules); forensic trade audit |
+| 31–33 | Feature discovery (360 IC/FDR tests); microstructure/cross-asset (264 tests); market-state classification (115 distributions) |
+| 34–35 | Confirmation of the Phase-33 candidate (walk-forward/placebo/FDR); post-mortem & anti-data-mining protocol |
+| 36–37 | External (non-price) data architecture & readiness; macro/futures-volume research (120 hypotheses) |
+| 38 | Unified signal schema + 6-stage signal-quality gate (research fixture) |
 | 39 | Prospective forward (paper/demo) validation with frozen config hash |
 | 40 | Adversarial failure-recovery & risk certification (circuit breakers) |
-| 41 | Final production-readiness audit (7-pillar) |
+| 41 | Final production-readiness audit (7-pillar: data, rigor, security, economics, latency, UI, fault tolerance) |
+| — | Cross-cutting final audit & research ledger (`run_final_research_audit.py`) |
 
-**Key outcome:** across Phases 28–37, candidate edges did **not** survive out-of-sample
-validation and multiple-testing correction. Several apparent discoveries were confirmed as
-false positives by follow-up phases (e.g. Phase 33 → Phase 34). This is a deliberately
+**Key outcome:** across the program, candidate edges did **not** survive out-of-sample
+validation and multiple-testing correction. Phase 28 classified all 10 baselines × 4
+instruments as "no demonstrated edge"; Phase 29 found **0/200** conditional rules with
+positive OOS net expectancy; Phases 31/32/37 found **0/360**, **0/264**, and **0/120**
+FDR-significant features; Phase 33's single apparent candidate was refuted as a likely
+false discovery by Phase 34; and Phase 39's prospective forward test returned **profit
+factor 0.70, expectancy −0.18R**. Phase 35 concluded price-derived technical information is
+exhausted and any future edge must come from genuinely new non-price exogenous data.
+
+Phase 41 separates the verdict explicitly: **system engineering quality — Grade A
+(production-ready)** vs **strategy profitability — unvalidated**. This is a deliberately
 honest research posture — the platform's value today is in its infrastructure,
-reproducibility, and risk controls.
+reproducibility, and risk controls. See
+[`PROFITABILITY_INVESTIGATION.md`](PROFITABILITY_INVESTIGATION.md) for the live-path
+implications.
 
-Run the research scripts, e.g.:
+Phases 38–41 have no runner script; their behavior is pinned by pytest modules and (for
+38/41) static committed deliverables. Run a research script, e.g.:
 
 ```bash
 cd backend
@@ -521,22 +620,38 @@ python scripts/run_final_research_audit.py
 
 ---
 
+## Engineering Documentation
+
+The repository keeps its design and audit history under `docs/`:
+
+| Document | Contents |
+|---|---|
+| [`docs/REFACTORING_ARCHITECTURE.md`](docs/REFACTORING_ARCHITECTURE.md) | As-built vs target architecture, ADR-1…ADR-8 (DI container, destination-aware safety gate, instrument truth, research consolidation, cross-process sentinel) |
+| [`docs/REFACTORING_PLAN.md`](docs/REFACTORING_PLAN.md) / [`docs/REFACTORING_TASKS.md`](docs/REFACTORING_TASKS.md) | Problem register and task breakdown |
+| [`docs/STRATEGY_INDEPENDENCE_PLAN.md`](docs/STRATEGY_INDEPENDENCE_PLAN.md) | Strategy/provider seam design (E1–E4 essential, V1–V4 valuable, D1–D6 deferred) |
+| [`docs/PHASE2_INDEPENDENT_REVIEW.md`](docs/PHASE2_INDEPENDENT_REVIEW.md) / [`…REVIEW2`](docs/PHASE2_INDEPENDENT_REVIEW2.md) / [`…RE_REVIEW`](docs/PHASE2_RE_REVIEW.md) | Independent code reviews and the fix requirements they produced |
+| [`docs/baseline/`](docs/baseline/) | Frozen API-contract samples + `contract_diff.py` (enforced in CI) |
+| [`PROFITABILITY_INVESTIGATION.md`](PROFITABILITY_INVESTIGATION.md) | Live/demo execution-path defect audit (critical → low) and prioritized fix order |
+
+---
+
 ## Testing
 
 The suite runs entirely on the **mock MT5 adapter** — no broker, no network, no Windows.
 
 ```bash
 cd backend
-pytest tests/ -v                       # full suite (323 tests)
+pytest tests/ -v                       # full suite (358 tests)
 pytest tests/test_risk_engine.py -v    # a single module
 pytest tests/ -k phase41 -v            # by keyword
 pytest tests/ --cov=app                # with coverage (if pytest-cov installed)
 ```
 
 Layout: 76 test modules under `backend/tests/`, covering the API, execution lifecycle,
-risk engine, all strategy engines, scalper bots, backtest/Monte Carlo/walk-forward, and
-every research phase. Shared fixtures (mock adapter, in-memory async DB, async HTTP client)
-live in `backend/tests/conftest.py`.
+risk engine, the strategy provider contract/seam, the safety gate and cross-process stop
+sentinel, all strategy engines, scalper bots, backtest/Monte Carlo/walk-forward, and every
+research phase. Shared fixtures (mock adapter, in-memory async DB, async HTTP client) live
+in `backend/tests/conftest.py`.
 
 ---
 
@@ -588,6 +703,9 @@ Safety is enforced structurally, not by documentation alone:
    `STOP`; its risk metrics are displayed for *monitoring* and do not auto-halt entries
    (an explicit operational choice — pair it with account-level discipline).
 
+The gate's truth table and the sentinel's exact guarantees/limits are specified in
+[`docs/REFACTORING_ARCHITECTURE.md`](docs/REFACTORING_ARCHITECTURE.md) (ADR-3 and ADR-8).
+
 > [!CAUTION]
 > The MT5 bots (`app/scalper/*`) and `scripts/run_demo_trader.py` build real order requests,
 > but the destination-aware gate permits them only in `DEMO` (demo account) or `LIVE` (both
@@ -607,6 +725,8 @@ git checkout -b feature/your-feature
 
 # ... make changes ...
 pytest tests/ -v            # from backend/
+ruff check app scripts      # from backend/ (correctness rules)
+python ../docs/baseline/contract_diff.py   # API shape must not drift
 npm run build               # from frontend/, if UI changed
 
 git add -A
@@ -620,7 +740,9 @@ Then open a Pull Request into `main`. CI must be green before merge.
 - Python: type hints, dataclasses for records, `snake_case`, no dead code.
 - Keep every limit configurable; use `0` to mean "disabled".
 - Never hard-code broker aliases — use `symbol_mappings` / `InstrumentSpecification`.
-- Any change to trading logic must include a regression test.
+- Every order-sending path must call `core/safety.ensure_trading_allowed` first.
+- Any change to trading logic or an API response shape must include a regression test;
+  intentional response changes require re-baselining `docs/baseline/`.
 
 ---
 
