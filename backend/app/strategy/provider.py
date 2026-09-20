@@ -95,6 +95,23 @@ class StrategyProvider(ABC):
     def evaluate(self, inputs: MarketInputs) -> Dict[str, Any]:
         """Produces a raw decision dict (validated by the caller via validate_decision)."""
 
+    def describe(
+        self,
+        *,
+        symbol: str,
+        candles: List[Dict[str, Any]],
+        timeframe: str = "M5",
+        point_size: float = 0.01,
+        **options: Any,
+    ) -> Optional[Dict[str, Any]]:
+        """Optional human-readable market analysis for dashboards.
+
+        Returns None when the strategy offers no analysis pages; routers turn
+        that into a 404. Option keys are provider-defined (the ICT provider
+        accepts swing_lookback/confirm_on_close/tolerance_pips).
+        """
+        return None
+
 
 _PROVIDER_REGISTRY: Dict[str, Callable[[], StrategyProvider]] = {}
 

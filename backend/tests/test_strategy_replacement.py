@@ -108,3 +108,33 @@ def test_ict_default_still_registered():
     provider = create_provider("ict_scalp", None)
     assert provider.name == "ict_scalp"
     assert "dummy_sma" not in provider.name
+
+
+@pytest.mark.asyncio
+async def test_analysis_pages_404_without_provider_describe(async_client):
+    """A provider without analysis yields 404s, not ICT-shaped crashes."""
+    from app.main import app
+    from app.api import deps
+    from app.strategy.provider import StrategyProvider
+
+    class _SilentProvider(StrategyProvider):
+        name = "silent"
+
+        def evaluate(self, inputs):
+            return {"client_signal_id": "SIG_S", "symbol": inputs.symbol,
+                    "direction": "LONG", "entry_price": 1.0,
+                    "stop_loss": 0.9, "take_profit": 1.2,
+                    "status": "APPROVED", "setup_type": "S",
+                    "confidence": 0.0, "reasons": {}, "timestamp": "t"}
+
+    silent = _SilentProvider()
+    assert silent.describe(symbol="XAUUSD", candles=[]) is None
+    app.dependency_overrides[deps.get_strategy_engine] = lambda: silent
+    try:
+        for path in ("/api/strategy/patterns?symbol=XAUUSD",
+                     "/api/structure/analyze?symbol=XAUUSD",
+                     "/api/liquidity/levels?symbol=XAUUSD"):
+            res = await async_client.get(path)
+            assert res.status_code == 404, path
+    finally:
+        app.dependency_overrides.clear()
